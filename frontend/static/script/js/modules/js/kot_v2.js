@@ -1,0 +1,1403 @@
+/* Separate restaurant workspace. All writes use the existing scoped order services. */
+(function () {
+    'use strict';
+    const P = PosnicPro,
+        esc = (v) => P.escapeHtml(String(v ?? ''));
+    const branch = () => P.local.get('branch_id_set');
+    const enabled = () =>
+        ['enable', 'true', '1', 'enabled'].includes(String(P.local.get('table_options')).toLowerCase());
+    let activeScope = '';
+    const state = {
+        floor: [],
+        sales: [],
+        selected: null,
+        sale: null,
+        paymentMessage: '',
+        paymentMethod: '',
+        filter: 'active',
+        tab: 'order',
+        pending: false,
+        draft: null,
+        search: [],
+        catalogue: [],
+        categories: [],
+        category: "",
+        catalogueLoaded: false,
+        busy: false,
+        generation: 0,
+    };
+    const money = (v) =>
+        (P.local.get('currencySign') || '') +
+        Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const paymentTable = (s) =>
+        /^take[\s_-]*away$/i.test(s.dine_type) ? 'takeaway:' + s._id : s.table_number;
+    const time = (v) =>
+        v && Number.isFinite(Date.parse(v))
+            ? new Date(v).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : '';
+    const id = () => crypto.randomUUID();
+    const root = () => document.getElementById('kot_v2');
+    function requestError(response) {
+        const error = new Error(response?.message || response?.error?.message || 'Connection failed. Your draft is retained.');
+        error.details = response?.data || response?.error?.details || {};
+        return error;
+    }
+    function api(method, url, data) {
+        if (activeScope && activeScope !== scopeKey())
+            return Promise.reject(
+                new Error('Branch or user changed. Reopen Table orders before continuing.'),
+            );
+        return new Promise((resolve, reject) =>
+            P[method](
+                { url, data: method === 'get' ? data : JSON.stringify(data), processData: method === 'get' },
+                (r) => {
+                    if (activeScope && activeScope !== scopeKey()) {
+                        reject(new Error('Branch or user changed. Reopen Table orders before continuing.'));
+                        return;
+                    }
+                    if (r?.type === 'error' || r?.error || r?.status === false)
+                        reject(requestError(r));
+                    else resolve(r?.type === 'success' ? r.data : r);
+                },
+                (e) =>
+                    reject(
+                        requestError(e?.responseJSON),
+                    ),
+            ),
+        );
+    }
+    function notify(message) {
+        P.alert('info', message);
+    }
+    const templates = (values, name) =>
+        '<div class="kv2-templates">' +
+        values
+            .map(
+                (v) =>
+                    '<button type="button" data-template="' +
+                    esc(v) +
+                    '" data-field="' +
+                    name +
+                    '">' +
+                    esc(v) +
+                    '</button>',
+            )
+            .join('') +
+        '</div>';
+    const button = (label, action, extra = '') =>
+        `<button type="button" data-action="${action}" ${extra}>${actionIcons[action] ? icon(actionIcons[action]) : ""}<span>${esc(label)}</span>${action === "actions" ? icon("chevron") : ""}</button>`;
+    function scopeKey() {
+        return 'posnic.kot-v2.draft:' + location.origin + ':' + branch() + ':' + P.local.get('username');
+    }
+    function persist() {
+        if (state.draft) localStorage.setItem(scopeKey(), JSON.stringify(state.draft));
+        else localStorage.removeItem(scopeKey());
+    }
+    async function run(fn) {
+        if (state.busy) return;
+        state.busy = true;
+        try {
+            await fn();
+        } catch (e) {
+            P.alert('error', e.message);
+        } finally {
+            state.busy = false;
+        }
+    }
+    let refreshFeedback = '', refreshFeedbackTimer;
+    function paintRefreshFeedback() {
+        const control = root()?.querySelector('[data-action="refresh"]');
+        if (!control) return;
+        const loading = refreshFeedback === 'loading';
+        const label = loading ? PosnicPro.i18n.t('lang_refreshing', 'Refreshing…') : refreshFeedback === 'success' ? PosnicPro.i18n.t('lang_orders_updated', 'Orders updated') : refreshFeedback === 'error' ? PosnicPro.i18n.t('lang_refresh_failed_try_again', 'Refresh failed. Try again.') : PosnicPro.i18n.t('lang_refresh_orders', 'Refresh orders');
+        control.dataset.feedback = refreshFeedback;
+        control.disabled = loading;
+        control.setAttribute('aria-busy', String(loading));
+        control.setAttribute('aria-label', label);
+        control.title = label;
+        control.innerHTML = refreshFeedback === 'success' ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>' : icon('refresh');
+        let status = root().querySelector('.kv2-refresh-status');
+        if (!status) {
+            status = document.createElement('span');
+            status.className = 'kv2-refresh-status';
+            status.setAttribute('role', 'status');
+            root().querySelector('.kv2-heading').append(status);
+        }
+        status.textContent = refreshFeedback ? label : '';
+    }
+    async function refreshFromButton() {
+        clearTimeout(refreshFeedbackTimer);
+        refreshFeedback = 'loading';
+        paintRefreshFeedback();
+        try {
+            await refresh();
+            refreshFeedback = 'success';
+        } catch (error) {
+            refreshFeedback = 'error';
+            throw error;
+        } finally {
+            paintRefreshFeedback();
+            refreshFeedbackTimer = setTimeout(() => {
+                refreshFeedback = '';
+                paintRefreshFeedback();
+            }, 2000);
+        }
+    }
+    function dialog(title, body, save, label = 'Save', context = state.draft || state.sale) {
+        const d = document.createElement('dialog');
+        d.className = 'kv2-dialog';
+        d.innerHTML = `<form><header><h3>${esc(title)}</h3><button type="button" data-close aria-label="Close" data-t-aria-label="lang_close_title">×</button></header><section>${body}</section><p role="alert"></p><footer><button type="button" data-close><lang class="lang_cancel_title">Cancel</lang></button><button class="primary" type="submit">${esc(label)}</button></footer></form>`;
+        if (context) {
+            const caption = document.createElement('small'); caption.className = 'kv2-action-context';
+            caption.textContent = /^take[\s_-]*away$/i.test(context.dineType || context.dine_type || '') ? P.i18n.t('lang_takeaway', 'Takeaway') + ' ' + (context.takeaway_number || context.token_id || '') : P.i18n.t('lang_table', 'Table') + ' ' + (context.table || context.table_number || '—');
+            d.querySelector('header h3').append(caption);
+        }
+        document.body.append(d);
+        let saving = false;
+        d.addEventListener('click', (e) => {
+            const b = e.target.closest('[data-template]');
+            if (b) {
+                const field = d.querySelector('[name=' + b.dataset.field + ']');
+                field.value = b.dataset.template;
+                field.focus();
+            }
+        });
+        d.querySelectorAll('[data-close]').forEach(
+            (b) =>
+                (b.onclick = () => {
+                    if (!saving) d.close();
+                }),
+        );
+        d.addEventListener('cancel', (e) => {
+            if (saving) e.preventDefault();
+        });
+        d.addEventListener('close', () => d.remove());
+        d.querySelector('form').onsubmit = async (e) => {
+            e.preventDefault();
+            if (saving || !d.querySelector('form').reportValidity()) return;
+            saving = true;
+            d.querySelector('[type=submit]').disabled = true;
+            try {
+                await save(new FormData(d.querySelector('form')), d);
+                d.close();
+            } catch (error) {
+                d.querySelector('[role=alert]').textContent = error.message;
+            } finally {
+                saving = false;
+                d.querySelector('[type=submit]').disabled = false;
+            }
+        };
+        d.showModal();
+        // Start entry in the form, not on the header's close button.
+        const entry = d.querySelector('section input:not([type=hidden]):not([type=radio]):not([type=checkbox]):not([type=button]):not([type=submit]):not(:disabled):not([readonly]), section textarea:not(:disabled):not([readonly])') || d.querySelector('section select:not(:disabled)');
+        if (entry) {
+            entry.focus();
+            if (entry.type === 'number' || entry.matches('[inputmode=numeric], [inputmode=decimal]')) entry.select();
+        }
+        return d;
+    }
+    function open(saleId = null) {
+        if (activeScope !== scopeKey()) {
+            activeScope = scopeKey();
+            state.draft = null;
+            state.sale = null;
+            state.selected = null;
+            state.paymentMessage = '';
+            state.sales = [];
+            state.floor = [];
+            state.catalogue = [];
+            state.categories = [];
+            state.category = "";
+            state.catalogueLoaded = false;
+        }
+        P.HideSideBarModal();
+        $('.page_loader,#osk-container,#closeSaleButton,#closeEditButton').hide();
+        $('#v-pills-dashboard').addClass('show active');
+        if (P.kotPrint) P.kotPrint.restore();
+        if (!root()) {
+            const el = document.createElement('div');
+            el.id = 'kot_v2';
+            el.className = 'page_loader';
+            document.querySelector('#kot').after(el);
+            el.addEventListener('click', onClick);
+        }
+        root().style.display = 'block';
+        if (!enabled()) {
+            root().innerHTML =
+                '<p><lang class="lang_enable_restaurant_to_use_table_orders">Enable Restaurant to use table orders.</lang></p>';
+            return;
+        }
+        if (!state.draft) {
+            try {
+                state.draft = JSON.parse(localStorage.getItem(scopeKey()) || 'null');
+            } catch (_) {
+                P.alert('error', 'The saved draft could not be read.');
+            }
+        }
+        // A page visit must not reuse the last table from this module's lifetime.
+        // Explicit order links and durable drafts retain their own recovery context.
+        state.sale = null;
+        state.selected = state.draft ? state.draft.saleId || null : saleId;
+        state.paymentMessage = '';
+        state.expanded = false;
+        state.filter = 'active';
+        render();
+        run(refresh);
+    }
+    function activeOrderFilter() {
+        return {
+            floor_closed_at: { $exists: false },
+            order_state: { $nin: ['rejected', 'cancelled'] },
+            $or: [
+                { sale_process: 'KOT', payment_status: { $nin: ['Paid', 'Cancelled'] } },
+                { floor_lifecycle: true, sale_process: { $in: ['KOT', 'Add', 'Edit'] },
+                  payment_status: { $ne: 'Cancelled' },
+                  $or: [{ dine_type: { $regex: '^take[\\s_-]*away$', $options: 'i' } },
+                        { fulfilment: { $regex: '^take[\\s_-]*away$', $options: 'i' } }] },
+            ],
+        };
+    }
+    const isTakeaway = sale => /^take[\s_-]*away$/i.test(sale?.fulfilment || sale?.dine_type || '');
+    const activeTakeaway = sale => isTakeaway(sale) && sale.floor_lifecycle === true && !sale.floor_closed_at && !['Cancelled'].includes(sale.payment_status) && ['KOT', 'Add', 'Edit'].includes(sale.sale_process);
+    async function refresh() {
+        const generation = ++state.generation;
+        const [floor, list] = await Promise.all([
+            api('get', 'captain/v1/tables', { branchId: branch() }),
+            api('get', 'sales', {
+                page: 1,
+                limit: 1000,
+                filters: JSON.stringify(activeOrderFilter()),
+            }),
+        ]);
+        if (generation !== state.generation) return;
+        P.restaurantFeedback?.apply(floor.orderFeedback, branch());
+        state.floor = floor.tables || [];
+        state.sales = list.list || [];
+        let page = 1;
+        while (state.sales.length < Number(list.total || 0)) {
+            const more = await api('get', 'sales', {
+                page: ++page,
+                limit: 1000,
+                filters: JSON.stringify(activeOrderFilter()),
+            });
+            if (generation !== state.generation) return;
+            if (!more.list?.length) break;
+            state.sales.push(...more.list);
+        }
+        if (!state.draft && !state.sales.some((sale) => String(sale._id) === String(state.selected))) {
+            state.selected = null;
+            state.sale = null;
+        }
+        if (state.selected) {
+            const sale = await api('get', 'sales/' + encodeURIComponent(state.selected));
+            if (generation !== state.generation) return;
+            state.sale = sale;
+        }
+        if (
+            state.sale &&
+            !activeTakeaway(state.sale) &&
+            (['Paid', 'Cancelled'].includes(state.sale.payment_status) || state.sale.sale_process !== 'KOT')
+        ) {
+            state.sale = null;
+            state.selected = null;
+        }
+        state.refreshed = new Date().toISOString();
+        render();
+    }
+    function resolveDraftBeforeSwitch(next, saleId) {
+        const draft = state.draft;
+        if (!draft) return false;
+        if (saleId && String(draft.saleId) === String(saleId)) {
+            state.expanded = false;
+            render();
+            return true;
+        }
+        if (!draft.items.length && !draft.intent) {
+            state.draft = null;
+            persist();
+            return false;
+        }
+        const review = P.i18n.t('lang_review_this_round', 'Review this round');
+        const modal = dialog(review,
+            '<strong>' + esc(draft.table || 'Takeaway') + '</strong><ul>' +
+            draft.items.map((line) => '<li>' + esc(line.quantity) + ' × ' + esc(line.name) + '</li>').join('') + '</ul>',
+            () => { state.expanded = false; render(); }, review);
+        // An uncertain send must be reconciled before its durable request can be discarded.
+        if (!draft.intent) {
+            const discard = document.createElement('button');
+            discard.type = 'button';
+            discard.textContent = P.i18n.t('lang_iv2_discard', 'Discard draft');
+            discard.onclick = () => run(async () => {
+                if (state.draft !== draft || draft.intent) return;
+                state.draft = null;
+                persist();
+                modal.close();
+                await next();
+            });
+            modal.querySelector('footer').prepend(discard);
+        }
+        return true;
+    }
+    async function select(saleId) {
+        if (resolveDraftBeforeSwitch(() => select(saleId), saleId)) return;
+        state.paymentMessage = '';
+        state.expanded = false;
+        state.selected = saleId;
+        state.sale = await api('get', 'sales/' + encodeURIComponent(saleId));
+        state.tab = 'order';
+        render();
+    }
+    const actionIcons = {discount:'discount',printBill:'print',printKOT:'print',pay:'pay',serveAll:'check',serve:'check',customer:'guests',details:'details',notes:'details',guests:'guests',handover:'handover',transfer:'transfer',split:'split',cancel:'cancel',discard:'cancel',draftNote:'details',removeDraft:'cancel'};
+    const paths = {
+        chevron: 'm8 10 4 4 4-4',
+        discount: 'm5 19 14-14M7 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6M17 14a3 3 0 1 0 0 6 3 3 0 0 0 0-6',
+        print: 'M6 9V3h12v6M6 17H3V9h18v8h-3M6 14h12v7H6zM17 11h1',
+        pay: 'M3 5h18v14H3zM3 10h18M6 15h4',
+        check: 'm4 12 5 5L20 6',
+        details: 'M5 3h14v18H5zM8 7h8M8 11h8M8 15h5',
+        cancel: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20M8 8l8 8m0-8-8 8',
+        table: 'M4 8h16v9H4z M6 17v4m12-4v4M8 4h8',
+        guests: 'M8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5 8v-2a5 5 0 0 1 10 0v2m3-14a3 3 0 0 1 0 6m1 3a4 4 0 0 1 4 4',
+        search: 'M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14m5 12 6 6',
+        move: 'M3 6h7v7H3z M5 13v4m3-4v4m6-8h7m-3-3 3 3-3 3',
+        merge: 'M3 4h6v6H3z M15 4h6v6h-6z M6 10v4l6 6 6-6v-4m-9 7 3 3 3-3',
+        transfer: 'M3 15a7 7 0 0 1 14 0M2 18h15M10 6V4m7 4h5m-3-3 3 3-3 3',
+        handover: 'M10 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0M2 20v-3a5 5 0 0 1 10 0v3m2-9h8m-4-4 4 4-4 4',
+        split: 'M5 3h14v7M5 10V3m3 3h8M12 10v5m0 0-6 6m6-6 6 6M3 17v4h4m10 0h4v-4',
+        refresh: 'M20 10a8 8 0 0 0-14-5L3 8m0-5v5h5m-4 6a8 8 0 0 0 14 5l3-3m0 5v-5h-5',
+        takeaway: 'M5 7h14l1 14H4L5 7zm4 2V5a3 3 0 0 1 6 0v4',
+    };
+    function icon(name) {
+        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + paths[name] + '"/></svg>';
+    }
+    function iconButton(name, label) {
+        return (
+            '<button type="button" class="kv2-icon" data-action="' +
+            name +
+            '" title="' +
+            label +
+            '" aria-label="' +
+            label +
+            '">' +
+            icon(name) +
+            '</button>'
+        );
+    }
+    function floorHTML() {
+        const rows = state.floor.map((t) => ({
+            ...t,
+            sales: state.sales.filter((s) => (t.orders || []).some((o) => o.id === String(s._id))),
+        }));
+        for (const sale of state.sales.filter(
+            (s) =>
+                !/^take[\s_-]*away$/i.test(s.dine_type) &&
+                !rows.some((t) => t.sales.some((v) => String(v._id) === String(s._id))),
+        ))
+            rows.push({
+                id: 'custom-' + sale._id,
+                tableorder_value: sale.table_number,
+                status: 'occupied',
+                sales: [sale],
+            });
+        for (const sale of state.sales.filter((s) => /^take[\s_-]*away$/i.test(s.dine_type)))
+            rows.push({
+                id: 'takeaway-' + sale._id,
+                tableorder_value: 'Takeaway ' + (sale.takeaway_number || sale.token_id || ''),
+                status: 'occupied',
+                sales: [sale],
+            });
+        return `<aside class="kv2-floor"><header><strong><lang class="lang_orders_tables">Orders & tables</lang></strong><small>${state.sales.length} active</small>${button(state.expanded ? PosnicPro.i18n.t('lang_po_receive_back', 'Back to order') : PosnicPro.i18n.t('lang_expand_tables', 'Expand tables'), 'expand')}</header><nav>${['active', 'available', 'all'].map((f) => button(f[0].toUpperCase() + f.slice(1), 'filter', `data-value="${f}" class="${state.filter === f ? 'selected' : ''}"`)).join('')}</nav><div class="kv2-grid">${
+            rows
+                .filter(
+                    (t) =>
+                        state.filter === 'all' ||
+                        (state.filter === 'active' ? t.sales.length : t.status === 'available'),
+                )
+                .map((t) => {
+                    const minutes = t.sales.length
+                        ? Math.max(
+                              0,
+                              Math.floor(
+                                  (Date.now() -
+                                      Math.min(
+                                          ...t.sales.map((s) => Date.parse(s.created_date) || Date.now()),
+                                      )) /
+                                      60000,
+                              ),
+                          )
+                        : 0;
+                    return `<button class="kv2-table ${t.sales.some((s) => String(s._id) === state.selected) ? 'selected' : ''}" data-action="table" data-table="${esc(t.id)}" data-sale="${esc(t.sales[0]?._id || '')}" data-opened="${t.sales.length ? Math.min(...t.sales.map((s) => Date.parse(s.created_date) || Date.now())) : ''}" data-age="${!t.sales.length ? '' : minutes >= 30 ? 'late' : minutes >= 15 ? 'waiting' : 'fresh'}"><strong>${icon(t.id.startsWith('takeaway-') ? 'takeaway' : 'table')} ${esc(t.tableorder_value)}</strong><small>${t.sales.length ? t.sales.reduce((n, s) => n + (s.items || []).reduce((q, l) => q + Number(l.item_quantity || 0), 0), 0) + ' items · ' + t.sales.reduce((n, s) => n + Number(s.person_count || 0), 0) + ' guests' : esc(t.status)}</small>${t.sales.length ? `<b>${esc(money(t.sales.reduce((n, s) => n + Number(s.sales_total || 0), 0)))}</b><small data-elapsed>${minutes} min ago</small>` : ''}</button>`;
+                })
+                .join('') || `<div class="kv2-floor-empty">${icon('table')}<p><lang class="lang_no_orders_here">No orders here.</lang></p>${state.filter === 'active' ? button(PosnicPro.i18n.t('lang_choose_a_table', 'Choose a table'), 'filter', 'data-value="available"') : ''}</div>`
+        }</div></aside>`;
+    }
+    function updateElapsed() {
+        if (!root()?.offsetParent || document.hidden) return;
+        root().querySelectorAll('.kv2-table[data-opened]').forEach((card) => {
+            if (!card.dataset.opened) return;
+            const minutes = Math.max(0, Math.floor((Date.now() - Number(card.dataset.opened)) / 60000));
+            const label = card.querySelector('[data-elapsed]');
+            if (label) label.textContent = minutes + ' min ago';
+            card.dataset.age = minutes >= 30 ? 'late' : minutes >= 15 ? 'waiting' : 'fresh';
+        });
+    }
+    setInterval(updateElapsed, 15000);
+    document.addEventListener('visibilitychange', updateElapsed);
+    function roundHTML(sale) {
+        const rounds = sale.restaurant_details?.rounds || [];
+        return (
+            rounds
+                .map((r, i) => {
+                    const lines = r.items.filter((l) => !state.pending || l.remaining > 0);
+                    if (!lines.length) return '';
+                    return `<div class="kv2-round"><strong>${i ? PosnicPro.i18n.t('lang_additional_order', 'Additional order') : PosnicPro.i18n.t('lang_first_order', 'First order')} · KOT ${i + 1}</strong><small>${esc(time(r.ordered_at || r.fired_at))}</small></div>${lines.map((l) => `<div class="kv2-line"><b>${esc(l.quantity)}</b><div><strong>${esc(l.name)}</strong><small>${esc([l.note, l.allergy_note, l.course].filter(Boolean).join(' · '))}</small></div>${sale.payment_status === 'Paid' ? '' : button('＋ Add again', 'again', `data-line="${esc(l.id)}"`)}<span>${esc(lineAmount(sale, l))}</span>${button(l.held ? 'Send now' : l.remaining <= 0 ? '✓ Served' : l.quantity === 1 ? 'Mark served' : 'Serve 1 · ' + l.served + '/' + l.quantity, 'serve', `data-line="${esc(l.id)}" ${l.remaining <= 0 ? 'disabled' : ''}`)}${sale.payment_status === 'Paid' ? '' : button('✎', 'editLine', `data-line="${esc(l.id)}" title="Edit dish" data-t-title="lang_edit_dish" aria-label="Edit dish" data-t-aria-label="lang_edit_dish"`)}</div>`).join('')}`;
+                })
+                .join('') ||
+            '<p class="kv2-empty"><lang class="lang_no_pending_portions">No pending portions.</lang></p>'
+        );
+    }
+    function emptyOrderHTML() {
+        const idle = !state.sales.length;
+        const method = state.paymentMethod;
+        const paymentArt = method === 'Card' ? '<rect x="62" y="48" width="116" height="78" rx="12" fill="#fff"/><path d="M62 70h116M79 101h24m10 0h14"/>' : method === 'Cash' ? '<rect x="58" y="56" width="124" height="70" rx="10" fill="#fff"/><circle cx="120" cy="91" r="19"/><path d="M73 78v26m94-26v26"/>' : method === 'Upi' ? '<rect x="88" y="29" width="64" height="113" rx="12" fill="#fff"/><path d="M109 40h22m-18 89h14M101 62h12v12h-12zm25 0h12v12h-12zm-25 25h12v12h-12zm26 0h11v12h-11z"/>' : '<path d="M82 35h76v110l-10-7-10 7-10-7-10 7-10-7-10 7-16-9Z" fill="#fff"/><path d="M98 60h43m-43 17h43m-43 17h25"/>';
+        const paymentImage = '<svg data-payment-art="' + esc(method || 'receipt') + '" viewBox="0 0 240 180"><ellipse cx="120" cy="155" rx="76" ry="10" fill="#edf3fa" stroke="none"/><circle cx="120" cy="85" r="66" fill="#f0f6ff" stroke="none"/>' + paymentArt + '<circle cx="175" cy="119" r="21" fill="#f5fbff"/><path d="m165 119 7 7 13-15"/></svg>';
+        const methodLabel = {Cash: P.i18n.t('lang_cash', 'Cash'), Card: P.i18n.t('lang_card', 'Card'), Upi: 'UPI'}[method];
+        return `<section class="kv2-order kv2-welcome"><div class="kv2-illustration" aria-hidden="true">${state.paymentMessage ? paymentImage : !idle ? `<svg viewBox="0 0 240 180"><circle cx="120" cy="85" r="66" fill="#f0f6ff" stroke="none"/><ellipse cx="120" cy="155" rx="76" ry="10" fill="#edf3fa" stroke="none"/><rect x="67" y="66" width="106" height="50" rx="10" fill="#fff"/><path d="M79 116v25m82-25v25M94 52v-9h52v9M47 78v39h9m137-39v39h-9"/><circle cx="120" cy="91" r="12"/></svg>` : `<svg viewBox="0 0 240 180"><ellipse cx="120" cy="155" rx="83" ry="12" fill="#edf3fa" stroke="none"/><circle cx="120" cy="79" r="66" fill="#f0f6ff" stroke="none"/><g class="kv2-cloche"><path d="M66 103h108M75 99a45 45 0 0 1 90 0M113 49h14M120 49v6"/><path d="M63 112h114l-9 10H72Z" fill="#e1edff"/></g><path d="M76 132h88M87 132v20m66-20v20"/><g class="kv2-steam"><path d="M104 32q-6-7 0-14m16 12q-6-7 0-14m16 16q-6-7 0-14"/></g><circle cx="182" cy="54" r="17" fill="#e5f5ef" stroke="none"/><path d="m175 54 5 5 9-11" stroke="#4d9b80"/></svg>`}</div><h2>${esc(state.paymentMessage ? (methodLabel ? methodLabel + ' · ' : '') + P.i18n.t('lang_captain_payment_recorded', 'Payment recorded') : idle ? P.i18n.t('lang_no_active_orders_2', 'No active orders') : P.i18n.t('lang_choose_a_table', 'Choose a table'))}</h2>${state.paymentMessage ? '<p role="status">' + esc(state.paymentMessage) + '</p>' : ''}<p>${esc(idle ? P.i18n.t('lang_start_a_table_order', 'Start a table order') : P.i18n.t('lang_choose_an_active_table_or_start_a_new_orde', 'Choose an active table, or start a new order.'))}</p><div class="kv2-welcome-actions">${button(PosnicPro.i18n.t('lang_new_order', 'New order'), 'new', 'class="primary"')}${button(PosnicPro.i18n.t('lang_takeaway', 'Takeaway'), 'takeaway')}</div></section>`;
+    }
+    function takeawayStatus(sale) {
+        if (!isTakeaway(sale)) return '';
+        const rounds = sale.restaurant_details?.rounds || [];
+        const ready = rounds.length && rounds.every(round => round.items.every(line => {
+            if (line.remaining <= 0) return true;
+            const work = sale.kitchen_work?.[round.id] || {};
+            return !line.held && Number(work.lines?.[line.id]?.ready ?? (work.state === 'ready' ? line.quantity : 0)) >= line.quantity;
+        }));
+        return '<p class="kv2-takeaway-status" role="status">' + esc(ready ? P.i18n.t('lang_takeaway_ready_pickup', 'Ready for pickup') : P.i18n.t('lang_preparing', 'Preparing...')) + ' · ' + esc(sale.payment_status === 'Paid' ? P.i18n.t('lang_paid', 'Paid') : P.i18n.t('lang_unpaid', 'Unpaid')) + '</p>';
+    }
+    function orderHTML() {
+        const s = state.sale;
+        if (!s) return emptyOrderHTML();
+        const details = s.restaurant_details || {};
+        return `<section class="kv2-order"><header><div><h2>${esc(s.dine_type === 'Take away' ? 'Takeaway ' + (s.takeaway_number || s.token_id || '') : 'Table ' + s.table_number)}</h2>${takeawayStatus(s)}<small>${esc(s.person_count || 0)} guests · ${esc(details.taken_by)} · ${esc(time(s.created_date))}</small></div><div>${iconButton('move', 'Move table')}${iconButton('merge', 'Merge tables')}${iconButton('split', 'Split payment')}${button('Actions', 'actions', 'aria-haspopup="true" aria-expanded="false" aria-controls="kv2-actions-menu"')}</div></header><div class="kv2-customer">Customer <strong>${esc(s.customer_name || 'Walk-in customer')}</strong> ${esc(s.customer_phone || '')}${button('Choose customer', 'customer')}</div><nav>${button('Order', 'tab', `data-value="order" class="kv2-tab ${state.tab === 'order' ? 'active' : ''}"`)}${button('Activity', 'tab', `data-value="activity" class="kv2-tab ${state.tab === 'activity' ? 'active' : ''}"`)}${button(state.pending ? 'Pending only ✓' : 'Pending only', 'pending')}${button(isTakeaway(s) ? P.i18n.t('lang_takeaway_given', 'Given to customer') : 'Serve all', 'serveAll')}${s.payment_status === 'Paid' ? '' : button('＋ Add items', 'add', 'class="primary"')}</nav><div class="kv2-lines">${state.tab === 'activity' ? (details.events || []).map((e) => `<article><strong>${esc(e.kind)}</strong> · ${esc(time(e.at))} · ${esc(e.actor)}<p>${esc((e.items || []).map((l) => l.quantity + ' × ' + l.name).join(', '))}</p></article>`).join('') : roundHTML(s)}</div><details class="kv2-breakdown"><summary>Bill breakdown & kitchen note</summary><div class="kv2-bill-content"><div class="kv2-bill-summary"><p>Subtotal <b>${esc(money(s.sales_sub_total || s.subtotal || 0))}</b></p><p>Tax <b>${esc(money(s.tax || 0))}</b></p>${taxBreakdown(s)}${(s.charges || []).map(c => `<p><span>${esc(c.name)}</span><b>${esc(money(c.amount))}</b></p>`).join('')}<p>Discount <b>${esc(money(Number(s.discount || 0) + Number(s.sale_extra_discount || 0)))}</b></p>${Number(s.round_off || s.sales_round_off) ? `<p>Rounding <b>${esc(money(s.round_off || s.sales_round_off))}</b></p>` : ''}</div><div class="kv2-bill-notes"><p>${esc(details.preparation_note || 'No kitchen note')}</p><div class="kv2-bill-actions">${s.payment_status === 'Paid' ? '' : button('Additional charges', 'charges') + button('Edit details', 'notes')}</div></div></div></details><footer><div><small><lang class="lang_total_title">Total</lang></small><strong>${esc(money(s.sales_total))}</strong></div>${s.payment_status === 'Paid' ? '' : button('Discount', 'discount')}${button('Print bill', 'printBill')}${button('Print KOT', 'printKOT')}${s.payment_status === 'Paid' ? '<strong>' + esc(P.i18n.t('lang_paid', 'Paid')) + '</strong>' : button('Take payment', 'pay', 'class="primary"')}</footer></section>`;
+    }
+    function catalogueHTML() {
+        return state.catalogue.map((item, i) => {
+            const name = P.itemName ? P.itemName(item) : item.item_name || item.name || '';
+            const photo = typeof item.image === 'string' && item.image !== 'item.svg' && !/default\/item\.svg/.test(item.image) && /^(https?:|\/|static\/)/i.test(item.image) ? item.image : '';
+            const art = photo ? `<img src="${esc(photo)}" alt="" loading="lazy">` : item.icon ? esc(item.icon) : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h18v13H3zM3 8l4-5h10l4 5M12 8v13M8 3l4 5 4-5"/></svg>';
+            return `<button type="button" data-action="pick" data-index="${i}" class="kv2-product"><span class="kv2-product-art">${art}</span><span class="kv2-product-text"><strong>${esc(name)}</strong><small>${esc([item.plu_code || item.short_code, item.itemid || item.item_code].filter(Boolean).join(' · '))}</small><span class="kv2-product-meta"><small>${esc(item.category_name || '')}</small><b>${esc(money(item.items_selling_price ?? item.selling_price ?? item.item_price ?? item.price ?? 0))}</b></span></span></button>`;
+        }).join('');
+    }
+    function categoriesHTML() {
+        return button(PosnicPro.i18n.t('lang_all_items', 'All items'), 'category', 'data-category="" class="' + (!state.category ? 'selected' : '') + '"') + state.categories.map(c => button(c.name, 'category', 'data-category="' + esc(c.id) + '" class="' + (state.category === String(c.id) ? 'selected' : '') + '"')).join('');
+    }
+    async function loadCatalogue() {
+        if (state.loadingMenu) return;
+        state.loadingMenu = true;
+        const scope = scopeKey(), category = state.category;
+        try {
+            const r = await api('get', 'items/getOnlineItemsAjaxList', {query: '', limit: 50, ...(category ? {categoryId: category} : {})});
+            if (scope !== scopeKey() || category !== state.category) return;
+            state.catalogue = (r.suggestions || []).map(v => v.data || v).filter(v => !window.PosnicBillingSearch?.expired(v.items_expiry_date));
+            state.catalogueLoaded = true;
+            const menu = root()?.querySelector('.kv2-menu');
+            if (menu) menu.innerHTML = catalogueHTML();
+            if (!state.categories.length) {
+                const cats = await api('get', 'categories/getCategoryAjaxList', {query: ''});
+                if (scope !== scopeKey()) return;
+                state.categories = cats.suggestions || [];
+                const chips = root()?.querySelector('.kv2-category-chips');
+                if (chips) chips.innerHTML = categoriesHTML();
+            }
+        } catch (e) { P.alert('error', e.message); }
+        finally { state.loadingMenu = false; if (scope === scopeKey() && category !== state.category) loadCatalogue(); }
+    }
+    function chooseProduct(data, quantity = 1) {
+        if (pendingSendReview()) return;
+        const price = Number(data.items_selling_price ?? data.selling_price ?? data.item_price ?? data.price ?? 0);
+        const openPrice = !price || data.open_price === true;
+        const modal = dialog(data.item_name || data.name || data.items_name || '',
+            `${openPrice ? '<label>Price<input name="price" type="number" min="0.01" step="0.01" required></label>' : '<p>' + esc(money(price)) + '</p>'}<label><lang class="lang_quantity">Quantity</lang><input name="qty" type="number" min="0.001" max="100000" step="any" value="${quantity}" required></label><label><lang class="lang_kot_workspace_note">Kitchen note</lang><textarea name="note" maxlength="500"></textarea></label>` + templates(['No onion', 'Less spicy', 'Less ice'], 'note'),
+            form => { addLine({product_id:data.item_id || data.id || data._id?.$oid || data._id,name:data.item_name || data.name || data.items_name,price:openPrice ? Number(form.get('price')) : price,quantity:Number(form.get('qty')),item_description:String(form.get('note') || '')}); }, 'Add to round');
+        modal.classList.add('kv2-product-dialog');
+        modal.querySelector(openPrice ? '[name=price]' : '[name=qty]').focus();
+        modal.addEventListener('close', () => root()?.querySelector('#kv2-search')?.focus());
+    }
+    function draftHTML() {
+        const d = state.draft;
+        return `<section class="kv2-order kv2-editor"><div class="kv2-customer"><strong>${esc(d.customer?.name || 'Walk-in customer')}</strong>${button('Choose customer', 'customer')}</div><header><div><h2>${PosnicPro.i18n.t('lang_add_items', 'Add items')} <span class="kv2-editor-table">/ ${esc(d.table || 'Takeaway')}</span></h2><small><lang class="lang_search_all_dishes_by_name_barcode_or_quick">Search all dishes by name, barcode or quick code. F2 to focus.</lang></small></div>${d.intent ? button('Review latest order', 'rebase') : button('Discard draft', 'discard')}</header>${d.tableConflict ? `<div class="kv2-table-conflict" role="status"><span>${esc(d.tableConflict)} Your items are kept.</span>${button('Change table', 'changeDraftTable')}</div>` : ''}<div class="kv2-draft-body"><section class="kv2-catalogue"><div class="kv2-search-row"><div class="kv2-searchbar"><input id="kv2-search" type="search" autocomplete="off" placeholder="Search name, SKU, barcode or quick code" data-t-placeholder="lang_search_name_sku_barcode_or_quick_code"><div id="kv2-results"></div></div>${button('Item not on menu', 'offmenu')}</div><div class="kv2-category-chips">${categoriesHTML()}</div><div class="kv2-menu">${catalogueHTML()}</div></section><aside class="kv2-review"><div class="kv2-review-heading"><h3><lang class="lang_review_this_round">Review this round</lang></h3></div><p class="kv2-review-hint"><lang class="lang_nothing_is_sent_until_you_choose_send_to_k">Nothing is sent until you choose Send to kitchen.</lang></p><div class="kv2-basket">${d.items.length ? d.items.map((l, i) => `<div class="kv2-draft-line"><div class="kv2-draft-name"><strong>${esc(l.name)}</strong><span>${esc(money(l.price * l.quantity))}</span></div>${l.item_description ? `<small>${esc(l.item_description)}</small>` : ''}<div class="kv2-stepper">${button('−', 'qty', `data-index="${i}" data-delta="-1" aria-label="${esc(PosnicPro.i18n.t('lang_quantity','Quantity'))} −"`)}<b>${l.quantity}</b>${button('+', 'qty', `data-index="${i}" data-delta="1" aria-label="${esc(PosnicPro.i18n.t('lang_quantity','Quantity'))} +"`)}${button('Note', 'draftNote', `data-index="${i}"`)}${button(PosnicPro.i18n.t('lang_remove','Remove'), 'removeDraft', `data-index="${i}" class="kv2-remove"`)}</div></div>`).join('') : `<div class="kv2-basket-empty">${icon('takeaway')}<p><lang class="lang_add_item">Add item</lang></p></div>`}</div><div class="kv2-round-total"><span><lang class="lang_amount">Amount</lang></span><strong>${esc(money(d.items.reduce((sum, l) => sum + Number(l.price) * Number(l.quantity), 0)))}</strong></div></aside></div><footer>${button(PosnicPro.i18n.t('lang_cancel', 'Cancel'), 'discard')}<small>${d.items.reduce((n, l) => n + Number(l.quantity), 0)} <lang class="lang_items">Items</lang></small>${button(d.intent ? PosnicPro.i18n.t('lang_retry_saved_send', 'Retry saved send') : PosnicPro.i18n.t('lang_kot_workspace_send', 'Send to kitchen'), 'send', `class="primary" ${d.items.length ? '' : 'disabled'}`)}</footer></section>`;
+    }
+    function render() {
+        const desktopTools = document.getElementById('posnic-desktop-fab');
+        if (desktopTools) document.body.append(desktopTools);
+        if (!root()) return;
+        root().classList.toggle('kv2-composing', !!state.draft);
+        root().classList.toggle('kv2-playful', !!P.restaurantFeedback?.allowed?.());
+        root().innerHTML = `<div class="kv2-heading"><h1><lang class="lang_table_orders">Table orders</lang></h1><small>${state.refreshed ? 'Refreshed ' + esc(time(state.refreshed)) : ''}</small><div>${state.draft ? button(state.expanded ? PosnicPro.i18n.t('lang_review_this_round','Review this round') : PosnicPro.i18n.t('lang_tables','Tables'), 'expand') : ''}${iconButton('refresh', 'Refresh orders')}${state.draft ? '' : button('Takeaway', 'takeaway') + button('＋ New order', 'new', 'class="primary"')}</div></div><div class="kv2-workspace ${state.expanded ? 'kv2-expanded' : ''}">${floorHTML()}${state.draft ? draftHTML() : orderHTML()}</div>`;
+        if (state.draft) {
+            bindSearch();
+            if (!state.catalogueLoaded) loadCatalogue();
+        }
+        paintRefreshFeedback();
+        if (desktopTools) {
+            root()?.querySelector('.kv2-heading')?.append(desktopTools);
+        }
+        fitEditor();
+    }
+    function fitEditor() {
+        const editor = root()?.querySelector('.kv2-order');
+        if (!editor || !editor.getClientRects().length) return;
+        const available = window.innerHeight - editor.getBoundingClientRect().top - 12;
+        editor.style.setProperty('--kv2-editor-height', Math.max(300, available) + 'px');
+        editor.style.setProperty('--kv2-order-height', Math.max(300, available) + 'px');
+    }
+    window.addEventListener('resize', fitEditor);
+    window.addEventListener('hashchange', () => {
+        const tools = document.getElementById('posnic-desktop-fab');
+        if (tools && !/^#\/kot(?:_v2)?(?:\/|$)/.test(location.hash)) document.body.append(tools);
+    });
+    function startDraft(meta) {
+        state.paymentMessage = '';
+        state.expanded = false;
+        if (!state.draft)
+            state.draft = {
+                key: id(),
+                saleId: state.sale?._id || null,
+                table: state.sale?.table_number || '',
+                customer: state.sale ? { id: state.sale.customer_id, name: state.sale.customer_name, phone: state.sale.customer_phone } : null,
+                items: [],
+                ...meta,
+            };
+        persist();
+        render();
+    }
+    function addLine(line) {
+        if (state.draft?.intent) throw new Error('Retry the saved send before changing this draft.');
+        startDraft();
+        if (!line.product_id) throw new Error('Item is unavailable. Search again.');
+        state.draft.items.push({ ...line, line_id: id() });
+        persist();
+        render();
+        P.restaurantFeedback?.play(state.draft.items.length === 1 ? 'first' : 'add');
+    }
+    function bindSearch() {
+        const input = $('#kv2-search');
+        P.kot.bindProductSearch(input, (data, quantity, done) => {
+            try {
+                const price = Number(
+                    data.items_selling_price ?? data.selling_price ?? data.item_price ?? data.price ?? 0,
+                );
+                if (!price || data.open_price === true) {
+                    quantityDialog(data, quantity);
+                    done(true);
+                    return;
+                }
+                addLine({
+                    product_id: data.item_id || data.id || data._id?.$oid || data._id,
+                    name: data.item_name || data.name || data.items_name,
+                    price,
+                    quantity,
+                });
+                done(true);
+            } catch (e) {
+                P.alert('error', e.message);
+                done(false);
+            }
+        });
+        if ($.fn.autocomplete) input.autocomplete('setOptions', {onSelect: suggestion => chooseProduct(suggestion.data)});
+    }
+    function quantityDialog(data, quantity) {
+        dialog(
+            'Price for this order',
+            '<label>Price<input name="price" type="number" min="0.01" step="0.01" required></label>',
+            (form) =>
+                addLine({
+                    product_id: data.item_id || data.id || data._id?.$oid || data._id,
+                    name: data.item_name || data.name || data.items_name,
+                    price: Number(form.get('price')),
+                    quantity,
+                }),
+            'Add to round',
+        );
+    }
+    function originalLine(sale, line) {
+        return (sale.items || []).find(
+            (i) => String(i.line_id || i.item_id || i.product_id) === line.line_key,
+        );
+    }
+    function lineAmount(sale, line) {
+        const saved = originalLine(sale, line);
+        if (!saved) return '';
+        return money(
+            Number(saved.unit_price ?? saved.item_base_price ?? saved.item_price ?? 0) * line.quantity,
+        );
+    }
+    function pendingSendReview(afterRecovery) {
+        if (!state.draft?.intent) return false;
+        dialog(P.i18n.t('lang_review_this_round', 'Review this round'),
+            '<p>' + esc(P.i18n.t('lang_submission_resolve_first', 'Resolve the previous submission before sending changes.')) + '</p>',
+            async (_, modal) => {
+                await send();
+                if (state.draft?.intent) return;
+                modal.close();
+                if (afterRecovery) afterRecovery();
+            }, P.i18n.t('lang_retry_saved_send', 'Retry saved send'));
+        return true;
+    }
+    function customer() {
+        if (pendingSendReview(customer)) return;
+        const d = state.draft,
+            s = state.sale,
+            c = d?.customer || { id: s?.customer_id, name: s?.customer_name || '', phone: s?.customer_phone || '' };
+        let selected = c.id ? { ...c } : null;
+        const walkIn = !c.id && (!c.name || /^walk[ -]in customer$/i.test(c.name));
+        let mode = !c.id && !walkIn ? 'new' : 'find';
+        const modal = dialog(
+            'Choose customer',
+            `<div class="kv2-customer-modes" role="group" aria-label="Customer options" data-t-aria-label="lang_customer_options"><button type="button" data-customer-mode="find">${icon('search')}Find customer</button><button type="button" data-customer-mode="new">${icon('guests')}＋ Add new customer</button><button type="button" data-customer-mode="walkin"><lang class="lang_walk_in_customer">Walk-in customer</lang></button></div><div data-customer-panel="find"><label for="kv2-customer-search"><lang class="lang_find_an_existing_customer">Find an existing customer</lang></label><div class="kv2-customer-search">${icon('search')}<input type="search" id="kv2-customer-search" placeholder="Name or mobile number" data-t-placeholder="lang_name_or_mobile_number" autocomplete="off"></div><p class="kv2-customer-help" data-search-status role="status"><lang class="lang_search_by_name_or_mobile_then_select_a_res">Search by name or mobile, then select a result.</lang></p><div class="kv2-customer-results" data-customer-results></div><div class="kv2-customer-selected" data-selected-customer></div></div><div data-customer-panel="new"><h4><lang class="lang_new_customer_details">New customer details</lang></h4><p class="kv2-customer-help"><lang class="lang_add_customer_details_for_this_order">Add customer details for this order.</lang></p><label>Name<input name="name" maxlength="80" value="${esc(walkIn ? '' : c.name)}" autocomplete="name"></label><label>Mobile number <small>(optional)</small><input name="phone" type="tel" maxlength="40" value="${esc(c.phone)}" autocomplete="tel"></label></div><div data-customer-panel="walkin"><h4><lang class="lang_walk_in_customer">Walk-in customer</lang></h4><p><lang class="lang_no_customer_details_needed_for_this_order">No customer details needed for this order.</lang></p></div>`,
+            async (f) => {
+                if (mode === 'find' && !selected) throw new Error('Select a customer from the search results.');
+                const value = mode === 'walkin' ? { name: '', phone: '' } : mode === 'find'
+                    ? { name: selected.name || '', phone: selected.phone || '' }
+                    : { name: String(f.get('name') || '').trim(), phone: String(f.get('phone') || '').trim() };
+                if (mode === 'new' && !value.name) throw new Error('Enter the new customer name.');
+                if (d && !d.saleId) {
+                    if (d.intent) throw new Error('Confirm the saved send first.');
+                    d.customer = { ...value, id: selected?.id };
+                    persist();
+                    render();
+                } else {
+                    if (d?.intent) throw new Error('Confirm the saved send first.');
+                    await api('post', 'sales/orderCustomer', {
+                        saleId: s._id,
+                        branchId: branch(),
+                        seenAt: s.order_revision || s.updated_date || s.created_date,
+                        customerId: selected?.id,
+                        ...value,
+                    });
+                    if (d) {
+                        d.customer = { ...value, id: selected?.id };
+                        persist();
+                    }
+                    await refresh();
+                }
+            },
+        );
+        modal.classList.add('kv2-customer-dialog');
+        modal.querySelector('footer [data-close]').textContent = 'Close';
+        const paintMode = () => {
+            modal.querySelectorAll('[data-customer-panel]').forEach(panel => { panel.hidden = panel.dataset.customerPanel !== mode; });
+            modal.querySelectorAll('[data-customer-mode]').forEach(control => control.setAttribute('aria-pressed', String(control.dataset.customerMode === mode)));
+            const submit = modal.querySelector('[type=submit]');
+            submit.textContent = mode === 'walkin' ? 'Use walk-in customer' : mode === 'new' ? PosnicPro.i18n.t('lang_add_to_order', 'Add to order') : PosnicPro.i18n.t('lang_use_this_customer', 'Use this customer');
+            submit.disabled = mode === 'find' && !selected;
+            modal.querySelector('[data-selected-customer]').textContent = selected ? selected.name + (selected.phone ? ' · ' + selected.phone : '') : '';
+            modal.querySelector('[data-selected-customer]').hidden = !selected;
+        };
+        modal.querySelectorAll('[data-customer-mode]').forEach(control => control.onclick = () => {
+            mode = control.dataset.customerMode;
+            selected = null;
+            modal.querySelector('[role=alert]').textContent = '';
+            paintMode();
+            modal.querySelector(mode === 'find' ? '#kv2-customer-search' : mode === 'new' ? '[name=name]' : '[type=submit]').focus();
+        });
+        paintMode();
+        let customerQuery = 0;
+        $(modal)
+            .find('#kv2-customer-search')
+            .autocomplete({
+                appendTo: modal.querySelector('[data-customer-results]'),
+                minChars: 0,
+                maxHeight: 260,
+                deferRequestBy: 180,
+                lookup: (query, done) => {
+                    const version = ++customerQuery;
+                    api('get', query.trim() ? 'customers/getCustomersAjaxList' : 'customers', query.trim() ? { query, limit: 10 } : { page: 1, limit: 10 })
+                        .then((r) => {
+                            if (!modal.isConnected || version !== customerQuery) return;
+                            const suggestions = (query.trim() ? r.suggestions || [] : r.list || []).slice(0, 10).map(c => ({ ...c, id: c.id || c._id }));
+                            modal.querySelector('[data-search-status]').textContent = suggestions.length ? PosnicPro.i18n.t('lang_select_a_customer_below', 'Select a customer below.') : PosnicPro.i18n.t('lang_no_customers_found_choose_add_new_customer', 'No customers found. Choose Add new customer.');
+                            done({
+                                suggestions: suggestions.map((c) => ({
+                                    value: c.name + ' · ' + (c.phone || ''),
+                                    data: c,
+                                })),
+                            });
+                        })
+                        .catch(() => {
+                            if (!modal.isConnected || version !== customerQuery) return;
+                            modal.querySelector('[data-search-status]').textContent = PosnicPro.i18n.t('lang_could_not_load_customers_try_again', 'Could not load customers - try again.');
+                            done({ suggestions: [] });
+                        });
+                },
+                onSelect: (choice) => {
+                    selected = choice.data;
+                    modal.querySelector('[name=name]').value = selected.name || '';
+                    modal.querySelector('[name=phone]').value = selected.phone || '';
+                    paintMode();
+                },
+                autoSelectFirst: false,
+                triggerSelectOnValidInput: false,
+            });
+        modal.querySelector('#kv2-customer-search').addEventListener('input', () => { customerQuery++; selected = null; paintMode(); });
+        modal.addEventListener('close', () => { customerQuery++; $(modal).find('#kv2-customer-search').autocomplete('dispose'); });
+        if (mode === 'find') $(modal).find('#kv2-customer-search').autocomplete('onValueChange');
+    }
+    async function send() {
+        const d = state.draft;
+        if (!d?.items.length) return;
+        if (!d.intent) {
+            if (d.saleId) {
+                const sale = await api('get', 'sales/' + d.saleId);
+                d.intent = {
+                    url: 'sales/updateOrder',
+                    body: {
+                        ...P.kotWorkspace.editPayload(sale, [
+                            ...sale.items.map((l) => P.kot.editLine(l)),
+                            ...d.items.map(({ name, ...l }) => l),
+                        ]),
+                        request_id: d.key,
+                    },
+                };
+            } else
+                d.intent = {
+                    url: 'sales/qrOrder',
+                    body: {
+                        idempotencyKey: d.key,
+                        branch: branch(),
+                        sale_method: 'Table-Order',
+                        order: d.dineType,
+                        dine_type: d.dineType,
+                        kiosk_table_no: d.table,
+                        kiosk_table_id: d.tableId || '',
+                        person_count: d.guests,
+                        customer_id: d.customer?.id || '',
+                        customer_name: d.customer?.name || '',
+                        customerMobile: d.customer?.phone || '',
+                        payment_status: 'cash',
+                        client: { app: 'desktop-kot-v2' },
+                        items: d.items.map((l) => ({
+                            item_id: l.product_id,
+                            line_id: l.line_id,
+                            item_name: l.name,
+                            item_quantity: l.quantity,
+                            item_price: l.price,
+                            item_description: l.item_description || '',
+                        })),
+                    },
+                };
+            persist();
+        }
+        let result;
+        try {
+            result = await api('post', d.intent.url, d.intent.body);
+        } catch (error) {
+            // Occupancy is rejected before any write. Do not lock a refused new order
+            // as an uncertain send, including drafts restored from older clients.
+            const occupiedTable = !d.saleId && (
+                (String(error.details?.table_number) === String(d.table) && Number(error.details?.open_orders) > 0) ||
+                error.message === `Table ${d.table} already has an open order. Add to it, or settle it first.` ||
+                new RegExp('^Table ' + String(d.table).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' already has [0-9]+ open orders, which is the most this shop allows\\.$').test(error.message)
+            );
+            if (occupiedTable) {
+                delete d.intent;
+                d.key = id();
+                d.tableConflict = error.message;
+                persist();
+                render();
+                notify(error.message);
+                return;
+            }
+            if (d.saleId && error.message === 'order_changed') {
+                // This is an explicit refusal, not an unknown network outcome.
+                // Reconcile accepted line IDs before unlocking the remaining draft.
+                const latest = await api('get', 'sales/' + d.saleId);
+                const accepted = new Set((latest.items || []).map(line => line.line_id));
+                d.items = d.items.filter(line => !accepted.has(line.line_id));
+                delete d.intent;
+                d.key = id();
+                state.sale = latest;
+                persist();
+                render();
+                notify('Latest order loaded. Review the remaining dishes before sending.');
+                return;
+            }
+            // Pricing validation happens before any order write. Unlike a lost response,
+            // this is a confirmed refusal: retain the dishes, but allow corrections.
+            if (['item_price_mismatch', 'invalid_price', 'item_needs_price', 'item_price_too_high', 'invalid_tax_configuration', 'price_context_mismatch', 'item_modifiers_changed'].includes(error.details?.state)) {
+                delete d.intent;
+                d.key = id();
+                persist();
+                render();
+                throw error;
+            }
+            if (!d.saleId) throw error;
+            // Stable line IDs prove the saved addition on a lost response; never send it twice.
+            const latest = await api('get', 'sales/' + d.saleId);
+            if (
+                !d.items.every((line) =>
+                    (latest.items || []).some(
+                        (saved) =>
+                            saved.line_id === line.line_id && Number(saved.item_quantity) === line.quantity,
+                    ),
+                )
+            )
+                throw error;
+        }
+        state.draft = null;
+        persist();
+        state.selected = d.saleId || result?.sale_id || result?.order_id || result?.id || null;
+        render();
+        P.restaurantFeedback?.play('sent');
+        await refresh();
+        if (d.saleId && P.kotPrint) P.kotPrint.afterSave(d.saleId);
+    }
+    async function newOrder(takeaway = false, tableId = '', movingDraft = null) {
+        if (movingDraft && (state.draft !== movingDraft || movingDraft.intent || movingDraft.saleId)) return;
+        if (!movingDraft && resolveDraftBeforeSwitch(() => newOrder(takeaway, tableId))) return;
+        if (!takeaway) {
+            const floor = await api('get', 'captain/v1/tables', { branchId: branch() });
+            state.floor = floor.tables || [];
+        }
+        const free = state.floor.filter((t) => t.status === 'available');
+        const modal = dialog(
+            takeaway ? PosnicPro.i18n.t('lang_new_takeaway', 'New takeaway') : PosnicPro.i18n.t('lang_start_a_table_order', 'Start a table order'),
+            `<div class="kv2-seating-layout">${takeaway ? '' : `<div class="kv2-table-section"><h4>${icon('table')} <lang class="lang_choose_a_table">Choose a table</lang></h4><div class="kv2-choices kv2-seat-grid">${[...state.floor].sort((a, b) => Number(b.status === 'available') - Number(a.status === 'available')).map((t) => `<label class="kv2-seat ${t.status !== 'available' ? 'occupied' : ''}"><input type="radio" name="table" value="${esc(t.id)}" ${tableId === t.id && t.status === 'available' ? 'checked' : ''} ${t.status !== 'available' ? 'disabled' : ''}>${icon('table')}<strong>${esc(t.tableorder_value)}</strong><small>${esc(t.status)}</small></label>`).join('')}</div><label>Other table number<input name="custom" maxlength="30" placeholder="For example, Garden 2" data-t-placeholder="lang_for_example_garden_2"></label></div>`}<div class="kv2-guest-section"><h4>${icon('guests')} <lang class="lang_kot_workspace_covers">Number of guests</lang></h4>${takeaway ? '' : `<div class="kv2-choices kv2-guest-grid">${[1, 2, 3, 4, 5, 6, 8, 10].map((n) => `<button type="button" data-guests="${n}" aria-pressed="${n === 2}" class="${n === 2 ? 'primary' : ''}">${icon('guests')}<strong>${n}</strong></button>`).join('')}</div>`}<label>${takeaway ? PosnicPro.i18n.t('lang_guests_optional', 'Guests (optional)') : PosnicPro.i18n.t('lang_guest_count', 'Guest count')}<input name="guests" inputmode="numeric" type="number" value="${takeaway ? 0 : 2}" min="${takeaway ? 0 : 1}" max="1000" required></label></div></div>`,
+
+            async (form) => {
+                let t = free.find((t) => t.id === form.get('table'));
+                const
+                    custom = String(form.get('custom') || '').trim();
+                if (!takeaway && !t && !custom) throw new Error('Choose a table or enter its number.');
+                if (custom.toUpperCase() === 'TA') throw new Error('Use Takeaway for an order to go.');
+                if (!takeaway) {
+                    const floor = await api('get', 'captain/v1/tables', { branchId: branch() });
+                    state.floor = floor.tables || [];
+                    const name = custom || t?.tableorder_value;
+                    const current = state.floor.find(row => custom
+                        ? String(row.tableorder_value).trim().toLowerCase() === custom.toLowerCase()
+                        : String(row.id) === String(t?.id));
+                    if ((current && current.status !== 'available') || (!custom && !current))
+                        throw new Error(`Table ${name} is no longer available. Choose another table.`);
+                    if (custom && !current) {
+                        const orders = await api('get', 'sales', { page: 1, limit: 1, filters: JSON.stringify({
+                            table_number: custom, sale_process: 'KOT',
+                            payment_status: { $nin: ['Paid', 'Cancelled'] },
+                            order_state: { $nin: ['rejected', 'cancelled'] },
+                        }) });
+                        if (orders.list?.some(order => String(order.table_number).trim().toLowerCase() === custom.toLowerCase()))
+                            throw new Error(`Table ${name} already has an open order. Choose another table.`);
+                    }
+                    t = current || (custom ? null : t);
+                }
+                if (movingDraft && (state.draft !== movingDraft || movingDraft.intent))
+                    throw new Error('The draft changed. Close this window and try again.');
+                state.sale = null;
+                state.selected = null;
+                const seating = {
+                    saleId: null,
+                    table: custom || t?.tableorder_value || '',
+                    tableId: t?.id || '',
+                    guests: Number(form.get('guests')),
+                    dineType: takeaway ? 'Take away' : 'Dine-in',
+                };
+                if (movingDraft) {
+                    Object.assign(movingDraft, seating, { key: id() });
+                    delete movingDraft.tableConflict;
+                    persist();
+                    render();
+                } else startDraft(seating);
+            },
+            'Choose dishes',
+            movingDraft || null,
+        );
+        modal.classList.add('kv2-seating-dialog');
+        if (movingDraft) {
+            modal.querySelector('h3').textContent = 'Change table';
+            modal.querySelector('[name=guests]').value = movingDraft.guests || 2;
+        }
+        modal.addEventListener('click', (e) => {
+            const b = e.target.closest('[data-guests]');
+            if (b) {
+                modal.querySelector('[name=guests]').value = b.dataset.guests;
+                modal
+                    .querySelectorAll('[data-guests]')
+                    .forEach((v) => { v.classList.toggle('primary', v === b); v.setAttribute('aria-pressed', String(v === b)); });
+            }
+        });
+        modal.querySelector('[name=guests]').addEventListener('input', (e) => {
+            modal.querySelectorAll('[data-guests]').forEach((v) => { const on = Number(v.dataset.guests) === Number(e.target.value); v.classList.toggle('primary', on); v.setAttribute('aria-pressed', String(on)); });
+        });
+        modal
+            .querySelector('[name=custom]')
+            ?.addEventListener('input', () =>
+                modal.querySelectorAll('[name=table]').forEach((v) => (v.checked = false)),
+            );
+        modal
+            .querySelectorAll('[name=table]')
+            .forEach((v) =>
+                v.addEventListener('change', () => (modal.querySelector('[name=custom]').value = '')),
+            );
+        return modal;
+    }
+    function editLine(lineId) {
+        const sale = state.sale,
+            line = sale.restaurant_details.rounds.flatMap((r) => r.items).find((l) => l.id === lineId),
+            original = originalLine(sale, line);
+        if (!original) throw new Error('Refresh the order before editing.');
+        dialog(
+            'Edit ' + line.name,
+            `<label>Quantity for this round<input name="qty" type="number" min="${line.served}" step="1" required value="${line.quantity}"></label><label>Kitchen note<textarea name="note" maxlength="500">${esc(line.note)}</textarea></label>${templates(['No onion', 'Less spicy', 'Less oil'], 'note')}<label>Reason for reducing or removing<textarea name="reason" maxlength="200"></textarea></label>`,
+            async (f) => {
+                const qty = Number(f.get('qty')),
+                    note = String(f.get('note'));
+                if (qty > line.quantity) {
+                    addLine({
+                        ...P.kot.editLine(original, qty - line.quantity),
+                        name: line.name,
+                        item_description: note,
+                    });
+                    return;
+                }
+                if (qty < line.quantity && !String(f.get('reason')).trim())
+                    throw new Error('Enter a reason for reducing the quantity.');
+                // Older clients share one bill line across multiple kitchen rounds.
+                // Their reduction contract removes the newest outstanding portion first.
+                const shared = sale.restaurant_details.rounds
+                    .flatMap((r) => r.items)
+                    .filter((l) => l.line_key === line.line_key && l.quantity > 0);
+                if (qty < line.quantity && shared.length > 1 && shared[shared.length - 1].id !== line.id)
+                    throw new Error(
+                        'This dish was ordered in several rounds. Reduce its latest round first.',
+                    );
+                const items = sale.items
+                    .map((i) => {
+                        const edit = P.kot.editLine(i);
+                        if (i === original) {
+                            edit.quantity = Number(i.item_quantity) - (line.quantity - qty);
+                            edit.item_description = note;
+                        }
+                        return edit;
+                    })
+                    .filter((l) => l.quantity > 0);
+                if (!items.length) throw new Error('Use Cancel order to remove the entire order.');
+                await api('post', 'sales/updateOrder', {
+                    ...P.kotWorkspace.editPayload(sale, items),
+                    change_reason: f.get('reason'),
+                });
+                await refresh();
+            },
+            'Save changes',
+        );
+    }
+    function taxBreakdown(sale) {
+        const groups = new Map();
+        for (const line of sale.items || []) {
+            const amount = Number(line.tax_amount ?? line.item_tax ?? 0);
+            if (!Number.isFinite(amount) || !amount) continue;
+            const rate = Number(line.tax_rate ?? line.tax ?? line.item_tax_rate);
+            const fields = (Array.isArray(line.tax_fields) ? line.tax_fields : []).map(t => ({name:String(t.tax_name || ''),rate:Number(t.tax_value ?? t.tax)})).filter(t => t.name && Number.isFinite(t.rate) && t.rate > 0);
+            const totalRate = fields.reduce((sum, t) => sum + t.rate, 0);
+            if (fields.length > 1 && Number.isFinite(rate) && Math.abs(totalRate - rate) < .001) {
+                let allocated = 0;
+                fields.forEach((t, i) => {
+                    const part = i === fields.length - 1 ? amount - allocated : Math.round(amount * t.rate / totalRate * 100) / 100;
+                    allocated += part;
+                    const label = t.name + ' (' + t.rate + '%)';
+                    groups.set(label, (groups.get(label) || 0) + part);
+                });
+                continue;
+            }
+            const name = String(line.tax_name || 'Tax') + (Number.isFinite(rate) && rate > 0 ? ' (' + rate + '%)' : '');
+            groups.set(name, (groups.get(name) || 0) + amount);
+        }
+        for (const charge of sale.charges || []) {
+            if (Number(charge.tax_amount) > 0) {
+                const name = String(charge.tax_name || 'Tax') + ' · ' + charge.name;
+                groups.set(name, (groups.get(name) || 0) + Number(charge.tax_amount));
+            }
+        }
+        return [...groups].map(([name, amount]) => `<p class="kv2-tax-detail"><span>${esc(name)}</span><b>${esc(money(amount))}</b></p>`).join('');
+    }
+    async function charges() {
+        const sale = state.sale;
+        let enabled = false;
+        try { enabled = JSON.parse(P.local.get('general_settings') || '{}').custom_charges_enable === true; } catch (_) {}
+        if (!enabled && !(sale.charges || []).length) throw new Error('Enable Custom charges in Settings to add charges to this bill.');
+        if (sale.captain_transfer_allocation) throw new Error('Additional charges cannot be changed on a transferred bill.');
+        const list = (sale.charges || []).filter(c => c.source !== 'outlet').map(c => ({...c}));
+        const taxes = await api('get', 'setting/getTaxAjaxList', {query: ''});
+        const defaultTax = (taxes.suggestions || []).find(t => String(t.tax_id) === String(P.local.get('default_tax_id')));
+        const rate = Number(defaultTax?.tax_value) || 0;
+        const row = (charge = {}) => `<div class="kv2-charge-row"><label>Charge name<input name="charge-name" maxlength="60" required value="${esc(charge.name || '')}"></label><label>Amount<input name="charge-amount" type="number" min="0.01" step="0.01" required value="${esc(charge.amount || '')}"></label><label>Tax<select name="charge-tax"><option value="no" data-t="lang_no_tax">No tax</option>${rate > 0 || charge.taxed ? `<option value="yes" ${charge.taxed ? 'selected' : ''}>${esc(defaultTax?.tax_name || charge.tax_name || 'Tax')}${rate > 0 ? ' (' + rate + '%)' : ''}</option>` : ''}</select></label><button type="button" data-remove-charge><lang class="lang_remove">Remove</lang></button></div>`;
+        const d = dialog('Additional charges', `<div class="kv2-charge-list">${list.map(row).join('')}</div><button type="button" data-add-charge><lang class="lang_add_charge">Add charge</lang></button>`, async (_, modal) => {
+            const values = [...modal.querySelectorAll('.kv2-charge-row')].map(el => {
+                const name = el.querySelector('[name=charge-name]').value.trim();
+                const amount = Number(el.querySelector('[name=charge-amount]').value);
+                const taxed = el.querySelector('[name=charge-tax]').value === 'yes';
+                const previous = list.find(c => c.name === name && Number(c.amount) === amount && c.taxed === taxed);
+                if (previous) return previous;
+                if (taxed && !rate) throw new Error('Configure a default tax before taxing additional charges.');
+                return {name,amount,taxed,tax_name:taxed ? defaultTax.tax_name : '',tax_amount:taxed ? Math.round(amount * rate) / 100 : 0,source:'manual'};
+            });
+            await api('post', 'sales/updateOrder', {...P.kotWorkspace.editPayload(sale, sale.items.map(l => P.kot.editLine(l))),charges:values});
+            await refresh();
+        }, 'Save', sale);
+        const add = () => {
+            if (d.querySelectorAll('.kv2-charge-row').length >= 20) return;
+            d.querySelector('.kv2-charge-list').insertAdjacentHTML('beforeend', row());
+            d.querySelector('.kv2-charge-row:last-child input').focus();
+        };
+        d.querySelector('footer [data-close]').textContent = P.i18n.t('lang_close_title', 'Close');
+        d.querySelector('[data-add-charge]').onclick = add;
+        d.addEventListener('click', e => e.target.closest('[data-remove-charge]')?.closest('.kv2-charge-row')?.remove());
+        if (!list.length) add();
+    }
+    function discount() {
+        const s = state.sale;
+        const discountType = Number(s.extra_discount) > 0 ? (s.extra_discount_type || 'amount') : 'percent';
+        dialog(
+            'Discount',
+            `<label>Type<select name="type"><option value="percent" data-t="lang_percentages" ${discountType === 'percent' ? 'selected' : ''}>Percentage</option><option value="amount" data-t="lang_amount_title" ${discountType === 'amount' ? 'selected' : ''}>Amount</option></select></label><label>Discount<input name="amount" type="number" min="0" step="0.01" required value="${esc(s.extra_discount || 0)}"></label><label>Reason<textarea name="reason" maxlength="200" required>${esc(s.discount_description || '')}</textarea></label>` +
+                templates(['Manager approved', 'Customer loyalty', 'Service delay'], 'reason'),
+            async (f) => {
+                if (f.get('type') === 'percent' && Number(f.get('amount')) > 100)
+                    throw new Error('Percentage cannot exceed 100.');
+                await api('post', 'sales/updateOrder', {
+                    ...P.kotWorkspace.editPayload(
+                        s,
+                        s.items.map((l) => P.kot.editLine(l)),
+                    ),
+                    extra_discount_type: f.get('type'),
+                    extra_discount: Number(f.get('amount')),
+                    discount_description: f.get('reason'),
+                });
+                await refresh();
+            },
+        );
+    }
+    async function offmenu() {
+        if (pendingSendReview()) return;
+        if (!state.draft && !state.sale) throw new Error('Start a table or takeaway order first.');
+        const tax = await api('get', 'items/instantItemTax');
+        dialog(
+            'Item not on menu',
+            '<label>Item name<input name="name" maxlength="100" required></label><label>Price<input name="price" type="number" min="0.01" step="0.01" required></label><p>' +
+                esc(tax?.rate ? tax.name + ' · ' + tax.rate + '% tax added to price' : 'No default tax') +
+                '</p><label>Quantity<input name="qty" type="number" min="1" value="1" required></label>',
+            async (form) => {
+                const made = await api('post', 'items/instanceItemInsert', {
+                    items_name: form.get('name'),
+                    items_selling_price: Number(form.get('price')),
+                    items_quantity: 1,
+                    quick_sale_default_tax: true,
+                    quick_sale_tax: tax,
+                    items_unit: 'qty',
+                });
+                addLine({
+                    product_id: made.id || made._id,
+                    name: form.get('name'),
+                    price: Number(made.selling_price ?? form.get('price')),
+                    quantity: Number(form.get('qty')),
+                });
+            },
+            'Add to round',
+        );
+    }
+    async function serveFeedback(control, action) {
+        const label = control.innerHTML;
+        control.classList.remove('kv2-serve-saved');
+        control.closest('.kv2-line')?.classList.remove('kv2-served-row');
+        control.disabled = true;
+        control.setAttribute('aria-busy', 'true');
+        control.classList.add('kv2-serving');
+        control.textContent = PosnicPro.i18n.t('lang_loading_3', 'Loading…');
+        try {
+            await action();
+            P.restaurantFeedback?.play('served');
+            const updated = Array.from(root().querySelectorAll('[data-action]')).find((el) =>
+                el.dataset.action === control.dataset.action && el.dataset.line === control.dataset.line);
+            if (updated) {
+                updated.classList.add('kv2-serve-saved');
+                updated.closest('.kv2-line')?.classList.add('kv2-served-row');
+                setTimeout(() => {
+                    updated.classList.remove('kv2-serve-saved');
+                    updated.closest('.kv2-line')?.classList.remove('kv2-served-row');
+                }, 1600);
+            }
+        } finally {
+            if (control.isConnected) {
+                control.innerHTML = label;
+                control.disabled = false;
+                control.removeAttribute('aria-busy');
+                control.classList.remove('kv2-serving');
+            }
+        }
+    }
+    async function serve(lineId) {
+        const s = state.sale,
+            l = s.restaurant_details.rounds.flatMap((r) => r.items).find((l) => l.id === lineId);
+        if (!l || l.remaining <= 0) return;
+        await api('post', l.held ? 'sales/fireKitchenItems' : 'sales/serveKitchenItems', {
+            saleId: s._id,
+            branchId: branch(),
+            requestId: id(),
+            items: l.held ? [l.id] : [{ id: l.id, quantity: Math.min(l.quantity, l.served + 1) }],
+        });
+        await refresh();
+    }
+    async function onClick(e) {
+        const b = e.target.closest('[data-action]');
+        if (!b || b.disabled || b.getAttribute('aria-busy') === 'true') return;
+        await run(async () => {
+            const a = b.dataset.action,
+                s = state.sale;
+            if (['discard', 'qty', 'removeDraft', 'draftNote'].includes(a) && pendingSendReview()) return;
+            if (a === 'expand') {
+                state.expanded = !state.expanded;
+                render();
+            } else if (a === 'filter') {
+                state.filter = b.dataset.value;
+                render();
+            } else if (a === 'refresh') await refreshFromButton();
+            else if (a === 'table') {
+                const t = state.floor.find((t) => t.id === b.dataset.table);
+                const ids = t?.orders?.map((o) => String(o.id)) || [];
+                if (ids.length > 1) {
+                    const modal = dialog(
+                        'Choose an order',
+                        '<div class="kv2-choices">' +
+                            state.sales
+                                .filter((v) => ids.includes(String(v._id)))
+                                .map((v) =>
+                                    button(
+                                        v.sales_id + ' · ' + money(v.sales_total),
+                                        'selectOrder',
+                                        `data-sale="${esc(v._id)}"`,
+                                    ),
+                                )
+                                .join('') +
+                            '</div>',
+                        () => {},
+                        'Close',
+                    );
+                    modal.querySelector('section').onclick = (ev) => {
+                        const control = ev.target.closest('[data-sale]');
+                        if (control) {
+                            modal.close();
+                            run(() => select(control.dataset.sale));
+                        }
+                    };
+                } else if (b.dataset.sale) await select(b.dataset.sale);
+                else await newOrder(false, b.dataset.table);
+            } else if (a === 'category') {
+                state.category = b.dataset.category; state.catalogue = []; state.catalogueLoaded = false; render();
+            } else if (a === 'pick') {
+                const item = state.catalogue[Number(b.dataset.index)];
+                chooseProduct(item);
+            } else if (a === 'new') await newOrder();
+            else if (a === 'takeaway') await newOrder(true);
+            else if (a === 'changeDraftTable') await newOrder(false, '', state.draft);
+            else if (a === 'add') startDraft();
+            else if (a === 'offmenu') await offmenu();
+            else if (a === 'send') await send();
+            else if (a === 'rebase') {
+                const d = state.draft;
+                if (!d.saleId) { pendingSendReview(); return; }
+                const latest = await api('get', 'sales/' + d.saleId);
+                const accepted = new Set((latest.items || []).map((l) => l.line_id));
+                d.items = d.items.filter((l) => !accepted.has(l.line_id));
+                delete d.intent;
+                state.sale = latest;
+                persist();
+                render();
+                notify('Latest order loaded. Review the remaining dishes before sending.');
+            } else if (a === 'discard') {
+                if (state.draft.intent)
+                    throw new Error(
+                        'Retry the saved send before discarding; it may already have reached the kitchen.',
+                    );
+                state.draft = null;
+                persist();
+                render();
+            } else if (a === 'removeDraft') {
+                if (state.draft.intent) throw new Error('Retry the saved send first.');
+                state.draft.items.splice(Number(b.dataset.index), 1);
+                persist();
+                render();
+                P.restaurantFeedback?.play('reduce');
+            } else if (a === 'qty') {
+                if (state.draft.intent) throw new Error('Retry the saved send first.');
+                const l = state.draft.items[b.dataset.index];
+                l.quantity += Number(b.dataset.delta);
+                if (l.quantity <= 0) state.draft.items.splice(Number(b.dataset.index), 1);
+                persist();
+                render();
+                P.restaurantFeedback?.play(Number(b.dataset.delta) > 0 ? 'add' : 'reduce');
+            } else if (a === 'draftNote') {
+                if (state.draft.intent) throw new Error('Confirm the saved send first.');
+                const l = state.draft.items[b.dataset.index];
+                dialog(
+                    'Kitchen note',
+                    `<label>Note<textarea name="note" maxlength="500">${esc(l.item_description || '')}</textarea></label>${templates(['No onion', 'Less spicy', 'Less oil', 'No ice'], 'note')}`,
+                    (form) => {
+                        l.item_description = form.get('note');
+                        persist();
+                        render();
+                    },
+                );
+            } else if (a === 'tab') {
+                state.tab = b.dataset.value;
+                render();
+            } else if (a === 'pending') {
+                state.pending = !state.pending;
+                render();
+            } else if (a === 'again') {
+                const l = s.restaurant_details.rounds
+                        .flatMap((r) => r.items)
+                        .find((l) => l.id === b.dataset.line),
+                    original = originalLine(s, l);
+                if (!original) throw new Error('Refresh the order before adding again.');
+                dialog(
+                    'Add again · ' + l.name,
+                    '<label>Additional quantity<input name="qty" type="number" min="1" value="1" required></label>',
+                    (f) => addLine({ ...P.kot.editLine(original, Number(f.get('qty'))), name: l.name }),
+                    'Add to round',
+                );
+            } else if (a === 'serve') await serveFeedback(b, () => serve(b.dataset.line));
+            else if (a === 'serveAll') {
+                const lines = s.restaurant_details.rounds
+                    .flatMap((r) => r.items)
+                    .filter((l) => !l.held && l.remaining > 0);
+                if (lines.length) {
+                    await serveFeedback(b, async () => {
+                        await api('post', 'sales/serveKitchenItems', {
+                            saleId: s._id,
+                            branchId: branch(),
+                            requestId: id(),
+                            items: lines.map((l) => ({ id: l.id, quantity: l.quantity })),
+                    });
+                    await refresh();
+                    });
+                }
+            } else if (a === 'editLine') editLine(b.dataset.line);
+            else if (a === 'customer') customer();
+            else if (a === 'notes') await P.kotWorkspace.notes(s._id);
+            else if (a === 'move' || a === 'merge') await P.kotWorkspace.move(s._id, a === 'merge');
+            else if (a === 'transfer') await P.kotWorkspace.transfer(s._id);
+            else if (a === 'discount') discount();
+            else if (a === 'charges') await charges();
+            else if (a === 'printBill') P.kot.printKOTReceipt(s._id);
+            else if (a === 'printKOT') P.kot.printKOTSlip(s._id);
+            else if (a === 'pay') {
+                if (!window.CaptainPayments)
+                    throw new Error('Payment screen is unavailable. Reload the app.');
+                await CaptainPayments.open(paymentTable(s), branch());
+            } else if (a === 'actions') {
+                const existing = document.getElementById('kv2-actions-menu');
+                if (existing) { existing.close(); return; }
+                const d = document.createElement('div');
+                d.id = 'kv2-actions-menu';
+                d.className = 'kv2-actions-menu';
+                d.setAttribute('popover', 'auto');
+                d.innerHTML = '<section aria-label="Actions" data-t-aria-label="lang_action_title">' +
+                    '<strong class="kv2-action-context">' + esc(s.dine_type === 'Take away' ? P.i18n.t('lang_takeaway', 'Takeaway') : P.i18n.t('lang_table', 'Table') + ' ' + s.table_number) + '</strong>' + button('Order details', 'details') + button('Guests', 'guests') +
+                    button('Hand over', 'handover') + button('Transfer items', 'transfer') +
+                    button('Cancel order', 'cancel', 'class="kv2-danger"') + '</section>';
+                b.setAttribute('aria-expanded', 'true');
+                d.close = () => { b.setAttribute('aria-expanded', 'false'); d.remove(); };
+                document.body.append(d);
+                const rect = b.getBoundingClientRect();
+                d.style.left = Math.max(8, Math.min(innerWidth - 248, rect.right - 240)) + 'px';
+                d.style.top = Math.max(8, Math.min(innerHeight - 270, rect.bottom + 8)) + 'px';
+                if (d.showPopover) d.showPopover();
+                d.addEventListener('toggle', ev => { if (ev.newState === 'closed') d.close(); });
+                d.addEventListener('keydown', ev => {
+                    const items = Array.from(d.querySelectorAll('button'));
+                    const index = items.indexOf(document.activeElement);
+                    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+                        ev.preventDefault(); items[(index + (ev.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length].focus();
+                    } else if (ev.key === 'Escape') { d.close(); b.focus(); }
+                });
+                d.querySelector('button').focus();
+                d.querySelector('section').onclick = (ev) => {
+                    const v = ev.target.closest('button');
+                    if (!v) return;
+                    d.close();
+                    run(async () => {
+                        if (v.dataset.action === 'details') await P.kotWorkspace.notes(s._id);
+                        else if (v.dataset.action === 'guests') await P.kotWorkspace.covers(s._id);
+                        else if (v.dataset.action === 'handover') await P.kotWorkspace.handover(s._id);
+                        else if (v.dataset.action === 'split') await P.kotWorkspace.split(paymentTable(s));
+                        else
+                            dialog(
+                                'Cancel order',
+                                '<label>Reason<textarea name="reason" maxlength="200" required></textarea></label>' +
+                                    templates(
+                                        [
+                                            'Customer changed their mind',
+                                            'Item unavailable',
+                                            'Duplicate order',
+                                        ],
+                                        'reason',
+                                    ),
+                                async (f, modal) => {
+                                    await api('post', 'sales/updateOrder', {
+                                        ...P.kotWorkspace.editPayload(
+                                            s,
+                                            s.items.map((l) => P.kot.editLine(l)),
+                                        ),
+                                        status: 'cancelled',
+                                        change_reason: f.get('reason'),
+                                    });
+                                    modal.close();
+                                    P.restaurantFeedback?.play('cancelled');
+                                    await refresh();
+                                },
+                                'Cancel order',
+                            );
+                    });
+                };
+            }
+        });
+    }
+    P.kot_v2 = {
+        showDataTablePage: open,
+        showAdd: open,
+        showDetails: (saleId) => open(saleId),
+        refresh,
+        state,
+    };
+    window.addEventListener('captain:payment-recorded', (event) => {
+        if (root()?.offsetParent) {
+            event.preventDefault();
+            const paidTable = state.sale
+                ? state.sale.dine_type === 'Take away' ? 'Takeaway ' + (state.sale.takeaway_number || state.sale.token_id || '') : 'Table ' + state.sale.table_number
+                : '';
+            state.paymentMethod = event.detail?.method || '';
+            state.paymentMessage = (paidTable ? paidTable + ' · ' : '') + (event.detail?.message || 'Payment recorded');
+            state.selected = null;
+            state.sale = null;
+            state.expanded = false;
+            render();
+            P.alert('success', event.detail?.message || 'Payment recorded');
+            P.restaurantFeedback?.play('payment');
+            run(refresh);
+        }
+    });
+    window.addEventListener('hashchange', () => {
+        state.generation++;
+    });
+    document.addEventListener('keydown', (e) => {
+        if (!root()?.offsetParent || document.querySelector('dialog[open]')) return;
+        if (e.key === 'F2') {
+            e.preventDefault();
+            if (!state.draft) startDraft();
+            $('#kv2-search').trigger('focus');
+        }
+        if (e.ctrlKey && e.key === 'Enter' && state.draft) {
+            e.preventDefault();
+            run(send);
+        }
+    });
+})();

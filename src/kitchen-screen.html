@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kitchen screen</title>
+<!--
+  THE SCREEN ON THE END OF THE CABLE.
+
+  Read at a distance, by somebody moving, often glancing sideways, through
+  steam, with a knife in hand. Every decision here follows from that:
+
+    - Light text on a dark ground. Kitchens are lit brightly from above, and
+      dark-on-light throws glare straight back at the cook. It also draws less
+      attention in peripheral vision when nothing has changed.
+    - No interaction. Nothing to click, nothing to scroll. A screen a cook has
+      to touch with wet hands is a screen they stop using.
+    - Age is carried by POSITION, SIZE and SHAPE as well as colour. Roughly one
+      man in twelve cannot separate red from green reliably, and this is
+      exactly the audience.
+    - Every size comes from the configuration, not from this stylesheet. The
+      shop says how far away the cook stands and how big the panel is; the
+      arithmetic in kitchen-screen-fit.js says what the font must be. See that
+      file for why doubling the distance quarters what fits.
+-->
+<style>
+  :root {
+    /* Overwritten at run time from the fit calculation. These are only what
+       gets painted in the instant before the configuration is read. */
+    --font: 42px;
+    --line: 53px;
+    --gap: 18px;
+    --safe: 3%;
+
+    --ground: #000000;
+    --card: #1b1d22;
+    --ink: #ffffff;
+    --muted: #cbd5e1;
+    --rule: #2c3038;
+
+    /* Age. Deliberately not red/green: amber to red, and each step also
+       changes the border weight and the bar, so hue is never the only signal. */
+    --calm: #4b5563;
+    --warm: #d98324;
+    --late: #e5484d;
+  }
+
+  [data-theme="light"] {
+    --ground: #f7f8fa;
+    --card: #ffffff;
+    --ink: #14171a;
+    --muted: #5b6570;
+    --rule: #dfe3e8;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: var(--font);
+    line-height: 1.25;
+    overflow: hidden;
+    /* Nothing here is selectable or draggable. It is a sign, not a document. */
+    user-select: none;
+    cursor: none;
+  }
+
+  /* Televisions crop 2 to 5 percent of every edge, so a card at the edge loses
+     its border and the bottom row loses its last line. */
+  #screen {
+    height: 100%;
+    padding: var(--safe);
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    row-gap: 6px;
+    justify-content: space-between;
+    gap: 18px;
+    padding-bottom: calc(var(--gap) / 2);
+    border-bottom: 2px solid var(--rule);
+    color: var(--muted);
+    font-size: calc(var(--font) * 0.55);
+  }
+
+  #count { color: var(--ink); font-weight: 700; }
+
+  #board {
+    flex: 1;
+    display: grid;
+    gap: var(--gap);
+    grid-template-columns: repeat(var(--columns, 4), minmax(0, 1fr));
+    align-content: start;
+    padding-top: var(--gap);
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  #board { position:relative; }
+  #board.packed { display:block; }
+
+  .ticket {
+    background: var(--card);
+    border-left: calc(var(--font) * 0.18) solid var(--calm);
+    border-radius: calc(var(--font) * 0.12);
+    padding: calc(var(--gap) * 0.7);
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--gap) * 0.25);
+    overflow: hidden;
+  }
+
+  .ticket.details-card { display:flex;flex-direction:column;gap:12px; }
+  .ticket-meta { min-width:0;display:flex;flex-direction:column;gap:8px;flex-shrink:0; }
+  .ticket-meta .top { flex-direction:column;align-items:center;gap:5px;border-top:1px dashed var(--rule);border-bottom:1px dashed var(--rule);padding:.2em 0;text-align:center; }
+  .ticket-meta > .table { text-align:center;border-top:1px dashed var(--rule);border-bottom:1px dashed var(--rule);padding:.2em 0; }
+  .ticket-meta .note { margin:0;padding:0;font-size:.52em;overflow-wrap:anywhere; }
+  .ticket-meta .item-progress,.ticket-meta .cancellation-label { font-size:.52em;overflow-wrap:anywhere; }
+  .ticket-body { min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden; }
+  .details-card .qty { min-width:0;white-space:nowrap; }
+  .details-card .note { overflow-wrap:anywhere; }
+
+  /* Warm and late also thicken the rule and fill the bar, so the state reads
+     without colour vision. */
+  .ticket.calm { border-left-color:#4ade80; }
+  .ticket.warm { border-left-color: var(--warm); border-left-width: calc(var(--font) * 0.26); }
+  .ticket.late { border-left-color: var(--late); border-left-width: calc(var(--font) * 0.34); }
+  /* Old active tickets still need to be read across the kitchen. */
+  .ticket.grey { opacity: 1; }
+  .ticket.urgent { border-left: calc(var(--font) * 0.34) solid var(--late); }
+  .ticket.urgent .age { color: var(--late); font-weight: 800; }
+  .ticket.urgent .bar > i { background: var(--late); }
+  .delay-label { font-size: .55em; font-weight: 800; color: var(--warm); }
+  .late .delay-label, .urgent .delay-label { color: var(--late); }
+  .urgent .delay-label.pulse { animation: urgency-pulse 2s ease-in-out infinite; }
+  @keyframes urgency-pulse { 50% { opacity: .65; } }
+  @media (prefers-reduced-motion: reduce) { .urgent .delay-label.pulse { animation: none; } }
+  .ticket.table-only { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; min-height:0; border:4px solid #4ade80; background:#14532d; color:#fff; }
+  .ticket.table-only.warm { border-color:#fb923c; background:#7c2d12; }
+  .ticket.table-only.late, .ticket.table-only.urgent { border-color:#f87171; background:#7f1d1d; }
+  .table-icon { width:1.6em; height:1.6em; flex-shrink:0; }
+  .table-only .table { text-align:center; max-width:100%; }
+  .ticket.urgent.pulse { animation:table-alert 2s ease-in-out infinite; }
+  @keyframes table-alert { 50% { box-shadow:inset 0 0 0 5px #fca5a5; } }
+  @media (prefers-reduced-motion:reduce) { .ticket.urgent.pulse { animation:none; } }
+  .top { flex-wrap: wrap; }
+  .table { overflow-wrap: anywhere; min-width: 0; }
+
+
+  .top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--gap); }
+
+  /* The table number is the thing being matched, so it is the biggest thing
+     on the card. A cook finds the ticket by table, not by dish. */
+  .table { font-size: calc(var(--font) * 1.2); font-weight: 800; letter-spacing: -0.01em; }
+
+  .age { font-size: calc(var(--font) * 0.78); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ticket.warm .age { color: var(--warm); font-weight: 700; }
+  .ticket.late .age { color: var(--late); font-weight: 800; }
+
+  .bar { height: calc(var(--font) * 0.14); background: var(--rule); border-radius: 99px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--calm); }
+  .ticket.warm .bar > i { background: var(--warm); }
+  .ticket.late .bar > i { background: var(--late); }
+
+  .items { display: flex; flex-direction: column; gap: calc(var(--gap) * 0.15); min-height: 0; overflow-y: auto; }
+  .items > * { flex-shrink: 0; }
+  .cancelled-section { border-top: 2px solid #ff737b; padding-top: .3em; margin-top: .3em; }
+  .cancelled-section .item { text-decoration: line-through; text-decoration-thickness: 3px; color: #ffb4b9; }
+  .round-arrival { color: var(--muted); font-size: .55em; border-top: 1px solid var(--rule); padding-top: .4em; }
+  .preparation-amount { font-weight: 800; color: inherit; }
+  .item { display: flex; gap: calc(var(--gap) * 0.5); align-items: baseline; }
+  .qty { font-weight: 800; min-width: 2.1em; font-variant-numeric: tabular-nums; }
+  .name { flex: 1; overflow-wrap: anywhere; font-weight: 700; }
+  .name { min-width: 0; }
+  .ticket { min-width: 0; }
+  .item-progress { display: flex; flex-wrap: wrap; gap: .35em; margin: .15em 0 .45em; font-size: .6em; font-weight: 750; }
+  .item-progress span { padding: .15em .45em; border-radius: .3em; }
+  .item > .name > .item-progress { display:inline-flex;vertical-align:middle;margin:0 0 0 .4em;gap:.25em; }
+  .item > .name > .item-progress span { white-space:nowrap;padding:.08em .3em; }
+  #status-key { font-size:.85em;display:flex;gap:.7em;flex-wrap:wrap; }
+  #status-key[hidden] { display:none; }
+  #status-key span { white-space:nowrap; }
+  .progress-cooking { color: #fff; background: #374151; }
+  .progress-ready { color: #d8ffe7; background: #14532d; }
+  .progress-picked { color: #dceeff; background: #173b65; }
+  .item.line-ready { color: #b3ffd0; }
+  .item.line-picked { color: #b9dcff; }
+  .ticket.ready-state { border-left-color: #4ade80; }
+  .ticket.ready-state .age { color: #b3ffd0; }
+  .ticket.ready-state .bar > i { background: #4ade80; }
+  .ticket.cancelled { border-color: #ff737b; background: #321418; color: #fff; }
+  .ticket.cancelled .item { text-decoration: line-through; text-decoration-thickness: 3px; }
+  .cancellation-label { color: #ffb4b9; font-weight: 800; font-size: .7em; }
+  .ticket.cancel-pulse { animation: cancel-pulse 2s ease-in-out infinite; }
+  @keyframes cancel-pulse { 50% { box-shadow: inset 0 0 0 4px #ff737b; } }
+  @media (prefers-reduced-motion: reduce) { .ticket.cancel-pulse { animation: none; } }
+  html[data-glow="true"]:not([data-theme="light"]) .name,
+  html[data-glow="true"]:not([data-theme="light"]) .qty,
+  html[data-glow="true"]:not([data-theme="light"]) .table {
+    text-shadow: 0 0 2px rgba(255,255,255,.35);
+  }
+
+  /* A note is the line that costs money when missed. Never dimmed, never
+     dropped when space runs short. */
+  .ordered-by { font-size: .55em; color: #cbd5e1; margin: .25em 0 .45em; overflow-wrap: anywhere; }
+  .note {
+    color: var(--warm);
+    font-size: calc(var(--font) * 0.8);
+    font-weight: 700;
+    padding-left: 2.6em;
+  }
+
+  .more { color: var(--muted); font-size: calc(var(--font) * 0.75); }
+
+  .ticket.compact .items, .ticket.compact .bar { display: none; }
+  .ticket.compact .count { font-size: calc(var(--font) * 0.8); color: var(--muted); }
+
+  #empty {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    font-size: calc(var(--font) * 0.8);
+    text-align: center;
+  }
+
+  #pager { color: var(--muted); font-size: calc(var(--font) * 0.5); }
+
+  /* The setup banner. Shown only while the screen is being placed, so somebody
+     standing in the kitchen can read the verdict from where the cook stands -
+     which is the only place the question can actually be answered. */
+  #setup {
+    border: 2px dashed var(--rule);
+    border-radius: calc(var(--font) * 0.12);
+    padding: calc(var(--gap) * 0.6);
+    margin-bottom: var(--gap);
+    color: var(--muted);
+    font-size: calc(var(--font) * 0.5);
+  }
+  #setup b { color: var(--ink); }
+  #setup.bad { border-color: var(--late); }
+.allergy{font-weight:800;color:#8d2800;background:#fff0d6;padding:6px;border:2px solid currentColor;border-radius:5px}
+</style>
+</head>
+<body>
+  <div id="screen">
+    <div id="setup" hidden></div>
+    <header>
+      <span id="title">Kitchen</span>
+      <span><span id="count">0</span> <span id="word">orders</span></span>
+      <span id="pager"></span>
+      <button id="refresh-orders" type="button" style="font:inherit;font-size:.65em;min-height:44px;padding:6px 12px;background:var(--card);color:var(--ink);border:1px solid var(--muted);border-radius:8px;cursor:pointer" aria-label="Refresh active orders">↻ Refresh</button>
+      <span id="status-key" hidden aria-label="Dish status legend"><span>◷ Pending / cooking</span><span>✓ Ready</span><span>↗ Collected</span></span>
+      <div id="wall-clock" style="margin-left:auto;text-align:right;white-space:nowrap;color:var(--ink)"><time id="current-time"></time><div id="current-date" style="font-size:.7em;color:var(--muted)"></div></div>
+    </header>
+    <div id="connection" role="status" style="font-size:0.55em;padding-top:8px">Connecting to kitchen orders...</div>
+    <div id="board"></div>
+    <div id="empty" hidden>Nothing cooking.</div>
+  </div>
+
+<script src="../api/src/kitchen-board/i18n.js"></script>
+<script>
+/*
+ * The page reads its own configuration and re-reads it when it changes, so a
+ * shop adjusting the font or the distance sees the effect immediately instead
+ * of being told to restart the till.
+ */
+(function () {
+  'use strict';
+
+  var t = function(text, values) { return window.DisplayI18n ? window.DisplayI18n.t(text, values) : text.replace(/\{(\w+)\}/g, function(token,key) { return values && values[key] != null ? String(values[key]) : token; }); };
+  document.addEventListener('display-language-change', function() { if(config) render(); });
+  var displayId = new URLSearchParams(location.search).get('display') || '';
+  var config = null;
+  var tickets = [];
+  var page = 0;
+  var cancellationSeen = new Map();
+  var cancellationExpiry = new Map();
+  var itemScroll = new Map();
+
+  function cancelledSeconds() {
+    var seconds = Number((config || {}).cancelledDisplaySeconds);
+    return Number.isFinite(seconds) && seconds > 0 ? Math.max(1, Math.min(300, seconds)) : 30;
+  }
+  var rotationTimer = null;
+  var rotationMs = 0;
+
+  function updateRotation() {
+    var seconds = Number((config || {}).pageDwellSeconds);
+    var nextMs = (Number.isFinite(seconds) && seconds > 0 ? Math.max(1, Math.min(300, seconds)) : 8) * 1000;
+    if (rotationTimer !== null && rotationMs === nextMs) return;
+    if (rotationTimer !== null) clearInterval(rotationTimer);
+    rotationMs = nextMs;
+    rotationTimer = setInterval(function () {
+      page += 1;
+      render();
+    }, rotationMs);
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------------------------------------------------------------- sizing */
+
+  /*
+   * Every size on the screen comes from here.
+   *
+   * The main process does the optics (kitchen-screen-fit.js) because it knows
+   * the panel's physical size; the page is told the answer. Doing it here from
+   * pixels alone is exactly the mistake that produces a screen nobody can read:
+   * pixels say nothing about how big a letter is on the eye.
+   */
+  function applyFit(fit, cfg) {
+    if (!fit) return;
+    var root = document.documentElement.style;
+    root.setProperty('--font', fit.fontPx + 'px');
+    root.setProperty('--line', fit.lineHeightPx + 'px');
+    root.setProperty('--columns', Math.max(1, fit.columns));
+    root.setProperty('--safe', (cfg && cfg.safeAreaPercent != null ? cfg.safeAreaPercent : 3) + '%');
+    document.documentElement.setAttribute('data-theme', (cfg && cfg.theme) || 'dark');
+    document.documentElement.setAttribute('data-glow', String(!!(cfg && cfg.textGlow)));
+  }
+
+  /* ---------------------------------------------------------------- render */
+
+  function minutesSince(iso) {
+    var t = Date.parse(iso);
+    if (!isFinite(t)) return 0;
+    return Math.max(0, Math.floor((Date.now() - t) / 60000));
+  }
+
+  function stateFor(mins, cfg) {
+    var amber = Math.max(1, Number(cfg.amberAfterMin) || 5);
+    var red = Math.max(amber, Number(cfg.redAfterMin) || 10);
+    var urgent = Math.max(red, Number(cfg.pulseAfterMin) || 15);
+    if (mins >= urgent) return 'urgent';
+    if (mins >= red) return 'late';
+    if (mins >= amber) return 'warm';
+    return 'calm';
+  }
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function statusBadge(kind, symbol, quantity, label) {
+    var badge = el('span', 'progress-' + kind, symbol + ' ' + quantity);
+    badge.setAttribute('role', 'img');
+    badge.setAttribute('aria-label', quantity + ' ' + label);
+    badge.title = quantity + ' ' + label;
+    return badge;
+  }
+
+  function detailsCard(node) {
+    var meta = el('div', 'ticket-meta'), body = el('div', 'ticket-body');
+    Array.from(node.children).forEach(function (child) {
+      (child.classList.contains('items') || child.classList.contains('count') ? body : meta).appendChild(child);
+    });
+    node.classList.add('details-card');node.appendChild(meta);node.appendChild(body);
+    return node;
+  }
+
+  function card(ticket, cfg, compact) {
+    if (ticket.cancelled) {
+      var cancelledCard = el('div', 'ticket cancelled' + (cfg.cancelledPulse !== false ? ' cancel-pulse' : ''));
+      cancelledCard.appendChild(el('div', 'cancellation-label', t("CANCELLED - do not prepare")));
+      if (ticket.table) cancelledCard.appendChild(el('div', 'table', ticket.table));
+      var cancelledList = el('div', 'items');
+      (ticket.items || []).forEach(function (item) {
+        var cancelledRow = el('div', 'item');
+        cancelledRow.appendChild(el('span', 'qty', item.qty + ' - '));
+        cancelledRow.appendChild(el('span', 'name', item.name || ''));
+        cancelledList.appendChild(cancelledRow);
+      });
+      cancelledCard.appendChild(cancelledList);
+      return detailsCard(cancelledCard);
+    }
+    var mins = minutesSince(ticket.placedAt);
+    var state = stateFor(mins, cfg);
+    var complete = (ticket.items || []).length > 0 && ticket.items.every(function (i) { return i.preparing === 0; });
+    if (complete) state = 'ready-state';
+    var node = el('div', 'ticket ' + state + (compact ? ' compact' : ''));
+
+    if (cfg.tableOnly) {
+      node.classList.add('table-only');
+      if (cfg.pulseAlerts !== false) node.classList.add('pulse');
+      var icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      icon.setAttribute('viewBox', '0 0 48 48');
+      icon.setAttribute('class', 'table-icon');
+      icon.setAttribute('aria-hidden', 'true');
+      var shape = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      shape.setAttribute('d', ticket.takeaway ? 'M10 14h28l4 28H6l4-28z M18 16V10a6 6 0 0 1 12 0v6' : 'M8 18h32v8H8zM12 26v14m24-14v14M16 8h16v6H16z');
+      shape.setAttribute('fill', 'none');
+      shape.setAttribute('stroke', 'currentColor');
+      shape.setAttribute('stroke-width', '4');
+      shape.setAttribute('stroke-linejoin', 'round');
+      icon.appendChild(shape);
+      node.appendChild(icon);
+      node.appendChild(el('span', 'table', ticket.takeaway ? 'Take Away ' + (ticket.orderNumber || '') : ticket.table || ''));
+      node.setAttribute('aria-label', (ticket.table || '') + ', ' + state);
+      return node;
+    }
+
+    var top = el('div', 'top');
+    if (cfg.showTable !== false && (ticket.takeaway || String(ticket.table || '').trim())) {
+      var tableLabel = ticket.takeaway ? 'Take Away ' + (ticket.orderNumber || '') : String(ticket.table || '').trim();
+      if (/^(?:T\s*-?\s*)?\d+$/i.test(tableLabel)) tableLabel = 'T - ' + tableLabel.replace(/^T\s*-?\s*/i, '');
+      var heading = el('span', 'table', tableLabel);
+      var kindIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      kindIcon.setAttribute('viewBox', '0 0 24 24');
+      kindIcon.setAttribute('width', '1em'); kindIcon.setAttribute('height', '1em');
+      kindIcon.setAttribute('aria-hidden', 'true');
+      var kindPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      kindPath.setAttribute('d', ticket.takeaway ? 'M5 7h14l2 14H3L5 7z M9 8V5a3 3 0 0 1 6 0v3' : 'M3 9h18v3H3z M5 12v9 M19 12v9 M5 3v6 M19 3v6');
+      kindPath.setAttribute('fill', 'none'); kindPath.setAttribute('stroke', 'currentColor');
+      kindPath.setAttribute('stroke-width', '2'); kindIcon.appendChild(kindPath);
+      kindIcon.style.marginRight = '0.25em';
+      heading.prepend(kindIcon);
+      top.appendChild(heading);
+    }
+    if (cfg.showAge !== false) {
+      top.appendChild(el('span', 'age', mins < 60 ? mins + 'm' : Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm'));
+    }
+    node.appendChild(top);
+    if (ticket.ownerName) node.appendChild(el('div', 'ordered-by', t('Taken by {name}', {name:ticket.ownerName})));
+    if (ticket.preparationNote) node.appendChild(el('div', 'note', ticket.preparationNote));
+    if (complete) node.appendChild(el('div', 'item-progress', ticket.items.some(function (i) { return i.readyToCollect > 0; }) ? '✓ Ready to collect' : '↗ Picked up'));
+    if (ticket.outlet || ticket.roomReference) node.appendChild(el('div', 'note', [ticket.outlet, ticket.roomReference ? 'Room / reference: ' + ticket.roomReference : ''].filter(Boolean).join(' · ')));
+    var arrived = new Date(ticket.placedAt);
+    if (isFinite(arrived.getTime())) {
+      var arrival = el('div', 'arrival', arrived.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit', hour12:true}));
+      arrival.style.cssText = 'font-size:.55em;color:var(--muted)';
+      top.appendChild(arrival);
+    }
+    if (state === 'urgent' && cfg.pulseAlerts !== false) node.classList.add('pulse');
+
+    if (compact) {
+      var n = (ticket.items || []).reduce(function (s, i) { return s + (Number(i.qty) || 1); }, 0);
+      node.appendChild(el('div', 'count', n + (n === 1 ? ' item' : ' items')));
+      return detailsCard(node);
+    }
+
+    /* The bar repeats the age as a shape, so the state survives a cook who
+       cannot separate the hues. */
+    var bar = el('div', 'bar');
+    var fillPct = Math.min(100, (mins / Math.max(1, cfg.redAfterMin || 10)) * 100);
+    var fill = el('i');
+    fill.style.width = fillPct + '%';
+    bar.appendChild(fill);
+    node.appendChild(bar);
+
+    if (cfg.showItems !== false) {
+      var list = el('div', 'items');
+      var lastRound = null;
+      (ticket.items || []).forEach(function (item) {
+        if (lastRound !== null && item.roundId !== lastRound && item.roundTime) {
+          var roundTime = new Date(item.roundTime);
+          if (Number.isFinite(roundTime.getTime())) list.appendChild(el('div', 'round-arrival', 'Added ' + roundTime.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit',hour12:true})));
+        }
+        lastRound = item.roundId;
+        var row = el('div', 'item');
+        if (item.preparing === 0) row.classList.add(item.readyToCollect > 0 ? 'line-ready' : 'line-picked');
+        row.appendChild(el('span', 'qty', (item.qty || 1) + ' - '));
+        row.appendChild(el('span', 'name', item.name || ''));
+        list.appendChild(row);
+        var progress = el('div', 'item-progress');
+        var cooking = item.preparing == null ? Number(item.qty) || 1 : item.preparing;
+        if (cooking > 0 && (item.started || item.readyToCollect > 0 || item.pickedUp > 0)) progress.appendChild(statusBadge('cooking', '◷', cooking, item.started ? 'Cooking' : 'To prepare'));
+        if (item.readyToCollect > 0) progress.appendChild(statusBadge('ready', '✓', item.readyToCollect, 'Ready to collect'));
+        if (item.pickedUp > 0) progress.appendChild(statusBadge('picked', '↗', item.pickedUp, 'Collected, not yet served'));
+        if (progress.childElementCount) row.querySelector('.name').appendChild(progress);
+        if (Number.isFinite(Number(item.priced_at_table)) && Number(item.priced_at_table) > 0) {
+          row.querySelector('.name').appendChild(el('span', 'preparation-amount', ' (' + Number(item.priced_at_table).toLocaleString(undefined, { maximumFractionDigits: 3 }) + ' each)'));
+        }
+        /* NEVER dropped to save space. "less spicy" is the line that costs a
+           plate of food when it is missed. */
+        if (item.seat || item.course) list.appendChild(el('div', 'note', [item.seat ? 'Seat ' + item.seat : '', item.course || ''].filter(Boolean).join(' · ')));
+        var allergies = (item.allergies || []).concat(item.allergy_note || '').filter(Boolean);
+        if (allergies.length) list.appendChild(el('div', 'allergy', 'ALLERGY: ' + allergies.join(', ')));
+        if (item.note && cfg.showItemNotes !== false) {
+          list.appendChild(el('div', 'note', item.note));
+        }
+      });
+      if ((ticket.cancelledItems || []).length) {
+        var cancelledSection = el('div', 'cancelled-section');
+        cancelledSection.appendChild(el('div', 'cancellation-label', t("CANCELLED - do not prepare")));
+        ticket.cancelledItems.forEach(function (item) {
+          var row = el('div', 'item');
+          row.appendChild(el('span', 'qty', item.qty + ' - '));
+          row.appendChild(el('span', 'name', item.name || ''));
+          cancelledSection.appendChild(row);
+        });
+        list.insertBefore(cancelledSection, list.firstChild);
+        if (cfg.cancelledPulse !== false) node.classList.add('cancel-pulse');
+      }
+      node.appendChild(list);
+    }
+
+    return detailsCard(node);
+  }
+
+  function updateClock() {
+    var now = new Date();
+    $('current-time').textContent = now.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit', hour12:true});
+    $('current-time').dateTime = now.toISOString();
+    $('current-date').textContent = now.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'});
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  function render() {
+    var cfg = config || {};
+    var fitInfo = cfg._fit || {};
+    var board = $('board');
+    board.textContent = '';
+    board.style.removeProperty('--font');
+    board.style.removeProperty('font-size');
+    board.style.gridTemplateRows = '';
+    board.style.alignContent = 'start';
+
+    function compareArrival(a, b, newest) {
+      var left = Date.parse(a.placedAt), right = Date.parse(b.placedAt);
+      if (!Number.isFinite(left)) return Number.isFinite(right) ? 1 : 0;
+      if (!Number.isFinite(right)) return -1;
+      return newest ? right - left : left - right;
+    }
+    // One box per table (within an outlet), keeping each preparation round intact.
+    var cancelled = tickets.filter(function (t) { return t.cancelled && cancellationExpiry.get(t.id) > Date.now(); });
+    var live = tickets.filter(function (t) { return !t.cancelled; }).sort(function (a, b) { return compareArrival(a, b, false); });
+
+    var grouped = new Map();
+    live.concat(cancelled).forEach(function (ticket, index) {
+      var table = String(ticket.table || '').trim();
+      var key = table ? JSON.stringify([ticket.outletId || ticket.outlet || '', table]) : 'order:' + (ticket.saleId || String(ticket.id || 'unknown-' + index).split(':')[0]);
+      if (!grouped.has(key)) grouped.set(key, Object.assign({}, ticket, {id:key,items:[],cancelledItems:[],cancelled:false,hasActive:false,ownerNames:[]}));
+      var group = grouped.get(key);
+      if (!ticket.cancelled) group.hasActive = true;
+      if (ticket.ownerName && !group.ownerNames.includes(ticket.ownerName)) group.ownerNames.push(ticket.ownerName);
+      group.ownerName = group.ownerNames.join(' · ');
+      (ticket.items || []).forEach(function (item) {
+        if (ticket.cancelled) group.cancelledItems.push(item);
+        else group.items.push(Object.assign({}, item, {roundId:ticket.id,roundTime:ticket.placedAt}));
+      });
+    });
+    live = []; cancelled = [];
+    grouped.forEach(function (group) {
+      if (group.hasActive) live.push(group);
+      else if (group.cancelledItems.length) cancelled.push(Object.assign({},group,{cancelled:true,items:group.cancelledItems}));
+    });
+    itemScroll.forEach(function (_, key) { if (!grouped.has(key)) itemScroll.delete(key); });
+    if (cfg.orderSort === 'newest') live.sort(function (a, b) { return compareArrival(a, b, true); });
+    $('count').textContent = live.length;
+    $('word').textContent = cfg.tableOnly ? (live.length === 1 ? t("table") : t("tables")) : (live.length === 1 ? t("order") : t("orders"));
+    $('empty').hidden = live.length > 0 || cancelled.length > 0 || !!cfg._feedStatus;
+    board.hidden = live.length === 0 && cancelled.length === 0;
+    live = cancelled.concat(live);
+
+    // Paginate whole tables, never slices of a table's dishes.
+    $('status-key').hidden = cfg.tableOnly || cfg.showItems === false || !live.some(function(t){return t.items.some(function(i){return i.started || i.readyToCollect > 0 || i.pickedUp > 0;});});
+    var maxItems = Math.min(6, Math.max(3, ...live.map(function(t) { return t.items.length + (t.cancelled ? 0 : (t.cancelledItems || []).length); })));
+    var visibleDishes = Number(cfg.visibleDishesPerBox);
+    visibleDishes = Number.isFinite(visibleDishes) ? Math.max(0, Math.min(20, Math.floor(visibleDishes))) : 0;
+    if (visibleDishes) maxItems = visibleDishes;
+    var compact = cfg.showItems === false && live.length > (Number(cfg.compactAfter) || 8);
+    // Auto uses CSS pixels, not the physical-pixel distance estimate.
+    var font = Math.max(24, Math.min(window.innerHeight > window.innerWidth ? 28 : 32, Math.round((window.innerHeight || 900) / 28)));
+    var customFont = Number(cfg.fontSizePx);
+    if (Number.isFinite(customFont) && customFont > 0) font = Math.max(24, Math.min(96, customFont));
+    document.documentElement.style.setProperty('--font', font + 'px');
+    var width = board.clientWidth || window.innerWidth || 1100;
+    var ceiling = Math.max(1, Math.min(Number(fitInfo.columns) || 4, Math.floor(width / (font * (cfg.tableOnly ? 7 : 12)))));
+    var height = board.clientHeight || window.innerHeight || 700;
+    var portraitColumns = Number(cfg.portraitColumns);
+    var fixedColumns = window.innerHeight > window.innerWidth && (portraitColumns === 1 || portraitColumns === 2);
+    if (fixedColumns) ceiling = portraitColumns;
+    var rows = Math.max(1, Math.floor(height / (font * (cfg.tableOnly ? 6 : maxItems * 2 + 4))));
+    var perPage = Math.max(1, ceiling * rows);
+    if (cfg.tableOnly) {
+      // Size from both dimensions, not a monitor's saved orientation or dish layout.
+      if (!fixedColumns) ceiling = Math.max(1, Math.floor(width / Math.max(220, font * 6)));
+      rows = Math.max(1, Math.floor(height / Math.max(190, font * 5)));
+      perPage = ceiling * rows;
+    }
+    // Auto measures whole orders with their wrapped names, notes and status rows.
+    // Prefer fewer, wider boxes to a clipped list. Explicit row limits remain an advanced option.
+    if (!cfg.tableOnly && !visibleDishes && live.length && board.clientWidth) {
+      if (!fixedColumns) ceiling = Math.max(1, Math.min(live.length, Math.floor(width / (font * 14))));
+      var measuredHeight = 0, measured = new Map();
+      var measureOrders = function () {
+        var cardWidth = (width - 18 * (ceiling - 1)) / ceiling;
+        measuredHeight = 0; measured.clear();
+        live.forEach(function (ticket) {
+          var probe = card(ticket, cfg, compact);
+          probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;width:' + cardWidth + 'px;';
+          board.appendChild(probe);
+          var naturalHeight = Math.ceil(probe.getBoundingClientRect().height);
+          measured.set(ticket.id, naturalHeight);
+          measuredHeight = Math.max(measuredHeight, naturalHeight);
+          probe.remove();
+        });
+      };
+      measureOrders();
+      while (measuredHeight > height - 18 && ceiling > 1 && !fixedColumns) { ceiling--; measureOrders(); }
+      while (measuredHeight > height - 18 && font > 24 && !(customFont > 0)) {
+        font = Math.max(24, font - 2);
+        document.documentElement.style.setProperty('--font', font + 'px');
+        height = board.clientHeight || height;
+        measureOrders();
+      }
+      // Layout-less test environments have no measured height.
+      if (measuredHeight > 0) rows = Math.max(1, Math.floor(height / (measuredHeight + 18)));
+      perPage = Math.max(1, ceiling * rows);
+    }
+    // Place each whole order in the shortest column, retaining arrival priority.
+    // Start a new page when the next order cannot fit; never skip older work.
+    var packedPages = null;
+    if (!cfg.tableOnly && !visibleDishes && measured && measuredHeight > 0) {
+      function packColumns() {
+        var result = [], packed = [], used = Array(ceiling).fill(0);
+        packed.positions = new Map();
+        live.forEach(function (ticket) {
+          var column = used.indexOf(Math.min.apply(null, used));
+          var orderHeight = Math.min(measured.get(ticket.id), height - 18);
+          if (packed.length && used[column] + orderHeight > height - 18) {
+            result.push(packed); packed = []; packed.positions = new Map();
+            used = Array(ceiling).fill(0); column = 0;
+          }
+          packed.positions.set(ticket.id, {column:column, top:used[column]});
+          packed.push(ticket); used[column] += orderHeight + 18;
+        });
+        if (packed.length) result.push(packed);
+        return result;
+      }
+      packedPages = packColumns();
+      if (!fixedColumns && packedPages.length > 1) {
+        var bestColumns = ceiling, bestPages = packedPages;
+        // Wider boxes can fit more orders because dish names wrap less.
+        for (var candidate = ceiling - 1; candidate >= 1; candidate--) {
+          ceiling = candidate;measureOrders();var trialPages = packColumns();
+          if (trialPages.length < bestPages.length ||
+              (trialPages.length === bestPages.length && trialPages[0].length > bestPages[0].length)) {
+            bestColumns = candidate;bestPages = trialPages;
+          }
+          if (bestPages.length === 1) break;
+        }
+        ceiling = bestColumns;packedPages = bestPages;
+      }
+    }
+    var pages = packedPages ? packedPages.length : Math.max(1, Math.ceil(live.length / perPage));
+    if (page >= pages) page = 0;
+
+    // Rotate complete pages of whole orders, oldest page first.
+    var shown = packedPages ? packedPages[page] : (pages > 1 ? live.slice(page * perPage, page * perPage + perPage) : live);
+    board.classList.toggle('packed', !!packedPages);
+    board.style.setProperty('--columns', String(fixedColumns ? ceiling : Math.max(1, Math.min(ceiling, shown.length))));
+    shown.forEach(function (t) {
+      var node = card(t, cfg, compact);
+      node.dataset.tableKey = t.id;
+      node.style.maxHeight = (packedPages ? height - 18 : Math.max(font * 5, (height - 18 * rows) / rows)) + 'px';
+      if (packedPages) {
+        var position = shown.positions.get(t.id);
+        var packedWidth = (width - 18 * (ceiling - 1)) / ceiling;
+        node.style.position = 'absolute';
+        node.style.width = packedWidth + 'px';
+        node.style.left = (position.column * (packedWidth + 18)) + 'px';
+        node.style.top = (18 + position.top) + 'px';
+      }
+      board.appendChild(node);
+      var list = node.querySelector('.items'), saved = itemScroll.get(t.id);
+      if (list && visibleDishes) list.style.maxHeight = (font * 2 * visibleDishes) + 'px';
+      if (list && saved) list.scrollTop = saved.top;
+      if (list && list.scrollHeight > list.clientHeight + 2) (node.querySelector('.ticket-body') || node).appendChild(el('div', 'more', 'Long order · remaining items scroll automatically'));
+      else if (list) list.style.overflowY = 'hidden';
+    });
+
+    var columns = fixedColumns ? ceiling : Math.max(1, Math.min(ceiling, shown.length));
+    board.style.gridTemplateRows = '';
+    board.style.alignContent = 'start';
+    board.style.removeProperty('font-size');
+    if (cfg.tableOnly && shown.length) {
+      var best = Infinity, tileRows = 1;
+      for (var c = fixedColumns ? ceiling : 1; c <= (fixedColumns ? ceiling : Math.min(ceiling, shown.length)); c++) {
+        var r = Math.ceil(shown.length / c);
+        if (r > rows) continue;
+        var score = Math.abs(Math.log((width / c) / (height / r) / 1.2)) + (c * r - shown.length) * .15;
+        if (score < best) { best = score; columns = c; tileRows = r; }
+      }
+      board.style.gridTemplateRows = 'repeat(' + tileRows + ', minmax(0, 1fr))';
+      board.style.alignContent = 'stretch';
+      var tileFont = Math.max(24, Math.min(96, (width / columns - 36) / 5, (height / tileRows - 40) / 4.5));
+      if (customFont > 0 && Number.isFinite(customFont)) tileFont = font;
+      board.style.fontSize = tileFont + 'px';
+      board.style.setProperty('--font', tileFont + 'px');
+    } else {
+      board.style.removeProperty('--font');
+    }
+    board.style.setProperty('--columns', String(columns));
+
+    $('pager').textContent = pages > 1 ? (page + 1) + ' of ' + pages : '';
+  }
+
+  /* ------------------------------------------------------------------ data */
+
+  function setConfig(cfg) {
+    if (config && cfg && config.branchId !== cfg.branchId) {
+      cancellationSeen.clear(); cancellationExpiry.clear(); itemScroll.clear(); tickets = [];
+    }
+    if (((config || {}).orderSort || 'oldest') !== ((cfg || {}).orderSort || 'oldest')) page = 0;
+    config = cfg || {};
+    $('refresh-orders').hidden = !!config.setupMode;
+    cancellationSeen.forEach(function (at, id) { cancellationExpiry.set(id, at + cancelledSeconds() * 1000); });
+    updateRotation();
+    $('connection').textContent = config.setupMode ? t("Preview - sample orders") : (t(config._feedStatus || ''));
+    applyFit(config._fit, config);
+    $('title').textContent = config.name || t("Kitchen");
+
+    /*
+     * While the screen is being placed, say what it can and cannot do - here,
+     * on the screen itself, where somebody standing at the range can read it.
+     * A verdict shown only on the till is a verdict read in the wrong room.
+     */
+    var setup = $('setup');
+    if (config.setupMode && config._fit) {
+      var f = config._fit;
+      setup.hidden = false;
+      setup.className = f.verdict === 'comfortable' ? '' : 'bad';
+      setup.innerHTML =
+        'Placing this screen. At <b>' + (config.viewingDistanceM || '?') + ' m</b> on a <b>' +
+        (config.diagonalInches || '?') + '&Prime;</b> panel, text is <b>' + f.capHeightMm +
+        ' mm</b> tall and <b>' + f.cards + '</b> order' + (f.cards === 1 ? '' : 's') +
+        ' fit (' + f.verdict + ').<br>If you cannot read the card below from where the cook ' +
+        'stands, the screen is too small or too far.';
+    } else {
+      setup.hidden = true;
+    }
+    render();
+  }
+
+  function setTickets(list) {
+    tickets = Array.isArray(list) ? list : [];
+    var now = Date.now(), newCancellation = false;
+    tickets.forEach(function (ticket) {
+      if (!ticket.cancelled || cancellationSeen.has(ticket.id)) return;
+      cancellationSeen.set(ticket.id, now);
+      cancellationExpiry.set(ticket.id, now + cancelledSeconds() * 1000);
+      newCancellation = true;
+    });
+    var present = new Set(tickets.map(function (t) { return t.id; }));
+    if (!tickets.length) itemScroll.clear();
+    cancellationSeen.forEach(function (at, id) {
+      if (!present.has(id) && now - at > 300000) { cancellationSeen.delete(id); cancellationExpiry.delete(id); }
+    });
+    if (newCancellation) page = 0;
+    render();
+  }
+
+  /* Exposed so the main process can drive the screen, and so a test can. */
+  window.kitchenScreen = { setConfig: setConfig, setTickets: setTickets, render: render };
+
+  // The sandboxed Hardware Manager preview accepts sample configuration only.
+  // It has no preload/IPC bridge and never subscribes to live orders.
+  if (new URLSearchParams(location.search).get('hardwarePreview') === '1' && parent !== window) {
+    var previewScenario;
+    window.addEventListener('message', function (event) {
+      if (event.source !== parent || !event.data || event.data.type !== 'posnic-hardware-preview') return;
+      setConfig(event.data.config);
+      var scenario = event.data.config._previewScenario || 'new';
+      if (!tickets.length || previewScenario !== scenario) {
+        if (scenario === 'busy' || scenario === 'added') {
+          var dishes = ['Chicken biryani','Grilled fish','Steamed rice','Butter naan','Vegetable curry','Lime soda'];
+          var samples = Array.from({length:10}, function (_, index) {
+            return {id:'preview-'+index+':c0',table:String(index+1).padStart(2,'0'),placedAt:new Date(Date.now()-(10-index)*60000).toISOString(),
+              items:dishes.map(function(name,i){return {name:name,qty:i===3?2:1,note:index===2&&i===1?'No chilli':'',priced_at_table:index===2&&i===1?500:undefined};})};
+          });
+          if(scenario==='added') samples.push({id:'preview-2:c1',table:'03',placedAt:new Date().toISOString(),items:[{name:'Fish fry',qty:1,note:'Extra crispy'},{name:'Lime soda',qty:2}]});
+          setTickets(samples);
+        } else setTickets([
+          {id:'preview-1',table:'05',placedAt:new Date(Date.now()-240000).toISOString(),items:[{qty:2,name:'Grilled fish',note:'No chilli',priced_at_table:500},{qty:1,name:'Steamed rice'}]},
+          {id:'preview-2',table:'08',placedAt:new Date(Date.now()-120000).toISOString(),items:[{qty:1,name:'Vegetable fried rice',preparing:scenario==='ready'?0:1,readyToCollect:scenario==='ready'?1:0},{qty:2,name:'Lime soda'}]},
+          {id:'preview-3',table:'12',placedAt:new Date(Date.now()-60000).toISOString(),cancelled:scenario==='cancelled',items:[{qty:1,name:'Butter naan'}]}
+        ]);
+      }
+      previewScenario = scenario;
+    });
+  }
+
+
+  if (window.posnicKitchenScreen && window.posnicKitchenScreen.onConfig) {
+    $('refresh-orders').addEventListener('click', async function () {
+      const button = this;
+      if (button.disabled || config?.setupMode) return;
+      button.disabled = true;
+      button.textContent = t("Refreshing…");
+      $('connection').textContent = t("Checking active orders…");
+      try {
+        const result = await window.posnicKitchenScreen.refresh();
+        if (!result || !result.ok) throw new Error(result?.why || 'Refresh failed');
+        $('connection').textContent = t("Active orders updated");
+      } catch (error) {
+        $('connection').textContent = 'Could not refresh. Showing previous orders. ' + error.message;
+      } finally {
+        button.disabled = false;
+        button.textContent = t("↻ Refresh");
+      }
+    });
+    window.posnicKitchenScreen.onConfig(setConfig);
+    window.posnicKitchenScreen.onTickets(setTickets);
+    window.posnicKitchenScreen.ready(displayId).catch(function () {
+      $('connection').textContent = t("Kitchen display could not connect. Close and reopen it in Hardware Manager.");
+    });
+  }
+
+  /* The clock moves even when nothing arrives, and a ticket going from amber
+     to red is the whole point of the colour. */
+  setInterval(render, 15000);
+  // Large tables stay in one box; reveal their lower dishes without touch input.
+  setInterval(function () {
+    document.querySelectorAll('#board .ticket').forEach(function (card) {
+      var list = card.querySelector('.items');
+      if (!list || list.scrollHeight <= list.clientHeight + 2) return;
+      var key = card.dataset.tableKey, state = itemScroll.get(key) || {top:0,hold:4};
+      if (state.hold > 0) state.hold -= 1;
+      else if (list.scrollTop >= list.scrollHeight - list.clientHeight - 1) { list.scrollTop = 0; state.hold = 4; }
+      else { list.scrollTop += 32; if (list.scrollTop >= list.scrollHeight - list.clientHeight - 1) state.hold = 4; }
+      state.top = list.scrollTop; itemScroll.set(key, state);
+    });
+  }, 1000);
+  setInterval(function () {
+    var expired = false;
+    cancellationExpiry.forEach(function (at, id) {
+      if (at > 0 && at <= Date.now()) { cancellationExpiry.set(id, 0); expired = true; }
+    });
+    if (expired) render();
+  }, 250);
+  window.addEventListener('resize', render);
+
+  /* Page rotation, only ever reached when there is more than one page. */
+  updateRotation();
+}());
+</script>
+</body>
+</html>

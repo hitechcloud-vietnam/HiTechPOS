@@ -1,0 +1,192 @@
+/* Device controls never grant access or cache staff/order data. */
+(() => {
+  'use strict';
+  const t = (text, values) =>
+    window.DisplayI18n
+      ? window.DisplayI18n.t(text, values)
+      : text.replace(/\{(\w+)\}/g, (token, key) => String(values?.[key] ?? token));
+  const $ = (id) => document.getElementById(id);
+  const demo = new URLSearchParams(location.search).get('demo') === '1';
+  async function deviceRequest(path, body) {
+    if (demo) throw Error(t('Device pairing is unavailable in the demo.'));
+    const response = await fetch('/api/kitchen/devices' + path, {
+      method: body ? 'POST' : 'GET',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(10000),
+    });
+    const value = await response.json();
+    if (!response.ok) throw Error(value.message || t('Could not update kitchen devices.'));
+    return value;
+  }
+  const run = (id, action) => async () => {
+    try {
+      await action();
+    } catch (error) {
+      $(id).textContent = error.message || t('Could not connect.');
+    }
+  };
+  $('device-create').onclick = run('device-manager-result', async () => {
+    const result = await deviceRequest('/code', { name: $('device-name').value });
+    $('device-manager-result').textContent = t(
+      'Code: {code} - {branch}. Valid for five minutes, one screen only.',
+      { code: result.code, branch: result.branch }
+    );
+  });
+  $('device-pair').onclick = run('device-result', async () => {
+    const result = await deviceRequest('/pair', { code: $('device-code').value });
+    localStorage.setItem('posnic.kitchen.device', result.token);
+    $('device-code').value = '';
+    location.reload();
+  });
+  $('device-forget').onclick = () => {
+    if (demo) return;
+    localStorage.removeItem('posnic.kitchen.device');
+    location.reload();
+  };
+  $('device-list').onclick = run('device-manager-result', async () => {
+    const result = await deviceRequest('');
+    $('device-list-items').replaceChildren();
+    for (const device of result.devices) {
+      const row = document.createElement('p'),
+        button = document.createElement('button');
+      row.textContent = device.name + ' ';
+      button.textContent = t('Disconnect');
+      button.onclick = run('device-manager-result', async () => {
+        await deviceRequest('/revoke', { id: device.id });
+        row.remove();
+      });
+      row.append(button);
+      $('device-list-items').append(row);
+    }
+    $('device-manager-result').textContent = t('{count} connected screens', {
+      count: result.devices.length,
+    });
+  });
+  $('save-delay-settings').onclick = run('delay-result', async () => {
+    if (demo) throw Error(t('Settings are unavailable in the demo.'));
+    const response = await fetch('/api/kitchen/settings', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orangeMinutes: Number($('orange-minutes').value),
+        redMinutes: Number($('red-minutes').value),
+        pulse: $('pulse-orders').checked,
+        takeawayRemoveWhen: $('takeaway-remove-when').value,
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    const data = await response.json();
+    if (!response.ok) throw Error(data.message || t('Could not save settings.'));
+    $('settings-workflow').dataset.dirty = 'false';
+    $('delay-result').textContent = t('Saved for this branch.');
+    $('refresh').click();
+  });
+  let wake = null,
+    wantsWake = false,
+    installPrompt = null;
+  $('device-address').textContent = t('Start URL: {url}', { url: location.origin + '/kitchen/' });
+  function renderDeviceLabels() {
+    $('device-address').textContent = t('Start URL: {url}', { url: location.origin + '/kitchen/' });
+    $('keep-awake').textContent = wantsWake ? t('Allow screen sleep') : t('Keep screen awake');
+    if (!('serviceWorker' in navigator && window.isSecureContext)) {
+      $('install-help').textContent =
+        t('Android: open the browser menu → Add to Home screen / Install app.') +
+        ' ' +
+        t(
+          'On plain HTTP, use a browser shortcut or managed kiosk browser; install and wake-lock features may be unavailable.'
+        );
+    }
+  }
+  document.addEventListener('display-language-change', renderDeviceLabels);
+  const settingsTabs = [...document.querySelectorAll('[data-settings-tab]')];
+  const showSettingsTab = (tab) => {
+    settingsTabs.forEach((button) => {
+      const active = button === tab;
+      button.setAttribute('aria-selected', String(active));
+      button.tabIndex = active ? 0 : -1;
+      $('settings-' + button.dataset.settingsTab).hidden = !active;
+    });
+  };
+  settingsTabs.forEach((tab, index) => {
+    tab.onclick = () => showSettingsTab(tab);
+    tab.onkeydown = (event) => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const next =
+        settingsTabs[
+          event.key === 'Home'
+            ? 0
+            : event.key === 'End'
+              ? settingsTabs.length - 1
+              : (index + (event.key === 'ArrowRight' ? 1 : -1) + settingsTabs.length) %
+                settingsTabs.length
+        ];
+      showSettingsTab(next);
+      next.focus();
+    };
+  });
+  function toggleSettings(open) {
+    $('device-setup').hidden = !open;
+    $('setup-toggle').setAttribute('aria-expanded', String(open));
+    if (open) settingsTabs.find((tab) => tab.getAttribute('aria-selected') === 'true')?.focus();
+    else $('setup-toggle').focus();
+  }
+  $('setup-toggle').onclick = () => toggleSettings($('device-setup').hidden);
+  $('close-setup').onclick = () => toggleSettings(false);
+  $('device-setup').addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') toggleSettings(false);
+  });
+  $('settings-workflow').addEventListener('input', () => {
+    $('settings-workflow').dataset.dirty = 'true';
+  });
+  async function acquire() {
+    if (!wantsWake || document.hidden || wake) return;
+    try {
+      if (!navigator.wakeLock) throw Error('unavailable');
+      wake = await navigator.wakeLock.request('screen');
+      wake.addEventListener('release', () => {
+        wake = null;
+        $('awake-status').textContent = t('Screen wake lock released by the device.');
+      });
+      $('awake-status').textContent = t('Screen stays awake while this page is visible.');
+    } catch {
+      $('awake-status').textContent = t(
+        'Use the device screen-sleep setting. Browser wake lock needs HTTPS and device support.'
+      );
+    }
+  }
+  $('keep-awake').onclick = async () => {
+    wantsWake = !wantsWake;
+    $('keep-awake').textContent = wantsWake ? t('Allow screen sleep') : t('Keep screen awake');
+    if (wantsWake) await acquire();
+    else {
+      await wake?.release();
+      wake = null;
+      $('awake-status').textContent = t('Normal screen-sleep settings apply.');
+    }
+  };
+  document.addEventListener('visibilitychange', acquire);
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    installPrompt = event;
+    $('install-board').hidden = false;
+  });
+  $('install-board').onclick = async () => {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    installPrompt = null;
+    $('install-board').hidden = true;
+  };
+  if ('serviceWorker' in navigator && window.isSecureContext) {
+    navigator.serviceWorker.register('sw.js', { scope: '/kitchen/' }).catch(() => {});
+  } else {
+    $('install-help').textContent +=
+      ' ' +
+      t(
+        'On plain HTTP, use a browser shortcut or managed kiosk browser; install and wake-lock features may be unavailable.'
+      );
+  }
+})();
