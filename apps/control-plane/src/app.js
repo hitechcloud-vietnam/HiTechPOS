@@ -13,7 +13,7 @@ const { createEInvoiceService } = require('./einvoices');
 const { createNotifier } = require('./notify');
 const { createDomainService } = require('./domains');
 const { rateLimit, securityHeaders } = require('./security');
-const { isEmail, forLog } = require('@hitechpos/payment-core');
+const { isEmail } = require('@hitechpos/payment-core');
 const { hashPassword, verifyPassword } = require('./passwords');
 const { signToken, verifyToken } = require('./tokens');
 
@@ -69,6 +69,11 @@ const MESSAGES = {
   pay2s_configuration_invalid: 'Thông tin kết nối Pay2S chưa đầy đủ.',
 };
 
+/* Log only values from fixed vocabularies, never request text: an error
+   code matching our own snake_case codes, a provider from the known set. */
+const logCode = (e) => (e && typeof e.code === 'string' && /^[a-z0-9_]{1,64}$/.test(e.code) ? e.code : 'invalid');
+const logProvider = (p) => (['payos', 'pay2s', 'bank-feed'].includes(p) ? p : 'unknown');
+
 function httpError(code, status) {
   return Object.assign(new Error(code), { code, status });
 }
@@ -102,7 +107,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
       const result = await billing.handleCallback(req.params.provider, { body: req.body.toString('utf8'), headers: req.headers });
       res.json({ success: true, ...result });
     } catch (e) {
-      logger.warn(`[webhook:${forLog(req.params.provider, 20)}] rejected: ${forLog(e.code || 'invalid', 60)}`);
+      logger.warn(`[webhook:${logProvider(req.params.provider)}] rejected: ${logCode(e)}`);
       res.status(e.status && e.status < 500 ? e.status : 400).json({ success: false, code: e.code || 'invalid' });
     }
   });
@@ -113,7 +118,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
     try {
       res.json({ success: true, ...(await counter.handleBankFeed(req.params.tenantId, { body: req.body.toString('utf8'), headers: req.headers })) });
     } catch (e) {
-      logger.warn(`[webhook:shop:bank-feed] rejected: ${forLog(e.code || 'invalid', 60)}`);
+      logger.warn(`[webhook:shop:bank-feed] rejected: ${logCode(e)}`);
       res.status(e.status && e.status < 500 ? e.status : 400).json({ success: false, code: e.code || 'invalid' });
     }
   });
@@ -122,7 +127,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
       const result = await counter.handleCallback(req.params.tenantId, req.params.method, { body: req.body.toString('utf8'), headers: req.headers });
       res.json({ success: true, ...result });
     } catch (e) {
-      logger.warn(`[webhook:shop:${forLog(req.params.method, 20)}] rejected: ${forLog(e.code || 'invalid', 60)}`);
+      logger.warn(`[webhook:shop:${logProvider(req.params.method)}] rejected: ${logCode(e)}`);
       res.status(e.status && e.status < 500 ? e.status : 400).json({ success: false, code: e.code || 'invalid' });
     }
   });
@@ -287,7 +292,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
       for await (const row of store.shopBridge.exportShop(tenant)) yield JSON.stringify(row) + '\n';
     })());
     await pipeline(lines, zlib.createGzip(), res);
-    logger.info?.(`[export] ${forLog(tenant.subdomain, 40)} by ${forLog(req.account.sub, 40)}`);
+    logger.info?.(`[export] shop ${String(tenant._id)}`);
   });
   app.get('/api/shop/payment-settings', auth, async (req, res) => res.json(await counter.getSettings(req.account.tenantId)));
   app.put('/api/shop/payment-settings', auth, async (req, res) => res.json(await counter.updateSettings(req.account.tenantId, req.body || {})));
