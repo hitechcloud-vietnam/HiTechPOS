@@ -60,7 +60,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('push', (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch (e) { /* show the default */ }
-  event.waitUntil(self.registration.showNotification(data.title || 'Posnic', {
+  event.waitUntil(self.registration.showNotification(data.title || 'HiTechPOS', {
     body: data.body || '',
     tag: data.tag || 'posnic',
     /*
@@ -72,7 +72,7 @@ self.addEventListener('push', (event) => {
      * when it lands on an existing tag.
      */
     renotify: true,
-    icon: 'static/images/logo/posnic-logo.svg',
+    icon: 'static/images/logo/hitechpos-logo.svg',
     data: { url: data.url || '/dashboard.html' },
   }));
 });

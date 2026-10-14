@@ -33,7 +33,7 @@ module.exports = {
       cwd: path.join(root, 'upstream/pos/api'),
       script: 'shard.js',
       node_args: '--max-old-space-size=2048',
-      env: { ...envFile('/etc/hitechpos/shard.env'), NODE_ENV: 'production', SHARD_HOST: '127.0.0.1', SHARD_PORT: '6000', SHARD_SHOP_HEADER: 'x-hitech-shop' },
+      env: { ...envFile('/etc/hitechpos/shard.env'), POSNIC_BRAND_DIR: path.join(root, 'deploy/brand'), NODE_ENV: 'production', SHARD_HOST: '127.0.0.1', SHARD_PORT: '6000', SHARD_SHOP_HEADER: 'x-hitech-shop' },
       max_memory_restart: '2500M',
       kill_timeout: 15000,
     },

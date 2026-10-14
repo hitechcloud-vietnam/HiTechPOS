@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Can't reach the till server</title>
+<title>HiTechPOS - Mất kết nối máy chủ</title>
 <style>
   /* Self-contained on purpose: this page is served from the service worker
      cache when the network is down, so it can depend on nothing. */
@@ -14,7 +14,7 @@
   h1 { font-size:20px; margin:0 0 12px; }
   p  { font-size:14px; line-height:1.55; color:#3a4459; margin:0 0 10px; }
   button { margin-top:14px; padding:10px 22px; font-size:14px; font-weight:600; color:#fff;
-           background:#506fe4; border:0; border-radius:8px; cursor:pointer; }
+           background:#0b6bcb; border:0; border-radius:8px; cursor:pointer; }
   @media (prefers-color-scheme: dark) {
     body { background:#141824; color:#e8eaf0; }
     .card { background:#1d2333; box-shadow:0 10px 30px rgba(0,0,0,.4); }
@@ -24,12 +24,13 @@
 </head>
 <body>
   <div class="card">
-    <h1>Can't reach the till server</h1>
-    <p>This screen lost its connection to the shop's till. <strong>Sales continue
-       normally on the till itself</strong>, so nothing is lost.</p>
-    <p>This page retries by itself and will recover the moment the connection
-       is back.</p>
-    <button onclick="location.reload()">Try now</button>
+    <!-- HiTechPOS mark, inline: this page may depend on nothing else. -->
+    <svg width="48" height="48" viewBox="0 0 64 64" aria-hidden="true" style="margin-bottom:10px"><rect width="64" height="64" rx="14" fill="#0b6bcb"/><path fill="#fff" d="M17 15h8v13.5h14V15h8v34h-8V35.5H25V49h-8z"/><circle cx="51" cy="13" r="5" fill="#7cc4ff"/></svg>
+    <h1>Không kết nối được máy chủ bán hàng</h1>
+    <p>Màn hình này đã mất kết nối tới máy chủ của cửa hàng. Trang sẽ tự thử lại
+       và hoạt động lại ngay khi có kết nối.</p>
+    <p lang="en" style="font-size:12px">Can't reach the till server. This page retries by itself.</p>
+    <button onclick="location.reload()">Thử lại ngay</button>
   </div>
   <script>setInterval(function () { location.reload(); }, 7000);</script>
 </body>

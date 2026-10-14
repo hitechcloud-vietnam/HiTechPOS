@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="232" height="56" viewBox="0 0 232 56" role="img" aria-label="HiTechPOS">
+  <title>HiTechPOS</title>
+  <rect x="2" y="4" width="48" height="48" rx="11" fill="#0b6bcb"/>
+  <path fill="#fff" d="M14 14h6v10.6h12V14h6v28h-6V30.3H20V42h-6z"/>
+  <circle cx="41.5" cy="12.5" r="3.8" fill="#7cc4ff"/>
+  <text x="60" y="40" font-family="'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="30" letter-spacing="-0.5" fill="#0b6bcb"><tspan font-weight="600">HiTech</tspan><tspan font-weight="800">POS</tspan></text>
+</svg>

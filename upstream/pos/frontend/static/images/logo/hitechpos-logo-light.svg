@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="HiTechPOS">
+  <title>HiTechPOS</title>
+  <rect x="1" y="1" width="62" height="62" rx="14" fill="#fff" stroke="#d6e6f7" stroke-width="2"/>
+  <path fill="#0b6bcb" d="M17 15h8v13.5h14V15h8v34h-8V35.5H25V49h-8z"/>
+  <circle cx="51" cy="13" r="5" fill="#3d9be9"/>
+</svg>

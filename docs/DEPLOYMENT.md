@@ -31,6 +31,8 @@ sudo cp deploy/Caddyfile /etc/caddy/Caddyfile && sudo systemctl reload caddy
 
 DNS: `app.hitechpos.vn` và `*.hitechpos.vn` trỏ về máy chủ. Sau khi chạy, mở `https://app.hitechpos.vn/admin` với `ADMIN_API_KEY` trong `/etc/hitechpos/control-plane.env`.
 
+Đặt `POSNIC_BRAND_DIR=<repo>/deploy/brand` cho tiến trình shard để hoá đơn PDF/A4 in logo và tên HiTechPOS.
+
 Lưu ý đã kiểm chứng khi chạy thật:
 - Cổng 6000 của shard bị `fetch` của trình duyệt/Node chặn (“bad port”) – control plane gọi shard bằng `node:http`, và shard chỉ nghe trên `127.0.0.1` sau Caddy.
 - Secret mới của shop (ví dụ `HITECH_POS_KEY` khi bật thanh toán QR) có hiệu lực sau ≤ 60 giây (chu kỳ nạp registry của shard).
