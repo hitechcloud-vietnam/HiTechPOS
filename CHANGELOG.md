@@ -2,6 +2,18 @@
 
 Định dạng theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), phiên bản theo [SemVer](https://semver.org/lang/vi/). Phát hành: gắn tag `vX.Y.Z` trên `main`, hoặc chạy tay workflow **Release** (Actions → Release → Run workflow, nhánh `main`, nhập phiên bản); workflow tạo tag và bản phát hành với nội dung mục tương ứng dưới đây.
 
+## [0.2.1] - 2026-10-14
+
+### Thêm
+- **Tài liệu triển khai chi tiết** `docs/DEPLOYMENT.md`: từ máy chủ Ubuntu 24.04 trống đến production (DNS, tường lửa, Node/PM2, Caddy có TLS wildcard và tên miền riêng, MongoDB replica set có xác thực, cài đặt và build, bí mật, khởi chạy và danh sách kiểm tra bằng `curl`, cổng thanh toán, hoá đơn điện tử, email, ứng dụng Business, migration theo shop, nâng cấp/rollback, phát hành, mở rộng, giám sát, sao lưu/khôi phục, diễn tập thảm hoạ, bảo mật vận hành). Các bước đã được chạy thử; phần chưa chạy được ghi rõ.
+- `docs/deploy/ENV.md` (mọi biến môi trường) và `docs/deploy/RUNBOOK.md` (vận hành hằng ngày, ~20 sự cố theo dạng triệu chứng → nguyên nhân → cách sửa).
+- Trang `/billing/cancel` cho khách huỷ thanh toán phí thuê bao (trước đây 404).
+
+### Sửa
+- `deploy/bootstrap-secrets.sh` sinh `SESSION_SECRET` cho shard (trước đây phiên máy bán hàng mất sau mỗi lần khởi động lại).
+- `deploy/ecosystem.config.js` báo lỗi rõ khi tệp env có nhưng không đọc được, thay vì khởi động với môi trường rỗng.
+- Test Captain: regex tên miền thoát dấu chấm (CodeQL).
+
 ## [0.2.0] - 2026-10-14
 
 Bản phát hành đầu tiên dùng được cho thử nghiệm với cửa hàng thật (xem phần “Còn lại” trước khi bán chính thức).

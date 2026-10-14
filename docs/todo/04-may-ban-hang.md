@@ -27,3 +27,7 @@ Mọi bản vá phải ghi vào `docs/UPSTREAM.md`.
 
 ## 4.6 Dữ liệu cũ lệch giờ
 - Đơn bán lưu trước bản sửa múi giờ (`api/src/helpers/shop-wall-clock.js`) bị lệch +7 giờ. Viết migration dời lại thời điểm bán của các đơn tạo trước bản sửa (xác định theo thời điểm triển khai bản sửa và `_id`), chạy qua `scripts/run-tenant-migrations.js`.
+
+## 4.7 Nhỏ, phát hiện khi chạy thử triển khai
+- `POST /api/install/add` không có body trả 500 (`Cannot read properties of undefined (reading 'key')`) thay vì 401.
+- Thông báo cho khách vẫn tiếng Anh: shop bị tạm ngưng (“This shop is suspended.”) và khi chưa build frontend (“Welcome to the Posnic API v2”) – `upstream/pos/api/shard.js`, `app.js`.
