@@ -58,8 +58,16 @@ async function tick() {
       $('amount').textContent = vnd(p.amount);
       $('desc').textContent = p.description ? `Nội dung: ${p.description}` : '';
       if (p.qrPayload) renderQR(p.qrPayload);
-      if (p.bank) $('bank').innerHTML = `<b>${p.bank.bankName}</b> · ${p.bank.accountNumber}<br>${p.bank.accountName || ''}`;
-      if (!p.qrPayload && p.checkoutUrl) $('link').innerHTML = `<a class="btn" href="${p.checkoutUrl}">Mở trang thanh toán</a>`;
+      if (p.bank) {
+        const b = document.createElement('b');
+        b.textContent = p.bank.bankName || '';
+        $('bank').replaceChildren(b, ` · ${p.bank.accountNumber || ''}`, document.createElement('br'), p.bank.accountName || '');
+      }
+      /* The checkout URL comes from the provider: https links only. */
+      if (!p.qrPayload && p.checkoutUrl && /^https:\/\//i.test(p.checkoutUrl)) {
+        const a = Object.assign(document.createElement('a'), { className: 'btn', href: p.checkoutUrl, textContent: 'Mở trang thanh toán' });
+        $('link').replaceChildren(a);
+      }
       rendered = true;
     }
     $('status').textContent = LABEL[p.status] || p.status;

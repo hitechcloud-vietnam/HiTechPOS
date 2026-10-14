@@ -51,7 +51,7 @@ function createEInvoiceService({ store, config, now = () => new Date(), provider
       providerCache.delete(String(tenant._id));
       return null;
     }
-    const spec = PROVIDERS[input.provider];
+    const spec = Object.hasOwn(PROVIDERS, input.provider) ? PROVIDERS[input.provider] : null;
     if (!spec) fail('einvoice_provider_invalid', 422);
     const environment = input.environment === 'production' ? 'production' : 'sandbox';
     const previous = (tenant.einvoiceSettings && tenant.einvoiceSettings.provider === input.provider && tenant.einvoiceSettings.connection) || {};
@@ -67,6 +67,8 @@ function createEInvoiceService({ store, config, now = () => new Date(), provider
         continue;
       }
       v = String(v).trim();
+      /* Shown as a link in the console: https only, {code} is the lookup code. */
+      if (f === 'lookupUrlTemplate' && !/^https:\/\/[^\s"'<>]+$/i.test(v)) fail('einvoice_lookup_url_invalid', 422);
       connection[f] = SECRET_FIELDS.includes(f) ? seal(v, config.tenantSecretKey) : v;
     }
     const seller = input.seller || {};

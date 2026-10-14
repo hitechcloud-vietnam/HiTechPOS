@@ -360,7 +360,7 @@ async function loadEinvoices() {
   $('#eiErrors').innerHTML = errs.length ? '<b>Cần xử lý:</b><br>' + errs.slice(0, 10).map((e) => `${esc(e.saleNo || e.refId)} – ${esc(EI_ERR[e.code] || e.message || e.code)}${e.final ? '' : ' (sẽ thử lại)'}`).join('<br>') : '';
   const rows = await api('GET', '/api/shop/einvoices');
   $('#eiList').innerHTML = rows.map((r) => `<tr><td>${dt(r.issuedAt || r.updatedAt)}</td><td>${esc(r.refId)}</td><td>${esc(r.invoiceNo || '')}</td><td>${esc((r.templateCode || '') + (r.series || ''))}</td>
-    <td>${r.lookupUrl ? `<a href="${esc(r.lookupUrl)}" target="_blank" rel="noopener">${esc(r.lookupCode || 'Tra cứu')}</a>` : esc(r.lookupCode || '')}</td>
+    <td>${r.lookupUrl && /^https:\/\//i.test(r.lookupUrl) ? `<a href="${esc(r.lookupUrl)}" target="_blank" rel="noopener">${esc(r.lookupCode || 'Tra cứu')}</a>` : esc(r.lookupCode || '')}</td>
     <td>${pill(EI_STATE[r.state] || r.status || r.state)}</td>
     <td>${r.state === 'unknown' ? `<button class="ghost" data-reconcile="${esc(r.refId)}">Đối soát</button>` : r.state === 'done' ? `<a href="#" data-pdf="${esc(r.refId)}">PDF</a>` : ''}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">Chưa có hoá đơn</td></tr>';
   document.querySelectorAll('[data-reconcile]').forEach((b) => b.onclick = async () => {

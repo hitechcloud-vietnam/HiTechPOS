@@ -83,3 +83,19 @@ test('unknown outcome blocks re-issue until reconciled', async (t) => {
   assert.equal(blocked.json.error, 'einvoice_outcome_unknown');
   assert.equal(creates, 1);
 });
+
+test('lookup URL template must be https and the provider name an own key', async (t) => {
+  const { call, server, owner } = await boot();
+  t.after(() => server.close());
+  const series = `1C${String(new Date().getFullYear()).slice(2)}MAA`;
+  const put = (provider, connection) => call('PUT', '/api/shop/einvoice-settings', { provider, connection, seller: SELLER, series }, owner);
+  const conn = { username: '0100109106', password: 'p' };
+  assert.equal((await put('viettel', { ...conn, lookupUrlTemplate: 'javascript:alert(1)//{code}' })).json.error, 'einvoice_lookup_url_invalid');
+  assert.equal((await put('viettel', { ...conn, lookupUrlTemplate: 'http://tracuu.example.vn/?c={code}' })).json.error, 'einvoice_lookup_url_invalid');
+  assert.equal((await put('viettel', { ...conn, lookupUrlTemplate: 'https://tracuu.example.vn/?c={code}' })).status, 200);
+  for (const provider of ['__proto__', 'constructor', 'toString']) {
+    const r = await put(provider, conn);
+    assert.equal(r.status, 422, provider);
+    assert.equal(r.json.error, 'einvoice_provider_invalid', provider);
+  }
+});

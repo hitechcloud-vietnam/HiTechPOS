@@ -29,6 +29,7 @@ const MESSAGES = {
   subdomain_taken: 'Tên miền này đã có cửa hàng sử dụng.',
   business_name_invalid: 'Vui lòng nhập tên cửa hàng.',
   industry_invalid: 'Ngành nghề không hợp lệ, vui lòng chọn lại.',
+  einvoice_lookup_url_invalid: 'Đường dẫn tra cứu phải bắt đầu bằng https://.',
   email_invalid: 'Email không hợp lệ.',
   email_taken: 'Email này đã được đăng ký.',
   phone_invalid: 'Số điện thoại di động không hợp lệ.',
