@@ -630,7 +630,7 @@ function createPartnersRouter({ partners, admin = null, config = {}, logger = co
 
   const partnerAuth = async (req, _res, next) => {
     const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
-    const partner = token ? await partners.authenticate(token) : null;
+    const partner = await partners.authenticate(token);
     if (!partner) return next(httpError('unauthorized', 401));
     req.partner = partner;
     next();
