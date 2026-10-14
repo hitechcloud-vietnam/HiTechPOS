@@ -4,6 +4,11 @@
 # and CLOUDFLARE_API_TOKEN in its environment.
 {
 	email {$ACME_EMAIL}
+	# Certificates for shops' own domains are issued on first visit, but only
+	# for domains the control plane has verified (apps/control-plane/src/domains.js).
+	on_demand_tls {
+		ask http://127.0.0.1:4100/internal/tls-ask
+	}
 }
 
 app.hitechpos.vn {
@@ -18,6 +23,19 @@ app.hitechpos.vn {
 	encode zstd gzip
 	# Only the control plane (on localhost) may name a shop by header; strip
 	# it from the internet so nobody can address another shop with it.
+	request_header -X-Hitech-Shop
+	reverse_proxy 127.0.0.1:6000 {
+		header_up Host {host}
+	}
+}
+
+# Shops' own verified domains (gói Doanh nghiệp). Anything else is refused by
+# the ask endpoint before a certificate is requested.
+https:// {
+	tls {
+		on_demand
+	}
+	encode zstd gzip
 	request_header -X-Hitech-Shop
 	reverse_proxy 127.0.0.1:6000 {
 		header_up Host {host}

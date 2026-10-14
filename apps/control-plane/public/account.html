@@ -24,7 +24,7 @@
   .wrap { overflow-x: auto; }
   .pill { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: .8rem; background: #eef4fb; }
   .paid, .active, .issued { background: #e5f6ef; color: var(--ok); }
-  .pending, .trialing { background: #fff4e0; color: var(--warn); }
+  .pending, .trialing, .unverified { background: #fff4e0; color: var(--warn); }
   .cancelled, .expired, .failed, .review { background: #fbeaea; color: var(--err); }
   .muted { color: var(--muted); font-size: .85rem; }
   .msg { min-height: 1.2em; font-size: .9rem; }
@@ -161,6 +161,17 @@
     <h2>Lịch sử thanh toán gói cước</h2>
     <div class="wrap"><table><thead><tr><th>Thời gian</th><th>Gói</th><th>Số tiền</th><th>Cổng</th><th>Trạng thái</th></tr></thead><tbody id="subs"></tbody></table></div>
   </section>
+  <section class="card" id="domainsCard">
+    <h2>Tên miền riêng</h2>
+    <p class="muted">Dùng địa chỉ của chính cửa hàng (ví dụ <code>pos.cuahang.vn</code>) – có trong gói Doanh nghiệp.</p>
+    <form id="domainForm" class="row">
+      <label>Tên miền <input name="domain" placeholder="pos.cuahang.vn"></label>
+      <button>Thêm tên miền</button>
+    </form>
+    <p class="msg" id="domainMsg"></p>
+    <div id="domainList"></div>
+  </section>
+
   <section class="card">
     <h2>Dữ liệu cửa hàng</h2>
     <p class="muted">Tải toàn bộ dữ liệu bán hàng, hàng hoá, khách hàng… (định dạng NDJSON nén) để tự lưu trữ hoặc chuyển sang hệ thống khác. Mật khẩu và khoá đăng nhập không được xuất.</p>
@@ -254,6 +265,23 @@ function renderSettings(s) {
   $('#methods').textContent = s.methods.length ? s.methods.map((m) => ({ vietqr: 'VietQR', payos: 'payOS', pay2s: 'Pay2S' }[m])).join(', ') : 'chưa cấu hình';
 }
 
+async function loadDomains() {
+  const list = await api('GET', '/api/shop/domains');
+  $('#domainList').innerHTML = list.map((d) => `<div class="card" style="margin-top:10px"><b>${esc(d.domain)}</b> ${d.verified ? pill('active') : pill('pending')}
+    ${d.verified ? '' : `<p class="muted">Tạo hai bản ghi DNS rồi bấm Xác minh:</p><div class="wrap"><table><tr><th>Loại</th><th>Tên</th><th>Giá trị</th></tr>${d.dns.map((r) => `<tr><td>${r.type}</td><td><code>${esc(r.name)}</code></td><td><code>${esc(r.value)}</code></td></tr>`).join('')}</table></div>
+    <button class="ghost" data-verify="${esc(d.domain)}">Xác minh</button>`} <button class="ghost" data-remove="${esc(d.domain)}">Gỡ</button></div>`).join('');
+  document.querySelectorAll('[data-verify]').forEach((b) => b.onclick = async () => {
+    try { await api('POST', `/api/shop/domains/${encodeURIComponent(b.dataset.verify)}/verify`); say($('#domainMsg'), 'Đã xác minh. Chứng chỉ HTTPS sẽ được cấp ở lần truy cập đầu tiên.', true); loadDomains(); } catch (err) { say($('#domainMsg'), err.message); }
+  });
+  document.querySelectorAll('[data-remove]').forEach((b) => b.onclick = async () => {
+    if (!confirm('Gỡ tên miền này?')) return;
+    await api('DELETE', `/api/shop/domains/${encodeURIComponent(b.dataset.remove)}`); loadDomains();
+  });
+}
+$('#domainForm').onsubmit = async (e) => {
+  e.preventDefault();
+  try { await api('POST', '/api/shop/domains', { domain: e.target.domain.value }); e.target.reset(); say($('#domainMsg'), 'Đã thêm. Tạo bản ghi DNS bên dưới rồi bấm Xác minh.', true); loadDomains(); } catch (err) { say($('#domainMsg'), err.message); }
+};
 $('#exportBtn').onclick = async () => {
   say($('#exportMsg'), 'Đang chuẩn bị tệp…', true);
   const res = await fetch('/api/shop/export', { headers: { authorization: 'Bearer ' + token } });
@@ -362,6 +390,7 @@ async function load() {
   renderSettings(await api('GET', '/api/shop/payment-settings'));
   loadKeys();
   loadEinvoices().catch(() => {});
+  loadDomains().catch(() => {});
   const sales = await api('GET', '/api/shop/payments');
   $('#sales').innerHTML = sales.map((p) => `<tr><td>${dt(p.createdAt)}</td><td>${esc(p.metadata && p.metadata.saleRef)}</td><td>${esc(p.provider)}</td>
     <td>${vnd(p.amount)}</td><td>${pill(p.status)}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Chưa có giao dịch</td></tr>';

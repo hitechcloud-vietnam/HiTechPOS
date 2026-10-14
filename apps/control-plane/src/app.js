@@ -11,6 +11,7 @@ const { createBillingService } = require('./billing');
 const { createCounterService } = require('./counter');
 const { createEInvoiceService } = require('./einvoices');
 const { createNotifier } = require('./notify');
+const { createDomainService } = require('./domains');
 const { rateLimit, securityHeaders } = require('./security');
 const { hashPassword, verifyPassword } = require('./passwords');
 const { signToken, verifyToken } = require('./tokens');
@@ -53,6 +54,13 @@ const MESSAGES = {
   sale_already_paid: 'Hoá đơn này đã được thanh toán.',
   payment_not_in_review: 'Giao dịch không ở trạng thái cần đối soát.',
   rate_limited: 'Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút.',
+  domain_invalid: 'Tên miền không hợp lệ.',
+  domain_reserved: 'Không dùng được tên miền của HiTechPOS.',
+  domain_taken: 'Tên miền này đang được cửa hàng khác sử dụng.',
+  domain_limit: 'Mỗi cửa hàng dùng tối đa 5 tên miền riêng.',
+  domain_not_found: 'Chưa thêm tên miền này.',
+  domain_unverified: 'Chưa thấy bản ghi TXT xác minh. Bản ghi DNS có thể mất vài phút đến vài giờ để có hiệu lực.',
+  plan_feature_missing: 'Tính năng này cần gói cao hơn.',
   export_unavailable: 'Chức năng xuất dữ liệu chưa sẵn sàng trên máy chủ này.',
   reset_token_invalid: 'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.',
   payment_not_found: 'Không tìm thấy giao dịch.',
@@ -65,8 +73,9 @@ function httpError(code, status) {
   return Object.assign(new Error(code), { code, status });
 }
 
-function createApp({ store, config, providers, installer, onboarding, now = () => new Date(), logger = console, counterOptions = {}, einvoiceOptions = {}, mailTransport }) {
+function createApp({ store, config, providers, installer, onboarding, now = () => new Date(), logger = console, counterOptions = {}, einvoiceOptions = {}, mailTransport, resolveTxt }) {
   const tenants = createTenantService({ store, config, installer, onboarding, now });
+  const domains = createDomainService({ store, config, now, ...(resolveTxt ? { resolveTxt } : {}) });
   const einvoices = createEInvoiceService({ store, config, now, providerOptions: einvoiceOptions, logger });
   const counter = createCounterService({ store, config, now, providerOptions: counterOptions, shopBridge: store.shopBridge || null, logger });
   const notifier = createNotifier({ store, config, now, logger, transport: mailTransport, hostsOf: (t) => tenants.hostsOf(t) });
@@ -246,6 +255,20 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   });
 
   /* ---- counter payments: owner settings ---- */
+  /* ---- custom domains (domains.js) ---- */
+  app.get('/api/shop/domains', auth, async (req, res) => res.json(await domains.list(req.account.tenantId)));
+  app.post('/api/shop/domains', auth, async (req, res) => res.status(201).json(await domains.add(req.account.tenantId, (req.body || {}).domain)));
+  app.post('/api/shop/domains/:domain/verify', auth, async (req, res) => res.json(await domains.verify(req.account.tenantId, req.params.domain)));
+  app.delete('/api/shop/domains/:domain', auth, async (req, res) => res.json(await domains.remove(req.account.tenantId, req.params.domain)));
+  /* Caddy on_demand_tls "ask" (deploy/Caddyfile). Answered only to the
+     local proxy itself: a direct, non-forwarded loopback request. */
+  app.get('/internal/tls-ask', async (req, res) => {
+    const remote = req.socket.remoteAddress || '';
+    const local = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(remote) && !req.headers['x-forwarded-for'];
+    if (!local) return res.status(403).end();
+    res.status((await domains.allowed(req.query.domain)) ? 200 : 404).end();
+  });
+
   /* Data portability / self-held backup: the whole shop database as
      gzipped NDJSON (store/mongo.js exportShop). */
   app.get('/api/shop/export', auth, async (req, res) => {
