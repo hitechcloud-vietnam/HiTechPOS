@@ -18,7 +18,7 @@ git subtree pull --prefix upstream/pos https://github.com/Posnic/POS develop --s
 
 Quy tắc:
 - Hạn chế sửa trực tiếp `upstream/`. Mỗi bản vá cục bộ phải ghi vào bảng dưới đây để khi `subtree pull` biết cần giữ gì; ưu tiên gửi bản vá ngược về Posnic.
-- Sau mỗi lần cập nhật chạy `npm test` (test `secrets.test.js` đối chiếu trực tiếp `upstream/pos/api/shard.js`).
+- Sau mỗi lần cập nhật chạy `npm test` và bộ test của Posnic: `cd upstream/pos/api && npm ci && MONGOMS_SYSTEM_BINARY=<đường dẫn mongod> npx jest -c jest.ci.config.js tests/unit` (test `secrets.test.js` đối chiếu trực tiếp `upstream/pos/api/shard.js`).
 
 ## Bản vá cục bộ
 
@@ -27,7 +27,8 @@ Quy tắc:
 | `pos/api/src/db/model-registry.js` | Proxy model trả về hàm gán ở cấp module (`Sale.xxxModel = …`) khi model theo tenant không có | Ở chế độ shard đa tenant, mọi hàm `Sale.*Model` gán ở cấp module đều lỗi “is not a function” (ví dụ QR) | Có – lỗi chung của Posnic |
 | `pos/api/src/models/sale.model.js` | Nhánh HiTechPOS trong `generateQrCodeModel`, `getQrStatusModel`, `qrCodeCloseModel`; nạp `../config` sau nhánh này | Ô QR của màn hình bán hàng dùng cổng HiTechPOS (VietQR/payOS/Pay2S) thay Razorpay; `config/index.js` đòi biến môi trường đơn shop | Một phần (lazy config) |
 | `pos/api/src/services/hitech-pay.js` | Tệp mới – adapter gọi control plane bằng khoá `HITECH_POS_KEY` của shop | Như trên | Không |
-| `pos/frontend/static/script/js/modules/js/sales.js` | Nhãn ô Qrpay dùng i18n `lang_razorpay` | Hiển thị “QR chuyển khoản” | Có |
+| `pos/frontend/static/script/js/modules/js/sales.js` | Nhãn ô Qrpay dùng i18n `lang_razorpay`; `PosnicPro.sales.paymentLabel` dịch “Cash”/“Card” khi hiển thị (giữ khoá nội bộ) | Hiển thị “QR chuyển khoản”, “Tiền mặt”, “Thẻ” | Có |
+| `pos/api/tests/unit/db/model-registry-module-helpers.test.js` | Test mới cho bản vá `model-registry` | | Có |
 | `pos/languages/vi.json`, `_english.json` | `lang_qrpay`, `lang_razorpay` → “QR chuyển khoản”; khoá mới `lang_qr_customer_display`, `lang_qr_money_received` | Việt hoá, nút mới trong hộp thoại QR | Không |
 | `pos/frontend/modals/sales.html`, `sales.js` | Nút “Màn hình khách” và “Đã nhận tiền” trong hộp thoại QR khi id là `htp_…` | Thu ngân xác nhận VietQR chuyển khoản trực tiếp | Không |
 | `pos/api/src/routes/sales.routes.js` | Route `GET /sales/hitechQrConfirm` (quyền `sales.write`) | Như trên | Không |

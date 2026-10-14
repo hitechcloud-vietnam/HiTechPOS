@@ -49,6 +49,7 @@ const MESSAGES = {
   payment_amount_invalid: 'Số tiền không hợp lệ.',
   sale_ref_invalid: 'Mã hoá đơn không hợp lệ.',
   sale_already_paid: 'Hoá đơn này đã được thanh toán.',
+  payment_not_in_review: 'Giao dịch không ở trạng thái cần đối soát.',
   payment_not_found: 'Không tìm thấy giao dịch.',
   manual_confirm_not_allowed: 'Chỉ xác nhận thủ công được với VietQR chuyển khoản trực tiếp.',
   payos_configuration_invalid: 'Thông tin kết nối payOS chưa đầy đủ.',
@@ -247,9 +248,56 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   });
   app.get('/pay/:tenantId/:orderCode', (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'pay.html')));
 
-  app.get('/api/admin/tenants', admin, async (_req, res) => res.json((await store.tenants.list()).map(view)));
-  app.post('/api/admin/tenants/:id/suspend', admin, async (req, res) => res.json(view(await tenants.setSuspended(req.params.id, true, (req.body || {}).reason))));
-  app.post('/api/admin/tenants/:id/resume', admin, async (req, res) => res.json(view(await tenants.setSuspended(req.params.id, false))));
+  /* Staff view: adds what support needs (install/onboarding outcome, which
+     payment and e-invoice integrations are on) and never any secret. */
+  const adminView = (t) => t && {
+    ...view(t),
+    tenantDb: t.tenantDb,
+    installError: t.installError || null,
+    onboarding: t.onboarding || null,
+    paymentMethods: ['vietqr', 'payos', 'pay2s'].filter((m) => t.paymentSettings && t.paymentSettings[m]),
+    bankFeed: !!(t.paymentSettings && t.paymentSettings.bankFeed),
+    einvoice: t.einvoiceSettings ? { provider: t.einvoiceSettings.provider, environment: t.einvoiceSettings.environment, autoIssue: !!t.einvoiceSettings.autoIssue } : null,
+  };
+  app.get('/api/admin/tenants', admin, async (_req, res) => res.json((await store.tenants.list()).map(adminView)));
+  app.get('/api/admin/stats', admin, async (_req, res) => {
+    const all = await store.tenants.list();
+    const count = (f) => all.filter(f).length;
+    const plans = require('./plans');
+    const mrr = all
+      .filter((t) => t.subscription && t.subscription.status === 'active' && !t.suspended)
+      .reduce((sum, t) => sum + ((plans.PLANS.find((p) => p.id === t.plan.id) || {}).monthlyPrice || 0), 0);
+    res.json({
+      tenants: all.length,
+      active: count((t) => t.status === 'active' && !t.suspended),
+      trialing: count((t) => t.subscription && t.subscription.status === 'trialing' && !t.suspended),
+      paying: count((t) => t.subscription && t.subscription.status === 'active'),
+      suspended: count((t) => t.suspended),
+      installFailed: count((t) => t.status === 'install_failed'),
+      mrr,
+      byIndustry: all.reduce((acc, t) => ({ ...acc, [t.industry]: (acc[t.industry] || 0) + 1 }), {}),
+    });
+  });
+  app.get('/api/admin/payments', admin, async (req, res) => {
+    const query = {};
+    if (req.query.status) query.status = String(req.query.status);
+    if (req.query.purpose) query.purpose = String(req.query.purpose);
+    const rows = await store.payments.list(query);
+    res.json(rows.slice(0, 200).map(({ events, ...p }) => ({ ...p, events: (events || []).slice(-5) })));
+  });
+  /* A payment held in review (amount mismatch) is accepted as paid by staff
+     after checking the bank statement; a subscription is then activated. */
+  app.post('/api/admin/payments/:orderCode/accept', admin, async (req, res) => {
+    const p = await billing.journal.get(Number(req.params.orderCode));
+    if (!p) throw httpError('payment_not_found', 404);
+    if (p.status !== 'review') throw httpError('payment_not_in_review', 409);
+    const note = String((req.body || {}).note || '').slice(0, 200);
+    const r = await billing.journal.apply({ provider: p.provider, orderCode: p.orderCode, status: 'paid', amount: p.amount, eventKey: `admin-accept:${p.orderCode}`, transactionId: note ? `admin:${note}` : 'admin' });
+    if (r.changed && r.payment.purpose === 'subscription') await billing.activate(r.payment);
+    res.json({ orderCode: r.payment.orderCode, status: r.payment.status });
+  });
+  app.post('/api/admin/tenants/:id/suspend', admin, async (req, res) => res.json(adminView(await tenants.setSuspended(req.params.id, true, (req.body || {}).reason))));
+  app.post('/api/admin/tenants/:id/resume', admin, async (req, res) => res.json(adminView(await tenants.setSuspended(req.params.id, false))));
   app.post('/api/admin/jobs/enforce-expiry', admin, async (_req, res) => res.json({ suspended: await billing.enforceExpiry() }));
 
   app.get('/vendor/qrcode.js', (_req, res) => res.type('js').sendFile(require.resolve('qrcode-generator/qrcode.js')));

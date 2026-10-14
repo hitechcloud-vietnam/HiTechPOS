@@ -2391,7 +2391,7 @@ PosnicPro.sales = {
                     $('.payment_mode').val(sales_payment_mode);
                     let paymentMethod = '<div class="col-lg-4 col-md-2 col-xs-12">' +
                         '<label class="btn btn-block btn-payment-mode payment_detail change_active save_enable ' + payment_mode_active + ' ">' +
-                        '<input type="radio" class="payment_mode" name="payment_mode" id="' + val.payment_value + '" value="' + val.payment_value + '" style="display: none;"/>' + val.payment_value + '' +
+                        '<input type="radio" class="payment_mode" name="payment_mode" id="' + val.payment_value + '" value="' + val.payment_value + '" style="display: none;"/>' + PosnicPro.sales.paymentLabel(val.payment_value) + '' +
                         '</label>' +
                         '</div>';
                     $('#payment_id').append(paymentMethod);
@@ -2824,7 +2824,7 @@ PosnicPro.sales = {
                 '<div class="payment-method-card ' + (isActive ? 'payment-active' : '') + '" style="border: 2px solid ' + (isActive ? '#5f63f2' : '#e9ecef') + '; border-radius: 8px; padding: 12px; transition: all 0.3s ease;">' +
                 '<button type="button" class="btn btn-payment-method ' + activeClass + '" style="min-width:140px; font-weight: 600; border-radius: 6px; padding: 10px 20px; background: ' + (isActive ? '#5f63f2' : 'transparent') + '; color: ' + (isActive ? '#fff' : '#495057') + '; border: 2px solid ' + (isActive ? '#5f63f2' : '#dee2e6') + ';">' +
                 '<input type="radio" class="payment_mode d-none" name="payment_mode" id="' + id + '" value="' + id + '">' +
-                icon + title +
+                icon + PosnicPro.sales.paymentLabel(title) +
                 '</button>' +
                 '<input type="number" class="form-control payment-amount-input mt-2" id="' + inputId + '" placeholder="₹ 0.00" value="' + (storedValue || '') + '" ' + disabledAttr + ' style="font-size: 18px; font-weight: 600; text-align: right; border: 1px solid #dee2e6; border-radius: 6px; padding: 12px;">' +
                 '</div>' +
@@ -10838,6 +10838,18 @@ $(function () {
 /******** END SALES RECENT ADD EDIT SALES MENU & RECENT ADDED ITEMS MENU ********/
 
 /******** START SALES RECENT ADD EDIT SALES MENU & RECENT ADDED ITEMS MENU ********/
+/*
+ * Display name of a tender. The stored name doubles as Posnic's internal key
+ * ('Cash' drives the drawer count and Captain), so it is translated only for
+ * display. (HiTechPOS)
+ */
+PosnicPro.sales.paymentLabel = function (value) {
+    var v = String(value == null ? '' : value);
+    if (v === 'Cash') { return PosnicPro.i18n.t('lang_cash_title', 'Cash'); }
+    if (v === 'Card') { return PosnicPro.i18n.t('lang_card', 'Card'); }
+    return v;
+};
+
 PosnicPro.sales.qr = {
     "intervalId": null,
     hitechConfirm: function () {
