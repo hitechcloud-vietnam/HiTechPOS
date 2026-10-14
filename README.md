@@ -55,6 +55,7 @@ Triển khai thật xem [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 - [Kiến trúc](docs/ARCHITECTURE.md)
 - [Lộ trình phát triển](docs/ROADMAP.md)
 - [Giấy phép & tuân thủ AGPL](docs/LICENSING.md)
+- [API cho máy POS và đối tác](docs/API.md)
 - [Triển khai](docs/DEPLOYMENT.md)
 - [Đồng bộ mã nguồn Posnic](docs/UPSTREAM.md)
 
