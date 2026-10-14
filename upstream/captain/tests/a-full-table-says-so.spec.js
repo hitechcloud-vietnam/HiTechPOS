@@ -28,7 +28,7 @@ const RUNTIME_INFO = {
   channel: null, apiSchema: 1, syncProtocol: 1, features: { account: true }
 };
 
-const SHOP_ORIGIN = 'https://smoke.posnic.io';
+const SHOP_ORIGIN = 'https://smoke.hitechpos.vn';
 const API_BASE = `${SHOP_ORIGIN}/api`;
 
 const branchData = {

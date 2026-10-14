@@ -55,7 +55,7 @@ export async function startAuthorization(
       method: "POST",
       body: {
         codeChallenge,
-        deviceName: "Posnic Business",
+        deviceName: "HiTechPOS Business",
         ...(options.stepUp ? { stepUp: true } : {}),
       },
     }),

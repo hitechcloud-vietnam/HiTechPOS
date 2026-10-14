@@ -95,7 +95,7 @@
   /**
    * Run it because the URL said to.
    *
-   * `?selftest=https://shop.posnic.io/api` - which is how an emulator with no
+   * `?selftest=https://shop.hitechpos.vn/api` - which is how an emulator with no
    * hands runs the same test a person would, and how CI reads the answer.
    * Nothing happens without that parameter.
    */

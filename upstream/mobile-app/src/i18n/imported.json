@@ -1,6 +1,6 @@
 {
   "ta": {
-    "cloudAccount": "Posnic கிளவுட் கணக்கு",
+    "cloudAccount": "HiTechPOS கிளவுட் கணக்கு",
     "refresh": "புதுப்பி",
     "more": "மேலும்",
     "items": "பொருட்கள்",
@@ -44,7 +44,7 @@
     "unavailable": "கிடைக்கவில்லை"
   },
   "hi": {
-    "cloudAccount": "Posnic क्लाउड खाता",
+    "cloudAccount": "HiTechPOS क्लाउड खाता",
     "refresh": "रीफ़्रेश करें",
     "more": "अधिक",
     "items": "वस्तुएं",
@@ -88,7 +88,7 @@
     "unavailable": "उपलब्ध नहीं"
   },
   "ml": {
-    "cloudAccount": "Posnic ക്ലൗഡ് അക്കൗണ്ട്",
+    "cloudAccount": "HiTechPOS ക്ലൗഡ് അക്കൗണ്ട്",
     "refresh": "പുതുക്കുക",
     "more": "കൂടുതൽ",
     "items": "ഇനങ്ങൾ",
@@ -132,7 +132,7 @@
     "unavailable": "ലഭ്യമല്ല"
   },
   "kn": {
-    "cloudAccount": "Posnic ಕ್ಲೌಡ್ ಖಾತೆ",
+    "cloudAccount": "HiTechPOS ಕ್ಲೌಡ್ ಖಾತೆ",
     "refresh": "ನವೀಕರಿಸಿ",
     "more": "ಇನ್ನಷ್ಟು",
     "items": "ವಸ್ತುಗಳು",
@@ -176,7 +176,7 @@
     "unavailable": "ಲಭ್ಯವಿಲ್ಲ"
   },
   "te": {
-    "cloudAccount": "Posnic క్లౌడ్ ఖాతా",
+    "cloudAccount": "HiTechPOS క్లౌడ్ ఖాతా",
     "refresh": "రిఫ్రెష్ చేయి",
     "more": "మరిన్ని",
     "items": "వస్తువులు",
@@ -220,7 +220,7 @@
     "unavailable": "అందుబాటులో లేదు"
   },
   "si": {
-    "cloudAccount": "Posnic ක්ලවුඩ් ගිණුම",
+    "cloudAccount": "HiTechPOS ක්ලවුඩ් ගිණුම",
     "refresh": "යාවත්කාලීන කරන්න",
     "more": "තව",
     "items": "අයිතම",
@@ -264,7 +264,7 @@
     "unavailable": "ලබා ගත නොහැක"
   },
   "ne": {
-    "cloudAccount": "Posnic क्लाउड खाता",
+    "cloudAccount": "HiTechPOS क्लाउड खाता",
     "refresh": "रिफ्रेस गर्नुहोस्",
     "more": "थप",
     "items": "वस्तुहरू",
@@ -308,7 +308,7 @@
     "unavailable": "उपलब्ध छैन"
   },
   "ar": {
-    "cloudAccount": "حساب Posnic السحابي",
+    "cloudAccount": "حساب HiTechPOS السحابي",
     "refresh": "تحديث",
     "more": "المزيد",
     "items": "الأصناف",
@@ -352,7 +352,7 @@
     "unavailable": "غير متاح"
   },
   "fr": {
-    "cloudAccount": "Compte cloud Posnic",
+    "cloudAccount": "Compte cloud HiTechPOS",
     "refresh": "Actualiser",
     "more": "Plus",
     "items": "Articles",
@@ -396,7 +396,7 @@
     "unavailable": "Indisponible"
   },
   "es": {
-    "cloudAccount": "Cuenta en la nube de Posnic",
+    "cloudAccount": "Cuenta en la nube de HiTechPOS",
     "refresh": "Actualizar",
     "more": "Más",
     "items": "Artículos",
@@ -440,7 +440,7 @@
     "unavailable": "No disponible"
   },
   "pt": {
-    "cloudAccount": "Conta na nuvem Posnic",
+    "cloudAccount": "Conta na nuvem HiTechPOS",
     "refresh": "Atualizar",
     "more": "Mais",
     "items": "Itens",
@@ -484,7 +484,7 @@
     "unavailable": "Indisponível"
   },
   "id": {
-    "cloudAccount": "Akun Cloud Posnic",
+    "cloudAccount": "Akun Cloud HiTechPOS",
     "refresh": "Muat ulang",
     "more": "Selengkapnya",
     "items": "Barang",
@@ -528,7 +528,7 @@
     "unavailable": "Tidak tersedia"
   },
   "th": {
-    "cloudAccount": "บัญชีคลาวด์ Posnic",
+    "cloudAccount": "บัญชีคลาวด์ HiTechPOS",
     "refresh": "รีเฟรช",
     "more": "เพิ่มเติม",
     "items": "สินค้า",
@@ -572,7 +572,7 @@
     "unavailable": "ไม่พร้อมใช้งาน"
   },
   "de": {
-    "cloudAccount": "Posnic-Cloud-Konto",
+    "cloudAccount": "HiTechPOS-Cloud-Konto",
     "refresh": "Aktualisieren",
     "more": "Mehr",
     "items": "Artikel",
@@ -616,7 +616,7 @@
     "unavailable": "Nicht verfügbar"
   },
   "sw": {
-    "cloudAccount": "Akaunti ya wingu ya Posnic",
+    "cloudAccount": "Akaunti ya wingu ya HiTechPOS",
     "refresh": "Onyesha upya",
     "more": "Zaidi",
     "items": "Bidhaa",
@@ -660,7 +660,7 @@
     "unavailable": "Haipatikani"
   },
   "nl": {
-    "cloudAccount": "Posnic-cloudaccount",
+    "cloudAccount": "HiTechPOS-cloudaccount",
     "refresh": "Vernieuwen",
     "more": "Meer",
     "items": "Artikelen",
@@ -704,7 +704,7 @@
     "unavailable": "Niet beschikbaar"
   },
   "it": {
-    "cloudAccount": "Account cloud Posnic",
+    "cloudAccount": "Account cloud HiTechPOS",
     "refresh": "Aggiorna",
     "more": "Altro",
     "items": "Articoli",

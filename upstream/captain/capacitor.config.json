@@ -1,6 +1,6 @@
 {
-  "appId": "com.posnic.captain",
-  "appName": "Captain",
+  "appId": "vn.hitechpos.captain",
+  "appName": "HiTechPOS Captain",
   "webDir": "dist",
   "server": {
     "androidScheme": "http",

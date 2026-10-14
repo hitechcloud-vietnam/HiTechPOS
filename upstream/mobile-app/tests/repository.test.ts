@@ -719,7 +719,7 @@ const localConnection = {
 };
 const internetConnection = {
   ...localConnection,
-  baseUrl: "https://same-shop.posnic.io/api",
+  baseUrl: "https://same-shop.hitechpos.vn/api",
 };
 test("connection switching isolates receipt history and restores it when returning", async () => {
   const { repo } = setup();

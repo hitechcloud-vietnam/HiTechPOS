@@ -178,7 +178,7 @@ public final class CaptainSecureSessionPlugin: CAPPlugin, CAPBridgedPlugin {
     }
     @objc func openBrowser(_ call: CAPPluginCall) {
         guard let text = call.getString("url"), let url = URL(string:text),
-              url.scheme == "https", url.host == "www.posnic.com", url.path == "/api/mobile/authorize",
+              url.scheme == "https", url.host == "app.hitechpos.vn", url.path == "/api/mobile/authorize",
               url.user == nil, url.password == nil, url.port == nil || url.port == 443 else {
             call.reject("Could not connect. Try again."); return
         }

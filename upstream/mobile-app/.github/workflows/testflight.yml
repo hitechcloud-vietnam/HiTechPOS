@@ -32,10 +32,11 @@ jobs:
           IOS_CERT_P12: ${{ secrets.IOS_CERT_P12 }}
           IOS_CERT_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
           IOS_APPSTORE_PROVISIONING_PROFILE: ${{ secrets.IOS_APPSTORE_PROVISIONING_PROFILE }}
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
         run: bash scripts/build-ios-testflight.sh
       - uses: actions/upload-artifact@v7
         with:
-          name: posnic-pos-ios
+          name: hitechpos-mobile-ios
           path: artifacts/ios-release/*.ipa
           if-no-files-found: error
       - name: Upload to TestFlight
@@ -52,4 +53,4 @@ jobs:
           trap 'rm -f "$KEY_FILE"' EXIT
           printf '%s' "$ASC_API_KEY_P8" > "$KEY_FILE"
           chmod 600 "$KEY_FILE"
-          xcrun altool --upload-app --type ios --file artifacts/ios-release/PosnicPOS.ipa --apiKey "$ASC_API_KEY_ID" --apiIssuer "$ASC_API_ISSUER"
+          xcrun altool --upload-app --type ios --file artifacts/ios-release/HiTechPOS.ipa --apiKey "$ASC_API_KEY_ID" --apiIssuer "$ASC_API_ISSUER"

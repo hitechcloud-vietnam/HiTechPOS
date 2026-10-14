@@ -34,7 +34,7 @@
    *
    * Accepts, in order of how likely somebody is to have produced it:
    *   demo                                a bare shop code
-   *   https://demo.posnic.io/api          the address itself
+   *   https://demo.hitechpos.vn/api          the address itself
    *   http://192.168.1.5:5555             a till on the shop network
    *   https://anything/x?server=demo      a link carrying either
    *
@@ -59,7 +59,7 @@
    *
    * THE CONTRACT, for whatever prints the code:
    *
-   *   https://demo.posnic.io/setup?server=demo&lan=http://192.168.1.5:5555
+   *   https://demo.hitechpos.vn/setup?server=demo&lan=http://192.168.1.5:5555
    *   {"server":"demo","lan":"192.168.1.5"}
    *   demo                                  still works, one address
    *   http://192.168.1.5:5555               still works, one address
@@ -199,7 +199,7 @@
           }
           /* A code that is not ours. Keep looking rather than closing the
              camera: the till's code is probably next to whatever this was. */
-          note.textContent = 'That code is not a Posnic shop. Keep looking.';
+          note.textContent = 'That code is not a HiTechPOS shop. Keep looking.';
         }
       }
       setTimeout(tick, SCAN_INTERVAL_MS);

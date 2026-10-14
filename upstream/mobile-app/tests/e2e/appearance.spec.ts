@@ -6,7 +6,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme });
     await page.goto("/");
     await expect(
-      page.getByRole("img", { name: "Posnic", exact: true }),
+      page.getByRole("img", { name: "HiTechPOS", exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", {

@@ -22,8 +22,8 @@ for (const returning of [false, true])
       window.setTimeout = (fn, ms, ...args) =>
         timeout(fn, ms === 5000 ? 10 : ms, ...args);
     });
-    const cloud = "https://approved.posnic.io/api";
-    await page.route("https://approved.posnic.io/**", (route) =>
+    const cloud = "https://approved.hitechpos.vn/api";
+    await page.route("https://approved.hitechpos.vn/**", (route) =>
       route.fulfill({
         json: route.request().url().endsWith("/pair")
           ? {
@@ -38,7 +38,7 @@ for (const returning of [false, true])
           : info,
       }),
     );
-    await page.route("https://www.posnic.com/**", (route) => {
+    await page.route("https://app.hitechpos.vn/**", (route) => {
       if (route.request().url().endsWith("/capabilities"))
         return route.fulfill({ json: { applications: ["captain"] } });
       if (route.request().url().endsWith("/requests"))
@@ -46,7 +46,7 @@ for (const returning of [false, true])
           json: {
             request: "a".repeat(43),
             authorizationUrl:
-              "https://www.posnic.com/api/mobile/authorize?request=" +
+              "https://app.hitechpos.vn/api/mobile/authorize?request=" +
               "a".repeat(43),
             expiresIn: 900,
           },
@@ -63,7 +63,7 @@ for (const returning of [false, true])
     if (returning)
       await page.evaluate(async () => {
         await POSNIC.session.start({
-          base: "https://approved.posnic.io/api",
+          base: "https://approved.hitechpos.vn/api",
           token: "previous",
           user: { id: "staff" },
           shopKey: "shop",
@@ -464,7 +464,7 @@ test("cloud uses external approval and a Captain-scoped request; unavailable acc
 }) => {
   await phone(page);
   let capability = false;
-  await page.route("https://www.posnic.com/**", (route) => {
+  await page.route("https://app.hitechpos.vn/**", (route) => {
     if (route.request().url().endsWith("/capabilities"))
       return route.fulfill({
         json: { applications: capability ? ["captain"] : ["mobile-pos"] },
@@ -475,7 +475,7 @@ test("cloud uses external approval and a Captain-scoped request; unavailable acc
         json: {
           request: "a".repeat(43),
           authorizationUrl:
-            "https://www.posnic.com/api/mobile/authorize?request=" +
+            "https://app.hitechpos.vn/api/mobile/authorize?request=" +
             "a".repeat(43),
           expiresIn: 900,
         },
@@ -584,7 +584,7 @@ test("first setup and connection settings use the same screen and save both addr
   if (!(await page.locator("#connection-settings").isVisible())) await page.locator("#connection-back").click();
   await page.locator("#connection-settings").click();
   await page.locator("#connection-lan").fill(base);
-  await page.locator("#connection-cloud").fill("https://shop.posnic.io/api");
+  await page.locator("#connection-cloud").fill("https://shop.hitechpos.vn/api");
   await page.locator("#connection-save").click();
   await expect(page.locator("#captain-note")).toContainText("Saved");
   expect(
@@ -592,7 +592,7 @@ test("first setup and connection settings use the same screen and save both addr
       lan: POSNIC.server.lan,
       cloud: POSNIC.server.cloud,
     })),
-  ).toEqual({ lan: base, cloud: "https://shop.posnic.io/api" });
+  ).toEqual({ lan: base, cloud: "https://shop.hitechpos.vn/api" });
   await page.locator("#connection-back").click();
   await page.locator("#connection-back").click();
   await page.locator("#captain-change-shop").click();
@@ -711,14 +711,14 @@ test("connection details can be saved while locked without clearing the staff se
 test("native account approval bypasses WebView CORS and can reopen after a browser launch failure", async ({ page }) => {
   await phone(page);
   let browserRequests = 0;
-  await page.route("https://www.posnic.com/**", route => { browserRequests++; return route.abort(); });
+  await page.route("https://app.hitechpos.vn/**", route => { browserRequests++; return route.abort(); });
   await page.evaluate(() => {
     window.nativeAccountCalls = [];
     window.browserAttempts = [];
     Capacitor.Plugins.CapacitorHttp = { request: async options => {
       window.nativeAccountCalls.push(options);
       if (options.url.endsWith("/capabilities")) return { status: 200, data: { applications: ["captain"] } };
-      if (options.url.endsWith("/requests")) return { status: 200, data: JSON.stringify({ request: "a".repeat(43), authorizationUrl: "https://www.posnic.com/api/mobile/authorize?request=" + "a".repeat(43), expiresIn: 900 }) };
+      if (options.url.endsWith("/requests")) return { status: 200, data: JSON.stringify({ request: "a".repeat(43), authorizationUrl: "https://app.hitechpos.vn/api/mobile/authorize?request=" + "a".repeat(43), expiresIn: 900 }) };
       return { status: 202, data: { error: "authorization_pending" } };
     } };
     Capacitor.Plugins.SecureSession.openBrowser = async ({ url }) => {
@@ -853,14 +853,14 @@ test("Retry finds a moved till on its custom port and never authorizes a neighbo
 test("approval stays pending in the browser and exchanges only after Captain returns", async ({ page }) => {
   await phone(page);
   let exchanges = 0, pairs = 0;
-  await page.route("https://www.posnic.com/**", route => {
+  await page.route("https://app.hitechpos.vn/**", route => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith("capabilities")) return route.fulfill({json:{applications:["captain"]}});
-    if (path.endsWith("requests")) return route.fulfill({json:{request:"a".repeat(43), authorizationUrl:"https://www.posnic.com/api/mobile/authorize?request=approved", expiresIn:900}});
+    if (path.endsWith("requests")) return route.fulfill({json:{request:"a".repeat(43), authorizationUrl:"https://app.hitechpos.vn/api/mobile/authorize?request=approved", expiresIn:900}});
     exchanges++;
-    return route.fulfill({json:{baseUrl:"https://azure.posnic.io/api",code,localServers:[]}});
+    return route.fulfill({json:{baseUrl:"https://azure.hitechpos.vn/api",code,localServers:[]}});
   });
-  await page.route("https://azure.posnic.io/**", route => {
+  await page.route("https://azure.hitechpos.vn/**", route => {
     pairs++;
     return route.fulfill({json:{token:"access",sessionId:"session",expiresIn:900,shopKey:"shop",user:{id:"staff"},branches:[{branch_id:"branch",store_id:"branch"}]}});
   });
@@ -889,18 +889,18 @@ test("approval stays pending in the browser and exchanges only after Captain ret
 test("a bare domain stays editable during discovery and supports changing server after sign-in selection", async ({ page }) => {
   await page.setViewportSize({width:360,height:800});
   await phone(page);
-  await page.route("https://azure.posnic.io/**", route => route.fulfill({json:info}));
+  await page.route("https://azure.hitechpos.vn/**", route => route.fulfill({json:info}));
   const input = page.locator("#captain-server");
-  await expect(input).toHaveAttribute("placeholder","azure.posnic.io");
-  await input.fill("azure.posnic.io");
+  await expect(input).toHaveAttribute("placeholder","azure.hitechpos.vn");
+  await input.fill("azure.hitechpos.vn");
   await page.evaluate(() => POSNIC.server.adopt("http://192.168.1.8:42590/api"));
   await expect(input).toBeVisible();
-  await expect(input).toHaveValue("azure.posnic.io");
+  await expect(input).toHaveValue("azure.hitechpos.vn");
   const box = await input.boundingBox();
   expect(box.width).toBeGreaterThan(230);
   await page.screenshot({path:"test-artifacts/server-domain-phone.png",fullPage:true});
   await input.press("Enter");
-  await expect(page.locator("#captain-selected-shop")).toHaveText("azure.posnic.io");
+  await expect(page.locator("#captain-selected-shop")).toHaveText("azure.hitechpos.vn");
   await expect(page.locator("#captain-change-shop")).toHaveText("Change server");
   await page.locator("#captain-change-shop").click();
   await page.locator("#captain-address-toggle").click();
@@ -918,18 +918,18 @@ test("expired cloud exchange recovers once without another browser approval", as
     const timeout = window.setTimeout;
     window.setTimeout = (fn, ms, ...args) => timeout(fn, ms === 5000 ? 10 : ms, ...args);
   });
-  await page.route("https://www.posnic.com/**", route => {
+  await page.route("https://app.hitechpos.vn/**", route => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith("capabilities")) return route.fulfill({json:{applications:["captain"]}});
     if (path.endsWith("requests")) {
       approvals++;
-      return route.fulfill({json:{request:String(approvals).repeat(43),authorizationUrl:"https://www.posnic.com/api/mobile/authorize?request=fresh",expiresIn:900}});
+      return route.fulfill({json:{request:String(approvals).repeat(43),authorizationUrl:"https://app.hitechpos.vn/api/mobile/authorize?request=fresh",expiresIn:900}});
     }
     exchanges++;
     if (exchanges === 2) expect(route.request().postDataJSON().recover).toBe(true);
-    return route.fulfill({json:{baseUrl:"https://azure.posnic.io/api",code:exchanges===1?code:"123456ABCDEF",localServers:[]}});
+    return route.fulfill({json:{baseUrl:"https://azure.hitechpos.vn/api",code:exchanges===1?code:"123456ABCDEF",localServers:[]}});
   });
-  await page.route("https://azure.posnic.io/**", route => {
+  await page.route("https://azure.hitechpos.vn/**", route => {
     pairs++;
     if (pairs===1) return route.fulfill({status:401,json:{error:{code:"PAIR_EXPIRED",message:"This pairing code expired or was already used."}}});
     expect(route.request().postDataJSON().code).toBe("123456ABCDEF");
@@ -946,7 +946,7 @@ test("expired cloud exchange recovers once without another browser approval", as
 
 test("pairing and backup addresses are focused views with a lossless Back action", async ({ page }) => {
   await phone(page);
-  await fillAddress(page, "azure.posnic.io");
+  await fillAddress(page, "azure.hitechpos.vn");
   if (!(await page.locator("#captain-code-toggle").isVisible())) await page.locator("#connection-back").click();
   await page.locator("#captain-code-toggle").click();
   await expect(page.locator("#captain-code")).toBeVisible();
@@ -954,7 +954,7 @@ test("pairing and backup addresses are focused views with a lossless Back action
   await expect(page.locator("#captain-connect")).toBeHidden();
   await expect(page.locator("#connection-lan")).toBeHidden();
   await page.locator("#connection-back").click();
-  await expect(page.locator("#captain-server")).toHaveValue("azure.posnic.io");
+  await expect(page.locator("#captain-server")).toHaveValue("azure.hitechpos.vn");
   await expect(page.locator("#captain-code")).toBeHidden();
   if (!(await page.locator("#connection-settings").isVisible())) await page.locator("#connection-back").click();
   await page.locator("#connection-settings").click();
@@ -962,13 +962,13 @@ test("pairing and backup addresses are focused views with a lossless Back action
   await expect(page.locator("#captain-server")).toBeHidden();
   await expect(page.locator("#captain-cloud-login")).toBeHidden();
   await page.locator("#connection-back").click();
-  await expect(page.locator("#captain-server")).toHaveValue("azure.posnic.io");
+  await expect(page.locator("#captain-server")).toHaveValue("azure.hitechpos.vn");
   await expect(page.locator("#captain-connect")).toBeEnabled();
 });
 
 test("Back cancels discovery and late results cannot replace the address screen", async ({ page }) => {
   await phone(page);
-  await fillAddress(page, "azure.posnic.io");
+  await fillAddress(page, "azure.hitechpos.vn");
   await page.evaluate(() => {
     POSNIC.discovery.scanSubnet = async (_subnet, options) => {
       window.finishDiscovery = () => options.collect({ base: "http://192.168.1.9:5555/api", info: { features: {} } });
@@ -980,7 +980,7 @@ test("Back cancels discovery and late results cannot replace the address screen"
   await expect.poll(() => page.evaluate(() => typeof window.finishDiscovery)).toBe("function");
   await page.locator("#connection-back").click();
   await page.evaluate(() => window.finishDiscovery());
-  await expect(page.locator("#captain-server")).toHaveValue("azure.posnic.io");
+  await expect(page.locator("#captain-server")).toHaveValue("azure.hitechpos.vn");
   await expect(page.locator("#captain-connect")).toBeEnabled();
   await expect(page.locator("#captain-results")).toBeHidden();
   await expect(page.locator("#captain-results button")).toHaveCount(0);
@@ -1043,7 +1043,7 @@ for (const screen of ['address','settings']) test(`Back during ${screen} verific
   if(screen==='settings'){
     await page.locator('#connection-settings').click();
     await page.locator('#connection-lan').fill(base);
-    await page.locator('#connection-cloud').fill('https://shop.posnic.io/api');
+    await page.locator('#connection-cloud').fill('https://shop.hitechpos.vn/api');
     await page.locator('#connection-save').click();
   }else{
     await page.locator('#captain-address-toggle').click();
@@ -1169,11 +1169,11 @@ test('same-server setup preserves typed credentials while another server clears 
   await page.locator('#captain-connect').click();
   await expect(page.locator('#username')).toHaveValue('current.staff');
   await expect(page.locator('#password')).toHaveValue('current-secret');
-  await page.evaluate(() => CaptainSignIn.remember('https://other.posnic.io/api', 'other.staff'));
-  await page.route('https://other.posnic.io/**', route => route.fulfill({ json: info }));
+  await page.evaluate(() => CaptainSignIn.remember('https://other.hitechpos.vn/api', 'other.staff'));
+  await page.route('https://other.hitechpos.vn/**', route => route.fulfill({ json: info }));
   await page.locator('#captain-change-shop').click();
   await page.locator('#captain-address-toggle').click();
-  await page.locator('#captain-server').fill('other.posnic.io');
+  await page.locator('#captain-server').fill('other.hitechpos.vn');
   await page.locator('#captain-connect').click();
   await expect(page.locator('#username')).toHaveValue('other.staff');
   await expect(page.locator('#password')).toHaveValue('');

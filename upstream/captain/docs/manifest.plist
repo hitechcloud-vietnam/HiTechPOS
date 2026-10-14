@@ -17,7 +17,7 @@
             <key>metadata</key>
             <dict>
                 <key>bundle-identifier</key>
-                <string>com.posnic.captain</string>
+                <string>vn.hitechpos.captain</string>
                 <key>bundle-version</key>
                 <!-- Indicative only. The url above always resolves to the newest
                      release, so this manifest never needs republishing; iOS shows
@@ -26,7 +26,7 @@
                 <key>kind</key>
                 <string>software</string>
                 <key>title</key>
-                <string>Captain</string>
+                <string>HiTechPOS Captain</string>
             </dict>
         </dict>
     </array>

@@ -24,7 +24,7 @@ PY
 security cms -D -i "$signing_dir/profile.mobileprovision" > "$signing_dir/profile.plist"
 profile_uuid=$(/usr/libexec/PlistBuddy -c 'Print UUID' "$signing_dir/profile.plist")
 app_id=$(/usr/libexec/PlistBuddy -c 'Print Entitlements:application-identifier' "$signing_dir/profile.plist")
-[[ "$app_id" == "$IOS_TEAM_ID.com.posnic.business" ]] || { echo 'Wrong app provisioning profile'; exit 1; }
+[[ "$app_id" == "$IOS_TEAM_ID.vn.hitechpos.business" ]] || { echo 'Wrong app provisioning profile'; exit 1; }
 mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
 profile_path="$HOME/Library/MobileDevice/Provisioning Profiles/$profile_uuid.mobileprovision"
 cp "$signing_dir/profile.mobileprovision" "$profile_path"
@@ -38,7 +38,7 @@ security list-keychains -d user -s "$keychain" "$HOME/Library/Keychains/login.ke
 export BUSINESS_PROFILE_UUID="$profile_uuid"
 ruby - <<'RUBY'
 require 'xcodeproj'
-project = Xcodeproj::Project.open('ios/PosnicBusiness.xcodeproj')
+project = Xcodeproj::Project.open('ios/HiTechPOSBusiness.xcodeproj')
 project.targets.each do |target|
   next unless target.product_type == 'com.apple.product-type.application'
   target.build_configurations.each do |config|
@@ -56,11 +56,11 @@ import plistlib, os
 with open(os.environ['SIGNING_DIR']+'/ExportOptions.plist', 'wb') as f:
     plistlib.dump({'method':'app-store-connect', 'teamID':os.environ['IOS_TEAM_ID'],
       'signingStyle':'manual', 'signingCertificate':'Apple Distribution',
-      'provisioningProfiles':{'com.posnic.business':os.environ['BUSINESS_PROFILE_UUID']},
+      'provisioningProfiles':{'vn.hitechpos.business':os.environ['BUSINESS_PROFILE_UUID']},
       'manageAppVersionAndBuildNumber':False, 'uploadSymbols':True}, f)
 PY
-xcodebuild -workspace ios/PosnicBusiness.xcworkspace -scheme PosnicBusiness -configuration Release -destination 'generic/platform=iOS' -archivePath "$signing_dir/Business.xcarchive" archive > "$signing_dir/archive.log" 2>&1 || { tail -150 "$signing_dir/archive.log"; exit 1; }
+xcodebuild -workspace ios/HiTechPOSBusiness.xcworkspace -scheme HiTechPOSBusiness -configuration Release -destination 'generic/platform=iOS' -archivePath "$signing_dir/Business.xcarchive" archive > "$signing_dir/archive.log" 2>&1 || { tail -150 "$signing_dir/archive.log"; exit 1; }
 xcodebuild -exportArchive -archivePath "$signing_dir/Business.xcarchive" -exportOptionsPlist "$signing_dir/ExportOptions.plist" -exportPath build-output
-test -s build-output/PosnicBusiness.ipa
+test -s build-output/HiTechPOSBusiness.ipa
 printf '%s\n' "$GITHUB_SHA" > build-output/SOURCE_COMMIT.txt
 (cd build-output && shasum -a 256 *.ipa > SHA256SUMS.txt)

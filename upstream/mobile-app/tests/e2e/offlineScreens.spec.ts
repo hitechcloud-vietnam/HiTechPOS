@@ -277,7 +277,7 @@ test("server settings refuse to disconnect an unfinished basket", async ({
     db.close();
     return shop;
   });
-  await page.route("https://same-shop.posnic.io/api/**", (route) =>
+  await page.route("https://same-shop.hitechpos.vn/api/**", (route) =>
     route.fulfill({
       json: route.request().url().includes("runtime-info")
         ? { edition: "cloud", apiSchema: 1, features: { mobilePosV1: true } }
@@ -291,7 +291,7 @@ test("server settings refuse to disconnect an unfinished basket", async ({
     .click();
   await page
     .getByRole("textbox", { name: "Server address", exact: true })
-    .fill("same-shop.posnic.io");
+    .fill("same-shop.hitechpos.vn");
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await page
     .getByRole("textbox", { name: "Username", exact: true })

@@ -1,3 +1,5 @@
+import { CLOUD_SUFFIX } from "../config/hitechpos";
+
 export function privateIpv4(host: string): boolean {
   const parts = host.split(".").map(Number);
   if (
@@ -26,7 +28,7 @@ export function serverAddress(raw: string): string {
   if (!value || /\s/.test(value)) throw new Error("invalidServer");
   const explicit = /^https?:\/\//i.test(value);
   if (!explicit && /^[a-z0-9-]+$/i.test(value) && value !== "localhost")
-    value = `https://${value.toLowerCase()}.posnic.io`;
+    value = `https://${value.toLowerCase()}${CLOUD_SUFFIX}`;
   else if (!explicit) {
     if (value.includes("://")) throw new Error("invalidServer");
     const host = value.split("/")[0]!.split(":")[0]!;

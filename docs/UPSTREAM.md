@@ -48,3 +48,13 @@ Quy tắc:
 | `pos/api/src/routes/sales.routes.js` | Route `GET /sales/hitechQrConfirm` (quyền `sales.write`) | Như trên | Không |
 | `pos/api/src/constants/categories.constants.js` | Mẫu tên danh mục chấp nhận chữ/số mọi ngôn ngữ (`\p{L}\p{M}\p{N}`) | Tên “Cà phê” bị từ chối – chặn chủ shop Việt nhập danh mục | Có |
 | `pos/api/tests/unit/services/business-access-hitechpos-cloud.test.js` (mới, chỉ test) | Chạy `shopBridge` thật của control plane ghi dòng `business_authorizations` (`authorization: 'cloud-browser'`) rồi đổi bằng `exchange()` của shard; tự bỏ qua khi không có `apps/control-plane`. Không sửa mã shard: `exchange()` vốn đã nhận dòng `cloud-browser` | Giữ hợp đồng “Tiếp tục với HiTechPOS Cloud” của ứng dụng chủ cửa hàng (`docs/BUSINESS-APP.md`) không lệch giữa hai bên | Không |
+
+## Ứng dụng di động (Business, Captain, Mobile)
+
+Đổi thương hiệu sang HiTechPOS; chi tiết từng ứng dụng nằm trong `HITECHPOS.md` của thư mục đó.
+
+| Thư mục | Thay đổi | Lý do | Gửi ngược Posnic? |
+|---|---|---|---|
+| `upstream/business` | Tên "HiTechPOS Chủ cửa hàng", id `vn.hitechpos.business`, cloud `https://app.hitechpos.vn` (`src/config/hitechpos.ts`, ghi đè bằng `EXPO_PUBLIC_HITECHPOS_CLOUD_ORIGIN`), chuỗi giao diện; giữ giá trị giao thức `posnic-business` và khoá keychain | Ứng dụng chủ cửa hàng của HiTechPOS; đăng nhập qua `apps/control-plane/src/business-cloud.js` | Không (thương hiệu); cấu hình cloud origin qua biến build thì có |
+| `upstream/captain` | Id `vn.hitechpos.captain`, tên "HiTechPOS Captain", `CLOUD_SUFFIX=.hitechpos.vn`, `ACCOUNT_ORIGIN=https://app.hitechpos.vn` (ghi đè lúc build: `scripts/hitechpos-config.js`), mặc định tiếng Việt, dòng "dựa trên Posnic (AGPL-3.0)" ở màn đăng nhập | Ứng dụng gọi món/phục vụ của HiTechPOS | Không (thương hiệu); phần ghi đè lúc build thì có |
+| `upstream/mobile-app` | Tên HiTechPOS, id `vn.hitechpos.mobile`, cloud trong `src/config/hitechpos.ts`, bỏ Apple team của Posnic (`IOS_TEAM_ID` bắt buộc) | Ứng dụng bán hàng trên điện thoại của HiTechPOS | Không |

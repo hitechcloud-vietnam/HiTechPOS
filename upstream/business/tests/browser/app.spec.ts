@@ -646,7 +646,7 @@ test("approved Business connection shows only real scope and revokes on sign-out
     .click();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Continue with Posnic Cloud" }),
+    page.getByRole("button", { name: "Continue with HiTechPOS Cloud" }),
   ).toBeVisible();
   expect(revoked).toBe(true);
   await popup.close().catch(() => {});
@@ -709,7 +709,7 @@ test("Cloud and Community do not impersonate completed authorization", async ({
   page,
 }) => {
   await page.route(
-    "https://www.posnic.com/api/business/v1/discovery",
+    "https://app.hitechpos.vn/api/business/v1/discovery",
     (route) =>
       route.fulfill({
         status: 404,
@@ -719,10 +719,10 @@ test("Cloud and Community do not impersonate completed authorization", async ({
   );
   await page.goto("/");
   await page
-    .getByRole("button", { name: "Continue with Posnic Cloud" })
+    .getByRole("button", { name: "Continue with HiTechPOS Cloud" })
     .click();
   await expect(
-    page.getByText(/This server does not yet support Posnic Business/),
+    page.getByText(/This server does not yet support HiTechPOS Business/),
   ).toBeVisible();
   await page.getByRole("button", { name: "Connect your own server" }).click();
   await page
@@ -775,7 +775,7 @@ test("obsolete Community checks cannot open approval after navigating back", asy
   await page.getByRole("button", { name: "Back", exact: true }).click();
   release();
   await expect(
-    page.getByRole("button", { name: "Continue with Posnic Cloud" }),
+    page.getByRole("button", { name: "Continue with HiTechPOS Cloud" }),
   ).toBeEnabled();
   await expect(
     page.getByText(/This server supports the Business connection protocol/),

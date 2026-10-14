@@ -14,7 +14,7 @@
 
 import { expect } from '@playwright/test';
 
-export const SHOP_ORIGIN = 'https://smoke.posnic.io';
+export const SHOP_ORIGIN = 'https://smoke.hitechpos.vn';
 export const API_BASE = `${SHOP_ORIGIN}/api`;
 
 /* What a Posnic server says about itself. Discovery accepts nothing else. */

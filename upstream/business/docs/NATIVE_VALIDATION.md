@@ -28,7 +28,7 @@ npm ci
 npx expo prebuild --no-install --platform ios
 cd ios
 pod install
-xcodebuild -workspace PosnicBusiness.xcworkspace -scheme PosnicBusiness -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+xcodebuild -workspace HiTechPOSBusiness.xcworkspace -scheme HiTechPOSBusiness -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
 ```
 
 The simulator bundle is under `ios/build/Build/Products/Debug-iphonesimulator/`. Real-device distribution needs the owner's signing account and provisioning. No store release is implied by an unsigned simulator build.

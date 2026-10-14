@@ -8,7 +8,9 @@ function install(root) {
   const storyboard = path.join(root, 'ios/App/App/Base.lproj/Main.storyboard');
   const marker = '// BEGIN CAPTAIN LOCAL PLUGINS';
   const source = fs.readFileSync(target, 'utf8').split(marker)[0].trimEnd();
-  const plugins = fs.readFileSync(path.join(root, 'ios-templates/CaptainPlugins.swift'), 'utf8');
+  // The approval-page host follows HITECHPOS_ACCOUNT_ORIGIN (scripts/hitechpos-config.js).
+  const plugins = require('./hitechpos-config').applyToNative(
+    fs.readFileSync(path.join(root, 'ios-templates/CaptainPlugins.swift'), 'utf8'));
   const layout = fs.readFileSync(storyboard, 'utf8');
   if (!/customClass="(?:CAPBridgeViewController|CaptainBridgeViewController)"/.test(layout)) {
     throw new Error('Cannot locate the Captain iOS bridge view controller');

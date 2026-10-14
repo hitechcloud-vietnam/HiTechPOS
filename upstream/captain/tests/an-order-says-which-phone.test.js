@@ -143,7 +143,7 @@ test('an order over the shop Wi-Fi says lan, one over the internet says cloud', 
   assert.strictEqual(load(lan).facts().network, 'lan');
 
   const cloud = aPhone();
-  cloud.POSNIC = { server: { baseUrl: 'https://azure.posnic.io/api' } };
+  cloud.POSNIC = { server: { baseUrl: 'https://azure.hitechpos.vn/api' } };
   assert.strictEqual(load(cloud).facts().network, 'cloud');
 });
 

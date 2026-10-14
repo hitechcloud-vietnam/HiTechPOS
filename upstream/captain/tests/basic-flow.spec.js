@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test';
  * server on the Wi-Fi (see server-resolution.spec.js). So this seeds the pin
  * the way a configured handset would have it, and routes that host.
  */
-const SHOP_ORIGIN = 'https://smoke.posnic.io';
+const SHOP_ORIGIN = 'https://smoke.hitechpos.vn';
 const API_BASE = `${SHOP_ORIGIN}/api`;
 
 /* What a Posnic server says about itself. Discovery accepts nothing else, so

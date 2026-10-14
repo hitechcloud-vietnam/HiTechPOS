@@ -6,9 +6,9 @@ for (const cloud of [true, false])
     context,
   }) => {
     const origin = cloud
-      ? "https://www.posnic.com"
+      ? "https://app.hitechpos.vn"
       : "https://shop.example.com";
-    const signIn = cloud ? "Continue with Posnic Cloud" : "Sign in securely";
+    const signIn = cloud ? "Continue with HiTechPOS Cloud" : "Sign in securely";
     let requests = 0;
     await context.route(origin + "/api/business/v1/**", async (route) => {
       const path = new URL(route.request().url()).pathname;

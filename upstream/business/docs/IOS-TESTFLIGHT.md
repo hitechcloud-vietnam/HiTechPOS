@@ -11,7 +11,7 @@ require an Expo account or publish the app to the public App Store.
 
 ## App identity and signing
 
-- Bundle ID: `com.posnic.business`
+- Bundle ID: `vn.hitechpos.business`
 - App Store Connect app ID: `6818860502`
 - Internal group: `Posnic Business Internal Testers`
 - Signing profile: `Posnic Business TestFlight`

@@ -48,9 +48,9 @@ test("denial cannot complete login", async () => {
 });
 for (const url of [
   "https://example.com/authorized",
-  "com.posnic.mobile://other",
-  "com.posnic.mobile://authorized/evil",
-  "com.posnic.mobile://user@authorized",
+  "vn.hitechpos.mobile://other",
+  "vn.hitechpos.mobile://authorized/evil",
+  "vn.hitechpos.mobile://user@authorized",
 ])
   test(`reject unexpected callback ${url}`, async () => {
     await assert.rejects(

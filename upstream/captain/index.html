@@ -99,11 +99,11 @@
     <div class="auth-page">
         <div class="auth-header">
             <div class="brand-circle">
-                <img src="assets/common/posnic-mark.svg" alt="Posnic" width="36" height="36">
+                <img src="assets/common/posnic-mark.svg" alt="HiTechPOS" width="36" height="36">
             </div>
             <div class="brand-text">
                 <h1 class="brand-title">Captain</h1>
-                <p class="brand-subtitle">By Posnic</p>
+                <p class="brand-subtitle">HiTechPOS · based on Posnic (AGPL-3.0)</p>
             </div>
             <label class="setup-language"><span class="visually-hidden">Language</span><select id="setup-language" data-language-picker aria-label="Language"></select></label>
             <button type="button" class="setup-settings" onclick="openServerModal()" aria-label="Connection settings" title="Connection settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="var(--surface)"/><circle cx="15" cy="17" r="3" fill="var(--surface)"/></svg></button>
@@ -137,7 +137,7 @@
                     <div id="setup-address-entry">
                     <label class="setup-label" for="captain-server">Shop code or server address</label>
                     <div class="setup-address">
-                        <input id="captain-server" type="text" inputmode="url" enterkeyhint="go" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off" placeholder="azure.posnic.io" aria-describedby="setup-wifi-hint">
+                        <input id="captain-server" type="text" inputmode="url" enterkeyhint="go" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off" placeholder="azure.hitechpos.vn" aria-describedby="setup-wifi-hint">
                     </div>
                     <p id="setup-wifi-hint" class="setup-hint"><strong>Shop Wi-Fi is fastest.</strong> Use a domain address when connecting over the internet.</p>
                     </div>
@@ -169,7 +169,7 @@
                         <button id="captain-pair" type="button" class="setup-primary">Pair phone</button>
                     </details>
 
-                    <details id="connection-addresses" hidden><summary>Connection settings</summary><p class="setup-hint">Shop Wi-Fi is fastest.</p><label class="setup-label" for="connection-lan">Local server</label><input id="connection-lan" class="ui-field" type="url" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="http://192.168.0.12:5555/api"><label class="setup-label" for="connection-cloud">Internet server</label><input id="connection-cloud" class="ui-field" type="url" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="https://azure.posnic.io/api"><button id="connection-save" type="button" class="setup-primary">Save</button><p id="connection-message" role="status"></p></details>
+                    <details id="connection-addresses" hidden><summary>Connection settings</summary><p class="setup-hint">Shop Wi-Fi is fastest.</p><label class="setup-label" for="connection-lan">Local server</label><input id="connection-lan" class="ui-field" type="url" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="http://192.168.0.12:5555/api"><label class="setup-label" for="connection-cloud">Internet server</label><input id="connection-cloud" class="ui-field" type="url" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="https://azure.hitechpos.vn/api"><button id="connection-save" type="button" class="setup-primary">Save</button><p id="connection-message" role="status"></p></details>
                     <button id="connection-done" type="button" class="setup-primary" hidden>Back to orders</button>
                 </section>
                 <section id="captain-legacy" hidden aria-label="Staff sign-in">

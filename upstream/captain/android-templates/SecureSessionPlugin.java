@@ -1,4 +1,4 @@
-package com.posnic.captain;
+package vn.hitechpos.captain;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -95,7 +95,7 @@ public class SecureSessionPlugin extends Plugin {
     @PluginMethod public void openBrowser(PluginCall call) {
         try {
             android.net.Uri uri = android.net.Uri.parse(call.getString("url", ""));
-            if (!"https".equals(uri.getScheme()) || !"www.posnic.com".equals(uri.getHost()) || !"/api/mobile/authorize".equals(uri.getPath())) throw new Exception("Invalid account address");
+            if (!"https".equals(uri.getScheme()) || !"app.hitechpos.vn".equals(uri.getHost()) || !"/api/mobile/authorize".equals(uri.getPath())) throw new Exception("Invalid account address");
             getActivity().runOnUiThread(() -> {
                 try {
                     android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, uri);

@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 const LAN = "http://192.168.1.8:5555/api",
-  CLOUD = "https://azure.posnic.io/api";
+  CLOUD = "https://azure.hitechpos.vn/api";
 async function settings(
   page,
   { lan = LAN, cloud = CLOUD, pinned = null } = {},

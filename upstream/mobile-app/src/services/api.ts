@@ -106,7 +106,7 @@ export class PosnicApi {
       throw new Error("serverUpgrade");
     const device = {
       device_id: await credentials.deviceId(),
-      device_model: "Posnic Mobile POS",
+      device_model: "HiTechPOS Mobile",
       platform: "mobile-pos",
     };
     const result = z

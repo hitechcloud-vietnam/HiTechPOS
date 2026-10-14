@@ -26,7 +26,7 @@ jobs:
       - name: Compile simulator app without signing or uploading
         run: |
           set -o pipefail
-          xcodebuild -workspace ios/PosnicBusiness.xcworkspace -scheme PosnicBusiness -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build > ios-pin-build.log 2>&1 || { tail -n 90 ios-pin-build.log; exit 1; }
+          xcodebuild -workspace ios/HiTechPOSBusiness.xcworkspace -scheme HiTechPOSBusiness -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build > ios-pin-build.log 2>&1 || { tail -n 90 ios-pin-build.log; exit 1; }
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -163,13 +163,13 @@
           failure?.reason === "REFUSED"
             ? "The till refused this connection. Ask your manager to check Captain access."
             : failure?.reason === "NOT_POSNIC"
-              ? "This address is not a Posnic till. Check the address with your manager."
+              ? "This address is not a HiTechPOS till. Check the address with your manager."
               : "The till is not answering. Check the shop Wi-Fi and address, then retry or scan its QR.",
         );
       }
       if (!hit?.info?.features?.captainAccessV1)
         throw new Error(
-          "Update Posnic on this till to approve Captain phones. Address sign-in remains available.",
+          "Update HiTechPOS on this till to approve Captain phones. Address sign-in remains available.",
         );
       if (!$("captain-confirm").checked)
         throw new Error(
@@ -384,7 +384,7 @@
     });
   }
   async function accountRequest(method, path, body, signal) {
-    const origin = "https://www.posnic.com";
+    const origin = POSNIC.constants.ACCOUNT_ORIGIN;
     const capacitor = window.Capacitor;
     const http = capacitor?.isNativePlatform?.()
       ? capacitor.Plugins?.CapacitorHttp || capacitor.registerPlugin?.("CapacitorHttp")
@@ -436,7 +436,7 @@
   }
   async function cloud(intent, signal) {
     secure();
-    const origin = "https://www.posnic.com";
+    const origin = POSNIC.constants.ACCOUNT_ORIGIN;
     note("Connecting to your shop…");
     const capabilities = await accountRequest("GET", "/api/mobile/capabilities", null, signal);
     if (!capabilities.applications?.includes("captain"))
@@ -455,7 +455,7 @@
         application: "captain",
         codeChallenge: challenge,
         deviceId: POSNIC.thisDevice.deviceId(),
-        deviceName: "Posnic Captain",
+        deviceName: "HiTechPOS Captain",
         intent,
       },
       signal,

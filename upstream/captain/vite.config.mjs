@@ -82,6 +82,11 @@ function copyClassicAssets() {
       for (const entry of ['config.js', 'indexedDB.js']) {
         fs.copyFileSync(path.join(ROOT, entry), path.join(DIST, entry));
       }
+      /* HiTechPOS cloud settings: HITECHPOS_CLOUD_SUFFIX and
+         HITECHPOS_ACCOUNT_ORIGIN override the defaults in config.js. */
+      const hitechpos = require('./scripts/hitechpos-config');
+      const builtConfig = path.join(DIST, 'config.js');
+      fs.writeFileSync(builtConfig, hitechpos.applyToConfig(fs.readFileSync(builtConfig, 'utf8')));
 
       const imagesDir = path.join(ROOT, 'images');
       const rootImages = path.join(DIST, 'images');

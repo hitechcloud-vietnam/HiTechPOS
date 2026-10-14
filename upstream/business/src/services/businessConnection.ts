@@ -11,7 +11,9 @@ import {
   type BusinessContext,
 } from "../domain/contracts";
 
-export const CLOUD_ORIGIN = "https://www.posnic.com";
+import { CLOUD_ORIGIN } from "../config/hitechpos";
+
+export { CLOUD_ORIGIN };
 export const BUSINESS_PATH = "/api/business/v1";
 export type ConnectionProblem =
   | "unsupported"

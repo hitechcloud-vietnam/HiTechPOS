@@ -36,5 +36,5 @@ http
     fs.createReadStream(requested).pipe(res);
   })
   .listen(8082, "127.0.0.1", () =>
-    console.log("Posnic preview: http://127.0.0.1:8082"),
+    console.log("HiTechPOS preview: http://127.0.0.1:8082"),
   );

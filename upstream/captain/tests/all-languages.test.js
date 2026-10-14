@@ -100,11 +100,11 @@ test("all local markup messages are covered except brands and address examples",
   const unchanged = new Set([
     "English",
     "Captain",
-    "Posnic",
-    "Posnic Cloud",
+    "HiTechPOS",
+    "HiTechPOS Cloud",
     "http://192.168.0.12:5555/api",
-    "https://azure.posnic.io/api",
-    "azure.posnic.io",
+    "https://azure.hitechpos.vn/api",
+    "azure.hitechpos.vn",
   ]);
   const missing = [...fromMarkup().keys()].filter(
     (key) => !english[key] && !unchanged.has(key),

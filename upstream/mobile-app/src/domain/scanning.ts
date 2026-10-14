@@ -7,7 +7,9 @@ export function resolveProductScan(items: Item[], input: string): Item {
     !code ||
     code.length > 512 ||
     /[\x00-\x1f\x7f]/.test(code) ||
-    /^(?:upi:|https?:|posnic:|%B|;\d{12,19}=)/i.test(code)
+    /^(?:upi:|https?:|posnic:|hitechpos:|vn\.hitechpos\.[a-z]+:|%B|;\d{12,19}=)/i.test(
+      code,
+    )
   )
     throw new Error("invalidScan");
   const matches = items.filter((item) => item.active && item.barcode === code);

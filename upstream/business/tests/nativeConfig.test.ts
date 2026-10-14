@@ -47,7 +47,7 @@ test("Expo writes and registers all release-language Face ID resources in the na
         new RegExp(`${code}\\.lproj/InfoPlist\\.strings`),
       );
       assert.ok(description.includes("Face ID"));
-      assert.ok(description.includes("Posnic Business"));
+      assert.ok(description.includes("HiTechPOS Business"));
       assert.doesNotMatch(description, /["\\\\\r\n]/);
     }
     // Re-running prebuild must not add duplicate resource build entries.

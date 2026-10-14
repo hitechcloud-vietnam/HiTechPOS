@@ -35,7 +35,7 @@ jobs:
           node - <<'JS'
           const fs = require('fs');
           const c = JSON.parse(fs.readFileSync('app.json'));
-          c.expo.android.package = 'com.posnic.business.pinqa';
+          c.expo.android.package = 'vn.hitechpos.business.pinqa';
           c.expo.name = 'Business PIN QA';
           fs.writeFileSync('app.json', JSON.stringify(c));
           fs.writeFileSync('index.ts', 'import {registerRootComponent} from "expo"; import App from "./tests/native/PinQa"; registerRootComponent(App);');

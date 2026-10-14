@@ -139,7 +139,7 @@ say('Checking the patches still find what they patch.');
 const MUST_EXIST = [
   ['app/build.gradle', 'the gradle file the version stamp edits'],
   ['app/src/main/AndroidManifest.xml', 'the manifest the permissions are added to'],
-  ['app/src/main/java/com/posnic/captain/MainActivity.java', 'the activity that is replaced'],
+  ['app/src/main/java/vn/hitechpos/captain/MainActivity.java', 'the activity that is replaced'],
 ];
 
 for (const [relative, what] of MUST_EXIST) {

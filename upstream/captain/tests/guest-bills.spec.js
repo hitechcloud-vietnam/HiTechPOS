@@ -218,7 +218,7 @@ test('same-shop route switching retains a prepared split; another staff member c
   await page.locator('#guest-bills [data-action=more]').click();
   await next(page);
   await page.locator('#guest-bills header [data-action=close]').click();
-  await page.evaluate(()=>Object.defineProperty(POSNIC.session,'base',{configurable:true,get:()=> 'https://backup.posnic.io/api'}));
+  await page.evaluate(()=>Object.defineProperty(POSNIC.session,'base',{configurable:true,get:()=> 'https://backup.hitechpos.vn/api'}));
   await page.evaluate(()=>GuestBills.open('T1'));
   await expect(page.locator('.guest-bill-review')).toHaveCount(3);
   await page.evaluate(()=>Object.defineProperty(POSNIC.session,'user',{configurable:true,get:()=>({id:'another-staff'})}));
@@ -251,7 +251,7 @@ test('an uncertain guest-bill print stays with its issuing server across route c
   await next(page);
   await expect(page.locator('.guest-bill-error')).toContainText('Could not confirm');
   await page.locator('#guest-bills header [data-action=close]').click();
-  await page.evaluate(() => Object.defineProperty(POSNIC.session,'base',{configurable:true,get:()=> 'https://backup.posnic.io/api'}));
+  await page.evaluate(() => Object.defineProperty(POSNIC.session,'base',{configurable:true,get:()=> 'https://backup.hitechpos.vn/api'}));
   await page.evaluate(() => GuestBills.open('T1'));
   await next(page);
   await expect(page.locator('.guest-bill-error')).toContainText('Reconnect to the server that authorized');

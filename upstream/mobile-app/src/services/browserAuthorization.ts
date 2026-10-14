@@ -1,4 +1,4 @@
-export const AUTH_RETURN_URL = "com.posnic.mobile://authorized";
+export const AUTH_RETURN_URL = "vn.hitechpos.mobile://authorized";
 
 export async function completeBrowserAuthorization(
   open: () => Promise<{ type: string; url?: string }>,
@@ -25,7 +25,7 @@ export async function completeBrowserAuthorization(
       throw new Error("authorizationCancelled");
     const url = new URL(result.url);
     if (
-      url.protocol !== "com.posnic.mobile:" ||
+      url.protocol !== "vn.hitechpos.mobile:" ||
       url.host !== "authorized" ||
       url.pathname !== "" ||
       url.username ||

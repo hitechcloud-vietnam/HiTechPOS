@@ -5,7 +5,9 @@ import { foreground } from "../platform/foreground";
 import { automaticAuthReturn } from "../platform/authBrowser";
 import { cloudGrant } from "./cloudGrant";
 
-export const ACCOUNT_ORIGIN = "https://www.posnic.com";
+import { ACCOUNT_ORIGIN } from "../config/hitechpos";
+
+export { ACCOUNT_ORIGIN };
 const alphabet =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 export function base64url(bytes: Uint8Array): string {
@@ -77,7 +79,7 @@ export async function authorizeAccount(
       await post("requests", {
         codeChallenge,
         deviceId: await credentials.deviceId(),
-        deviceName: "Posnic Mobile POS",
+        deviceName: "HiTechPOS Mobile",
         intent,
         returnToApp: automaticAuthReturn,
       }),

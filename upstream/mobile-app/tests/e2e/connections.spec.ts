@@ -28,7 +28,7 @@ const shop = {
   },
 };
 const local = "http://192.168.50.4:5555/api";
-const cloud = "https://same-shop.posnic.io/api";
+const cloud = "https://same-shop.hitechpos.vn/api";
 async function mock(page: Page) {
   const logins: string[] = [];
   for (const base of [local, cloud])
@@ -129,14 +129,14 @@ test("connect once to each endpoint and switch using remembered endpoint-specifi
 test("cloud approval returns directly to selling and stays on the internet endpoint", async ({
   page,
 }) => {
-  await page.route("https://www.posnic.com/api/mobile/**", async (route) => {
+  await page.route("https://app.hitechpos.vn/api/mobile/**", async (route) => {
     const path = route.request().url();
     await route.fulfill({
       json: path.endsWith("/requests")
         ? {
             request: "a".repeat(43),
             expiresIn: 120,
-            authorizationUrl: "https://www.posnic.com/api/mobile/authorize",
+            authorizationUrl: "https://app.hitechpos.vn/api/mobile/authorize",
           }
         : { baseUrl: cloud, code: "ABCDEF123456" },
     });

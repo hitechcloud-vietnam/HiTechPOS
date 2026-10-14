@@ -154,7 +154,7 @@
     } catch (error) {
       if (error.status === 429) resendAt = Date.now() + 60000;
       if (verifying && error.status === 409) { resendAt = 0; phoneChallenge.invalid = true; }
-      message.textContent = t(error.status === 404 ? 'This shop’s server is too old for this screen. Update POSNIC on the till.' : error.status === 400 ? (verifying ? 'Check the verification code.' : 'The current password is incorrect.') : error.status === 409 ? (contactKind === 'email' && !verifying ? 'This email address is unavailable.' : 'Request a new verification code.') : error.status === 429 ? 'Resend code' : verifying ? 'Could not save. Please try again.' : contactKind === 'email' ? 'Could not send the code. Check email settings or try again later.' : 'Could not send the code. Check SMS settings or try again later.');
+      message.textContent = t(error.status === 404 ? 'This shop’s server is too old for this screen. Update HiTechPOS on the till.' : error.status === 400 ? (verifying ? 'Check the verification code.' : 'The current password is incorrect.') : error.status === 409 ? (contactKind === 'email' && !verifying ? 'This email address is unavailable.' : 'Request a new verification code.') : error.status === 429 ? 'Resend code' : verifying ? 'Could not save. Please try again.' : contactKind === 'email' ? 'Could not send the code. Check email settings or try again later.' : 'Could not send the code. Check SMS settings or try again later.');
     } finally {
       busy = false;
       page.querySelectorAll('button,input').forEach(node => node.disabled = false);
