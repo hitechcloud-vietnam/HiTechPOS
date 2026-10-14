@@ -1,0 +1,10 @@
+{
+  "name": "@hitechpos/industry-presets",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bộ cấu hình mẫu theo ngành nghề (tạp hóa, cà phê, nhà hàng, karaoke, thời trang, nhà thuốc...) cho HiTechPOS, ánh xạ lên tính năng của Posnic",
+  "license": "AGPL-3.0-only",
+  "main": "src/index.js",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test" }
+}

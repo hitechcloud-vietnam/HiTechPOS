@@ -1,0 +1,35 @@
+'use strict';
+
+module.exports = {
+  id: 'spa-salon',
+  name: 'Spa / Salon / Nail',
+  description: 'Dịch vụ làm đẹp: lịch hẹn, phân công nhân viên kỹ thuật, tính hoa hồng, bán thẻ liệu trình và sản phẩm đi kèm.',
+  icon: 'spa',
+  posnicBusinessType: 'supermarket',
+  features: ['services', 'appointments', 'commissions', 'servicePackages', 'loyalty', 'debtLedger', 'quickSale', 'einvoice'],
+  units: [
+    { code: 'lan', name: 'Lần' },
+    { code: 'buoi', name: 'Buổi' },
+    { code: 'goi', name: 'Gói' },
+    { code: 'the', name: 'Thẻ' },
+    { code: 'chai', name: 'Chai' },
+    { code: 'hop', name: 'Hộp' },
+  ],
+  categories: ['Chăm sóc da', 'Massage & body', 'Tóc', 'Nail', 'Gội đầu dưỡng sinh', 'Thẻ liệu trình', 'Sản phẩm bán lẻ'],
+  sampleItems: [
+    { name: 'Gội đầu dưỡng sinh 60 phút', unit: 'lan', price: 120000, vatRate: 8 },
+    { name: 'Cắt tóc nữ + sấy tạo kiểu', unit: 'lan', price: 150000, vatRate: 8 },
+    { name: 'Nhuộm tóc thời trang', unit: 'lan', price: 550000, vatRate: 8 },
+    { name: 'Sơn gel tay', unit: 'lan', price: 150000, vatRate: 8 },
+    { name: 'Chăm sóc da mặt cơ bản 60 phút', unit: 'buoi', price: 350000, vatRate: 8 },
+    { name: 'Massage body đá nóng 90 phút', unit: 'buoi', price: 450000, vatRate: 8 },
+    { name: 'Thẻ liệu trình chăm sóc da 10 buổi', unit: 'the', price: 2990000, vatRate: 8 },
+    { name: 'Dầu gội phục hồi 500ml', unit: 'chai', price: 280000, vatRate: 8 },
+  ],
+  settings: { defaultCommissionPercent: 10, appointmentSlotMinutes: 30 },
+  receipt: { template: 'k80', showVatBreakdown: false, footer: 'Cảm ơn quý khách! Hẹn gặp lại trong lần làm đẹp tới.' },
+  payments: ['cash', 'vietqr', 'payos', 'card', 'momo', 'zalopay'],
+  vatDefault: 8,
+  recommendedPlan: 'pro',
+  recommendedApps: ['pos-web', 'mobile-pos', 'business'],
+};

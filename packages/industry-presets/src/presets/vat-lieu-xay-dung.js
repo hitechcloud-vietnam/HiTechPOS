@@ -1,0 +1,37 @@
+'use strict';
+
+module.exports = {
+  id: 'vat-lieu-xay-dung',
+  name: 'Vật liệu xây dựng',
+  description: 'Cửa hàng VLXD, điện nước: đơn vị quy đổi (bao/tấn, cây/bó, viên/m²), công nợ nhà thầu, giao hàng tận công trình.',
+  icon: 'construction',
+  posnicBusinessType: 'hardware',
+  features: ['barcode', 'unitConversion', 'debtLedger', 'delivery', 'returns', 'einvoice'],
+  units: [
+    { code: 'bao', name: 'Bao' },
+    { code: 'tan', name: 'Tấn', conversions: [{ unit: 'bao', factor: 20 }] },
+    { code: 'cay', name: 'Cây' },
+    { code: 'bo', name: 'Bó', conversions: [{ unit: 'cay', factor: 10 }] },
+    { code: 'vien', name: 'Viên' },
+    { code: 'm2', name: 'm²' },
+    { code: 'm3', name: 'm³' },
+    { code: 'kg', name: 'Kg' },
+    { code: 'thung', name: 'Thùng' },
+  ],
+  categories: ['Xi măng', 'Sắt thép', 'Gạch', 'Cát đá', 'Sơn', 'Thiết bị điện', 'Ống nước & phụ kiện', 'Thiết bị vệ sinh'],
+  sampleItems: [
+    { name: 'Xi măng Hà Tiên PCB40 (bao 50kg)', unit: 'bao', price: 92000, vatRate: 8 },
+    { name: 'Thép cuộn Hòa Phát phi 6', unit: 'kg', price: 16500, vatRate: 10 },
+    { name: 'Thép thanh vằn D10 (cây 11,7m)', unit: 'cay', price: 105000, vatRate: 10 },
+    { name: 'Gạch ống 4 lỗ 8x8x18', unit: 'vien', price: 1300, vatRate: 8 },
+    { name: 'Cát xây tô', unit: 'm3', price: 380000, vatRate: 8 },
+    { name: 'Đá 1x2', unit: 'm3', price: 420000, vatRate: 8 },
+    { name: 'Sơn nước nội thất 18 lít', unit: 'thung', price: 1450000, vatRate: 8 },
+    { name: 'Ống nhựa PVC phi 21 (cây 4m)', unit: 'cay', price: 28000, vatRate: 8 },
+  ],
+  receipt: { template: 'k80', showVatBreakdown: true, footer: 'Cảm ơn quý khách! Hàng đã giao vui lòng kiểm tra trước khi ký nhận.' },
+  payments: ['cash', 'vietqr', 'payos', 'pay2s', 'debt'],
+  vatDefault: 8,
+  recommendedPlan: 'pro',
+  recommendedApps: ['pos-web', 'mobile-pos', 'business'],
+};

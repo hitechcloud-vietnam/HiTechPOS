@@ -1,0 +1,36 @@
+'use strict';
+
+module.exports = {
+  id: 'nha-hang-quan-an',
+  name: 'Nhà hàng / Quán ăn',
+  description: 'Phục vụ tại bàn: sơ đồ bàn, phiếu bếp KOT và màn hình bếp KDS, gộp/tách bàn, phí phục vụ, nhân viên gọi món bằng Captain.',
+  icon: 'restaurant',
+  posnicBusinessType: 'cafe',
+  features: ['tables', 'mergeSplitTables', 'kitchen', 'kds', 'captainApp', 'modifiers', 'serviceCharge', 'loyalty', 'onlineOrdering', 'delivery', 'recipes', 'wastage', 'einvoice'],
+  units: [
+    { code: 'phan', name: 'Phần' },
+    { code: 'dia', name: 'Đĩa' },
+    { code: 'to', name: 'Tô' },
+    { code: 'noi', name: 'Nồi' },
+    { code: 'chai', name: 'Chai' },
+    { code: 'lon', name: 'Lon' },
+    { code: 'kg', name: 'Kg' },
+  ],
+  categories: ['Khai vị', 'Món chính', 'Lẩu', 'Nướng', 'Cơm & mì', 'Rau', 'Tráng miệng', 'Đồ uống', 'Bia'],
+  sampleItems: [
+    { name: 'Gỏi cuốn tôm thịt (4 cuốn)', unit: 'phan', price: 55000, vatRate: 8 },
+    { name: 'Phở bò tái nạm', unit: 'to', price: 65000, vatRate: 8 },
+    { name: 'Cơm chiên hải sản', unit: 'dia', price: 85000, vatRate: 8 },
+    { name: 'Lẩu thái hải sản (nồi lớn)', unit: 'noi', price: 359000, vatRate: 8 },
+    { name: 'Ba chỉ bò nướng', unit: 'phan', price: 129000, vatRate: 8 },
+    { name: 'Rau muống xào tỏi', unit: 'dia', price: 45000, vatRate: 8 },
+    { name: 'Bia Tiger lon 330ml', unit: 'lon', price: 25000, vatRate: 10 },
+    { name: 'Nước ngọt Pepsi lon', unit: 'lon', price: 20000, vatRate: 8 },
+  ],
+  settings: { serviceChargePercent: 5 },
+  receipt: { template: 'k80', showVatBreakdown: true, footer: 'Cảm ơn quý khách đã dùng bữa! Hẹn gặp lại.' },
+  payments: ['cash', 'vietqr', 'payos', 'card', 'momo', 'zalopay'],
+  vatDefault: 8,
+  recommendedPlan: 'pro',
+  recommendedApps: ['pos-web', 'captain', 'kds', 'business'],
+};

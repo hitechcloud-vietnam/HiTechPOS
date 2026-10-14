@@ -1,0 +1,10 @@
+{
+  "name": "@hitechpos/vietqr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tạo mã VietQR (NAPAS 247, chuẩn EMVCo) ngoại tuyến cho HiTechPOS — không cần cổng thanh toán",
+  "license": "AGPL-3.0-only",
+  "main": "src/index.js",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test" }
+}
