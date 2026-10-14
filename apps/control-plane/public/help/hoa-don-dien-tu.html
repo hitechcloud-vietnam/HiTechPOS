@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Hoá đơn điện tử – Trợ giúp HiTechPOS</title>
+<meta name="description" content="Kết nối MISA meInvoice, Viettel S-Invoice hoặc Mắt Bão, đặt ký hiệu hoá đơn, tự động phát hành khi chốt đơn và đối soát khi có lỗi.">
+<link rel="stylesheet" href="/help/help.css">
+<script src="/help/help.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#noi-dung">Bỏ qua, tới nội dung</a>
+<header class="top">
+  <a class="brand" href="/help/"><strong>HiTechPOS</strong><span>Trung tâm trợ giúp</span></a>
+  <nav class="toplinks" aria-label="Liên kết chính"><a href="/">Trang chủ</a><a href="/account">Quản lý cửa hàng</a></nav>
+</header>
+<div class="layout">
+  <aside class="side">
+    <div class="search" data-help-search>
+      <label class="sr" for="help-q">Tìm trong trợ giúp</label>
+      <input id="help-q" type="search" placeholder="Tìm: VietQR, ký hiệu, mật khẩu…" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="help-q-results" aria-expanded="false">
+      <ul class="results" id="help-q-results" role="listbox" hidden></ul>
+    </div>
+    <button class="navtoggle" type="button" aria-expanded="false" aria-controls="help-nav">Danh mục trợ giúp</button>
+    <nav class="nav" id="help-nav" aria-label="Danh mục trợ giúp">
+      <a href="/help/">Trang chủ trợ giúp</a>
+      <div class="group"><div class="gt">Bắt đầu</div><a href="/help/bat-dau">Bắt đầu sử dụng</a></div>
+      <div class="group"><div class="gt">Bán hàng</div><a href="/help/ban-hang">Bán hàng tại quầy</a><a href="/help/thanh-toan-qr">Thanh toán QR chuyển khoản</a></div>
+      <div class="group"><div class="gt">Cài đặt</div><a href="/help/cau-hinh-thanh-toan">Cấu hình thanh toán QR</a><a href="/help/hoa-don-dien-tu" aria-current="page">Hoá đơn điện tử</a></div>
+      <div class="group"><div class="gt">Tài khoản</div><a href="/help/goi-cuoc">Gói cước và thanh toán phí</a><a href="/help/ten-mien-rieng">Tên miền riêng</a><a href="/help/tai-khoan">Mật khẩu, khoá API, dữ liệu</a></div>
+      <div class="group"><div class="gt">Hỗ trợ</div><a href="/help/cau-hoi-thuong-gap">Câu hỏi thường gặp</a></div>
+    </nav>
+  </aside>
+  <main id="noi-dung" class="content">
+    <nav class="crumbs" aria-label="Vị trí"><a href="/help/">Trợ giúp</a> <span aria-hidden="true">›</span> <span>Cài đặt</span></nav>
+    <article>
+    <h1>Hoá đơn điện tử</h1>
+    <p class="lead">Kết nối MISA meInvoice, Viettel S-Invoice hoặc Mắt Bão, đặt ký hiệu hoá đơn, tự động phát hành khi chốt đơn và đối soát khi có lỗi.</p>
+    <nav class="toc" aria-label="Trên trang này"><div class="gt">Trên trang này</div><ol><li><a href="#gioi-thieu">Cách hoạt động</a></li><li><a href="#cau-hinh">Cấu hình kết nối</a></li><li><a href="#ky-hieu">Ký hiệu mẫu số và ký hiệu hoá đơn</a></li><li><a href="#tu-dong">Tự động phát hành khi chốt đơn</a></li><li><a href="#danh-sach">Xem hoá đơn đã phát hành</a></li><li><a href="#loi">Xử lý lỗi và đối soát</a></li></ol></nav>
+<section>
+<h2 id="gioi-thieu">Cách hoạt động <a class="anchor" href="#gioi-thieu" aria-label="Liên kết tới mục này">#</a></h2>
+<p>HiTechPOS phát hành hoá đơn điện tử (kể cả hoá đơn khởi tạo từ máy tính tiền) qua <b>hợp đồng của chính cửa hàng</b> với nhà cung cấp: <b>Viettel S-Invoice</b>, <b>MISA meInvoice</b> hoặc <b>Mắt Bão</b>.</p>
+<p>Trước khi kết nối, cửa hàng cần:</p>
+<ul>
+<li>Hợp đồng và tài khoản với một trong ba nhà cung cấp trên.</li>
+<li>Đã đăng ký sử dụng hoá đơn điện tử với cơ quan thuế và có ký hiệu hoá đơn được chấp nhận (nếu dùng hoá đơn khởi tạo từ máy tính tiền, ký hiệu có chữ M – xem <a href="/help/hoa-don-dien-tu#ky-hieu">Ký hiệu hoá đơn</a>).</li>
+</ul>
+<p>Theo bảng gói cước, hoá đơn điện tử thuộc gói <b>Chuyên nghiệp</b> và <b>Doanh nghiệp</b>.</p>
+<p class="note">Mỗi đơn hàng chỉ được phát hành <b>một</b> hoá đơn. Nếu lần phát hành trước chưa rõ kết quả, HiTechPOS chặn phát hành lại cho tới khi đối soát xong, để không bao giờ xuất trùng.</p>
+</section>
+<section>
+<h2 id="cau-hinh">Cấu hình kết nối <a class="anchor" href="#cau-hinh" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Trên <a href="/account">trang quản lý</a>, mục <b class="ui">Hoá đơn điện tử</b>:</p>
+<ol class="steps">
+<li><b>Nhà cung cấp</b>: Viettel S-Invoice, MISA meInvoice, Mắt Bão. Lựa chọn “Thử nghiệm (không gửi cơ quan thuế)” chỉ để làm quen, hoá đơn không có giá trị.</li>
+<li><b>Môi trường</b>: <b>Thử nghiệm (sandbox)</b> khi kiểm tra với tài khoản thử của nhà cung cấp, <b>Chính thức</b> khi xuất hoá đơn thật.</li>
+<li><b>Loại hoá đơn</b>: Hoá đơn GTGT hoặc Hoá đơn bán hàng.</li>
+<li><b>Ký hiệu</b>, ví dụ <code>1C26MAA</code> – xem <a href="/help/hoa-don-dien-tu#ky-hieu">Ký hiệu hoá đơn</a>.</li>
+<li>Thông tin đăng nhập nhà cung cấp (bảng dưới).</li>
+<li>Thông tin <b>đơn vị bán</b>: MST, tên, địa chỉ (bắt buộc), điện thoại (không bắt buộc).</li>
+<li>Đánh dấu <b class="ui">Khởi tạo từ máy tính tiền</b> nếu cửa hàng dùng loại hoá đơn này, và <b class="ui">Tự động phát hành khi chốt đơn</b> nếu muốn.</li>
+<li>Bấm <b class="ui">Lưu cấu hình hoá đơn</b>. Ký hiệu và loại hoá đơn được kiểm tra ngay khi lưu.</li>
+</ol>
+<div class="table"><table>
+<thead><tr><th>Nhà cung cấp</th><th>Thông tin cần nhập</th></tr></thead>
+<tbody>
+<tr><td>Viettel S-Invoice</td><td>Tài khoản (thường là MST), Mật khẩu, MST người bán (nếu khác tài khoản)</td></tr>
+<tr><td>MISA meInvoice</td><td>AppID, MST, Tài khoản, Mật khẩu</td></tr>
+<tr><td>Mắt Bão</td><td>MST, Tài khoản, Mật khẩu</td></tr>
+</tbody></table></div>
+<p>Mật khẩu được mã hoá khi lưu. Khi sửa cấu hình mà không đổi nhà cung cấp, để nguyên ô mật khẩu đang hiện <code>••••••••</code> thì mật khẩu cũ được giữ.</p>
+</section>
+<section>
+<h2 id="ky-hieu">Ký hiệu mẫu số và ký hiệu hoá đơn <a class="anchor" href="#ky-hieu" aria-label="Liên kết tới mục này">#</a></h2>
+<p>HiTechPOS nhận ký hiệu viết liền 7 ký tự, ví dụ <code>1C26MAA</code>:</p>
+<div class="table"><table>
+<thead><tr><th>Vị trí</th><th>Ví dụ</th><th>Ý nghĩa</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><code>1</code></td><td>Ký hiệu mẫu số: <code>1</code> = hoá đơn GTGT, <code>2</code> = hoá đơn bán hàng. Phải khớp với Loại hoá đơn đã chọn.</td></tr>
+<tr><td>2</td><td><code>C</code></td><td><code>C</code> = có mã của cơ quan thuế, <code>K</code> = không có mã</td></tr>
+<tr><td>3–4</td><td><code>26</code></td><td>Hai số cuối của năm lập hoá đơn</td></tr>
+<tr><td>5</td><td><code>M</code></td><td>Loại hoá đơn điện tử; <code>M</code> = khởi tạo từ máy tính tiền</td></tr>
+<tr><td>6–7</td><td><code>AA</code></td><td>Hai chữ cái do người bán tự đặt</td></tr>
+</tbody></table></div>
+<ul>
+<li>Bật <b>Khởi tạo từ máy tính tiền</b> thì ký hiệu phải có dạng <code><var>x</var>C<var>yy</var>M<var>zz</var></code> (có mã, chữ M ở vị trí thứ 5).</li>
+<li>Chữ <code>M</code> chỉ dùng cho hoá đơn khởi tạo từ máy tính tiền.</li>
+<li>Hai số năm phải trùng năm lập hoá đơn.</li>
+</ul>
+<p class="warn"><b>Đầu mỗi năm</b>, cập nhật ký hiệu theo năm mới (ví dụ từ <code>1C26MAA</code> sang <code>1C27MAA</code>) sau khi đã đăng ký ký hiệu mới với nhà cung cấp. Ký hiệu năm cũ sẽ bị từ chối.</p>
+</section>
+<section>
+<h2 id="tu-dong">Tự động phát hành khi chốt đơn <a class="anchor" href="#tu-dong" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Khi bật <b class="ui">Tự động phát hành khi chốt đơn</b>, HiTechPOS định kỳ (khoảng mỗi phút) đọc các đơn đã bán trên máy bán hàng của cửa hàng và phát hành hoá đơn cho từng đơn. Thu ngân không cần thao tác gì thêm.</p>
+<ul>
+<li>Chỉ các đơn bán <b>sau thời điểm bật</b> tính năng mới được phát hành; đơn cũ không bị xuất ngược.</li>
+<li>Nếu tắt rồi bật lại, các đơn bán trong khoảng thời gian tắt <b>không</b> được phát hành tự động.</li>
+<li>Bỏ qua: đơn lưu tạm, đơn chưa thanh toán đủ, đơn đặt online chưa được nhận, đơn đã huỷ, đơn trả hàng, đơn tổng tiền bằng 0.</li>
+<li>Thuế suất từng dòng lấy theo thuế của mặt hàng (0%, 5%, 8%, 10%, KCT, KKKNT); hình thức thanh toán ghi TM, CK hoặc TM/CK theo cách khách trả.</li>
+<li>Cửa hàng đang bị tạm ngưng thì việc phát hành tự động cũng tạm dừng.</li>
+</ul>
+<h3 id="nguoi-mua">Thông tin người mua</h3>
+<p>Nếu đơn gắn với khách hàng có <b>mã số thuế</b> (trên đơn hoặc trong hồ sơ khách hàng ở máy bán hàng), hoá đơn ghi tên, tên công ty, MST, địa chỉ, email, điện thoại của khách. Đơn không có khách hàng có MST được xuất cho khách lẻ không lấy hoá đơn. MST sai định dạng làm đơn đó báo lỗi – sửa hồ sơ khách hàng.</p>
+<p>Ngoài phát hành tự động, máy bán hàng khác hoặc phần mềm tích hợp có thể phát hành qua API bằng <a href="/help/tai-khoan#khoa-api">khoá API</a>.</p>
+</section>
+<section>
+<h2 id="danh-sach">Xem hoá đơn đã phát hành <a class="anchor" href="#danh-sach" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Bảng cuối mục Hoá đơn điện tử liệt kê: thời gian, đơn hàng, số hoá đơn, ký hiệu, <b>mã tra cứu</b> (bấm để mở trang tra cứu của nhà cung cấp nếu có) và trạng thái:</p>
+<ul>
+<li><span class="pill ok">Đã phát hành</span> – có liên kết <b class="ui">PDF</b> để xem/tải hoá đơn (nếu nhà cung cấp hỗ trợ tải PDF).</li>
+<li>Nhãn màu vàng – hoá đơn đang được phát hành.</li>
+<li><span class="pill bad">Cần đối soát</span> – chưa rõ kết quả, có nút <b class="ui">Đối soát</b>.</li>
+</ul>
+</section>
+<section>
+<h2 id="loi">Xử lý lỗi và đối soát <a class="anchor" href="#loi" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Đơn không phát hành được hiện ở khung <b class="ui">Cần xử lý</b> phía trên bảng hoá đơn (10 lỗi gần nhất). Dòng có chữ “(sẽ thử lại)” sẽ được thử lại tự động.</p>
+<div class="table"><table>
+<thead><tr><th>Thông báo</th><th>Nguyên nhân</th><th>Cách xử lý</th></tr></thead>
+<tbody>
+<tr><td>Chưa rõ kết quả – bấm Đối soát</td><td>Nhà cung cấp không trả lời rõ ràng (mất mạng, quá thời gian chờ). Hoá đơn có thể đã hoặc chưa được tạo.</td><td>Bấm <b class="ui">Đối soát</b> ở dòng hoá đơn. HiTechPOS hỏi lại nhà cung cấp: nếu hoá đơn đã có, dòng chuyển “Đã phát hành”; nếu chưa, đơn được phát hành lại ở lượt sau.</td></tr>
+<tr><td>Dữ liệu đơn không hợp lệ để xuất hoá đơn, hoặc thông báo cụ thể như “Mã số thuế người mua … không hợp lệ”</td><td>Thiếu hoặc sai dữ liệu, ví dụ MST người mua sai</td><td>Sửa dữ liệu trên máy bán hàng; xuất hoá đơn cho đơn này trên phần mềm của nhà cung cấp</td></tr>
+<tr><td>Đơn đã xuất hoá đơn bị trả hàng – cần lập hoá đơn điều chỉnh</td><td>Khách trả hàng sau khi đã có hoá đơn</td><td>Lập hoá đơn điều chỉnh/thay thế trên phần mềm của nhà cung cấp</td></tr>
+<tr><td>Đơn bị trả hàng trước khi xuất hoá đơn</td><td>Đơn có trả hàng nên không tự phát hành</td><td>Xuất hoá đơn cho phần đã bán trên phần mềm của nhà cung cấp</td></tr>
+</tbody></table></div>
+<ul>
+<li><b>Nhà cung cấp từ chối thông tin đăng nhập</b> hoặc tạm thời không truy cập được: việc phát hành tạm dừng và tự thử lại ở lượt sau. Kiểm tra lại tài khoản, mật khẩu, môi trường (thử nghiệm/chính thức).</li>
+<li>Nhà cung cấp từ chối một hoá đơn cụ thể: thử lại tối đa 5 lần, sau đó bỏ qua đơn đó để không chặn các đơn khác – xuất thủ công cho đơn đó.</li>
+</ul>
+</section>
+    </article>
+    <nav class="pager" aria-label="Trang trước và sau">
+      <a class="prev" href="/help/cau-hinh-thanh-toan"><small>Trang trước</small>Cấu hình thanh toán QR</a>
+      <a class="next" href="/help/goi-cuoc"><small>Trang sau</small>Gói cước và thanh toán phí</a>
+    </nav>
+  </main>
+</div>
+<footer class="foot">
+  <p>HiTechPOS · HiTechCloud-VN · Phố Tuệ Software Solutions JSC</p>
+  <p><a href="/help/cau-hoi-thuong-gap#lien-he">Liên hệ hỗ trợ</a> · Phần mềm nguồn mở AGPL-3.0, dựa trên Posnic · <a href="/source">Mã nguồn</a></p>
+</footer>
+</body>
+</html>

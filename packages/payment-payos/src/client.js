@@ -1,6 +1,6 @@
 'use strict';
 
-const { requestJson, fail } = require('@hitechpos/payment-core');
+const { requestJson, fail, trimTrailingSlashes } = require('@hitechpos/payment-core');
 const { paymentRequestSignature, verifyDataSignature } = require('./signature');
 
 const BASE_URL = 'https://api-merchant.payos.vn';
@@ -43,7 +43,7 @@ function createPayOSClient(config, { transport = globalThis.fetch, timeoutMs = 1
   const clientId = credential(config && config.clientId, 'clientId');
   const apiKey = credential(config.apiKey, 'apiKey');
   const checksumKey = credential(config.checksumKey, 'checksumKey');
-  const baseUrl = String(config.baseUrl || BASE_URL).replace(/\/+$/, '');
+  const baseUrl = trimTrailingSlashes(config.baseUrl || BASE_URL);
   const headers = { 'x-client-id': clientId, 'x-api-key': apiKey, ...(config.partnerCode ? { 'x-partner-code': config.partnerCode } : {}) };
 
   async function call(method, path, body, { verify = true } = {}) {

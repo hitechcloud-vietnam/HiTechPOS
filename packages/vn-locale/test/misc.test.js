@@ -44,7 +44,10 @@ test('provinces (1/7/2025)', () => {
 test('banks', () => {
   assert.ok(L.BANKS.length >= 20);
   assert.equal(new Set(L.BANKS.map((b) => b.bin)).size, L.BANKS.length);
-  for (const b of L.BANKS) assert.match(b.bin, /^97\d{4}$/);
+  for (const b of L.BANKS) assert.match(b.bin, /^\d{6}$/);
+  assert.equal(L.findBank("VCB").bin, "970436");
+  assert.ok(L.BANKS.length >= 55);
+  assert.equal(L.findBank("DongA Bank").shortName, "Vikki Bank");
   assert.equal(L.findBank('970436').shortName, 'Vietcombank');
   assert.equal(L.findBank('vietcombank').bin, '970436');
   assert.equal(L.findBank('namabank').bin, '970428');

@@ -14,6 +14,14 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: `http://127.0.0.1:${testPort}`,
+    /* HiTechPOS starts a fresh phone in Vietnamese. These checks read the
+       English source text, so each page begins with English chosen, the way
+       a waiter who picked it would have it. hitechpos-defaults.spec.js
+       clears this to check the Vietnamese default itself. */
+    storageState: {
+      cookies: [],
+      origins: [{ origin: `http://127.0.0.1:${testPort}`, localStorage: [{ name: 'posnic.language', value: 'en' }] }],
+    },
     /* Edge is what is installed on the desk this is developed at. A CI
        runner has Playwright's own Chromium and no Edge, and naming a channel
        it cannot find fails before a single test runs. */

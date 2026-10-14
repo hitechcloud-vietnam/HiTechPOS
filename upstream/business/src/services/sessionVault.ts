@@ -3,6 +3,7 @@ import { gcm } from "@noble/ciphers/aes.js";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils.js";
 import { z } from "zod";
 import { communityOrigin } from "../domain/server";
+import { CLOUD_ORIGIN } from "../config/hitechpos";
 
 export interface SecretStore {
   get(key: string): Promise<string | null>;
@@ -27,7 +28,7 @@ export const credentialSchema = z
     (value) =>
       value.authorizationOrigin === undefined ||
       value.authorizationOrigin === value.origin ||
-      value.authorizationOrigin === "https://www.posnic.com",
+      value.authorizationOrigin === CLOUD_ORIGIN,
     "Unexpected authorization origin",
   );
 export type Credential = z.infer<typeof credentialSchema>;

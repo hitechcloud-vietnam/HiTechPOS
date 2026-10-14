@@ -22,8 +22,8 @@ const RUNTIME_INFO = {
 
 const LAN = 'http://192.168.1.8:5555/api';
 const LAN_ORIGIN = 'http://192.168.1.8:5555';
-const CLOUD = 'https://azure.posnic.io/api';
-const CLOUD_ORIGIN = 'https://azure.posnic.io';
+const CLOUD = 'https://azure.hitechpos.vn/api';
+const CLOUD_ORIGIN = 'https://azure.hitechpos.vn';
 
 /** Answer /runtime-info like a Posnic server, and everything else emptily. */
 function serve(page, origin, { info = RUNTIME_INFO, extra = {}, seen, delayMs = 0 } = {}) {
@@ -91,7 +91,7 @@ test('addresses the user might type are all understood', async ({ page }) => {
     bareIp: POSNIC.server.normalize('192.168.1.8'),
     ipWithPort: POSNIC.server.normalize('192.168.1.8:5555'),
     fullLan: POSNIC.server.normalize('http://192.168.1.8:5555/'),
-    cloudHost: POSNIC.server.normalize('azure.posnic.io'),
+    cloudHost: POSNIC.server.normalize('azure.hitechpos.vn'),
     ownDomain: POSNIC.server.normalize('https://pos.myshop.com/api'),
     nothing: POSNIC.server.normalize('   '),
   }));
@@ -451,20 +451,20 @@ test('a scanned code is read however it was written', async ({ page }) => {
   await page.goto('/index.html');
   const read = await page.evaluate(() => ({
     bareCode: POSNIC_CONNECT.serverFromScan('demo'),
-    fullUrl: POSNIC_CONNECT.serverFromScan('https://demo.posnic.io/api'),
+    fullUrl: POSNIC_CONNECT.serverFromScan('https://demo.hitechpos.vn/api'),
     tillAddress: POSNIC_CONNECT.serverFromScan('192.168.1.5:5555'),
-    linkCarrying: POSNIC_CONNECT.serverFromScan('https://www.posnic.com/pair?server=demo'),
+    linkCarrying: POSNIC_CONNECT.serverFromScan('https://app.hitechpos.vn/pair?server=demo'),
     linkCarryingUrl: POSNIC_CONNECT.serverFromScan(
-      'https://www.posnic.com/pair?server=' + encodeURIComponent('http://192.168.1.5:5555')),
+      'https://app.hitechpos.vn/pair?server=' + encodeURIComponent('http://192.168.1.5:5555')),
     someoneElsesQr: POSNIC_CONNECT.serverFromScan('WIFI:S:ShopGuest;T:WPA;P:hunter2;;'),
     empty: POSNIC_CONNECT.serverFromScan(''),
   }));
 
-  expect(read.bareCode).toBe('https://demo.posnic.io/api');
-  expect(read.fullUrl).toBe('https://demo.posnic.io/api');
+  expect(read.bareCode).toBe('https://demo.hitechpos.vn/api');
+  expect(read.fullUrl).toBe('https://demo.hitechpos.vn/api');
   expect(read.tillAddress).toBe('http://192.168.1.5:5555/api');
   // A link is unwrapped, not mistaken for the address of the page hosting it.
-  expect(read.linkCarrying).toBe('https://demo.posnic.io/api');
+  expect(read.linkCarrying).toBe('https://demo.hitechpos.vn/api');
   expect(read.linkCarryingUrl).toBe('http://192.168.1.5:5555/api');
   // Codes that are not ours are refused rather than turned into an address.
   expect(read.someoneElsesQr).toBeNull();
@@ -523,7 +523,7 @@ test('a till that stops answering is named as the thing that is down', async ({ 
   // The address it is trying, so nobody guesses which shop it means.
   await expect(page.locator('#posnic-offline-url')).toContainText(LAN);
   // What would actually fix it.
-  await expect(page.locator('#posnic-offline-body')).toContainText('Posnic is running on the till');
+  await expect(page.locator('#posnic-offline-body')).toContainText('HiTechPOS is running on the till');
   // Both ways out are offered.
   await expect(page.getByRole('button', { name: 'Try now' })).toBeVisible();
   await expect(overlay.getByRole('button', { name: 'Change server' })).toBeVisible();
@@ -574,7 +574,7 @@ test('a device that was never set up is not shown an outage', async ({ page }) =
 /*
  * A CODE ON A WALL THAT SAYS http, FOR A HOST THAT ONLY ANSWERS ON https.
  *
- * Servers printed pairing codes reading `http://shop.posnic.io/api` for
+ * Servers printed pairing codes reading `http://shop.hitechpos.vn/api` for
  * months: nginx terminates TLS and forwards plain http, so Express saw `http`
  * and put that on the QR. A phone scanned it, the address 301'd, and the
  * handset reported that nothing answered - so the shop was told to check
@@ -587,13 +587,13 @@ test('a device that was never set up is not shown an outage', async ({ page }) =
 test('a scanned http address for a public host is used over https', async ({ page }) => {
   await page.goto('/index.html');
   const results = await page.evaluate(() => ({
-    scanned: POSNIC.server.normalize('http://develop.posnic.io/api'),
-    typed: POSNIC.server.normalize('http://shop.posnic.io'),
+    scanned: POSNIC.server.normalize('http://develop.hitechpos.vn/api'),
+    typed: POSNIC.server.normalize('http://shop.hitechpos.vn'),
     ownDomain: POSNIC.server.normalize('http://pos.myshop.com/api'),
   }));
 
-  expect(results.scanned).toBe('https://develop.posnic.io/api');
-  expect(results.typed).toBe('https://shop.posnic.io/api');
+  expect(results.scanned).toBe('https://develop.hitechpos.vn/api');
+  expect(results.typed).toBe('https://shop.hitechpos.vn/api');
   expect(results.ownDomain).toBe('https://pos.myshop.com/api');
 });
 
@@ -617,9 +617,9 @@ test('a code the scanner reads is understood the same way', async ({ page }) => 
      a waiter who scans and a waiter who types reach different servers. */
   await page.goto('/index.html');
   const scanned = await page.evaluate(() =>
-    POSNIC_CONNECT.serverFromScan('http://develop.posnic.io/api')
+    POSNIC_CONNECT.serverFromScan('http://develop.hitechpos.vn/api')
   );
-  expect(scanned).toBe('https://develop.posnic.io/api');
+  expect(scanned).toBe('https://develop.hitechpos.vn/api');
 });
 
 /*
@@ -783,7 +783,7 @@ test('the app can say which transport it is using', async ({ page }) => {
  *
  * Reported from a real handset against the real server:
  *
- *   Could not use https://develop.posnic.io/api. It did not answer in time.
+ *   Could not use https://develop.hitechpos.vn/api. It did not answer in time.
  *   It may be slow, or not listening. [native+patched-fetch]
  *
  * Capacitor's patched fetch ignores an AbortSignal and simply never came
@@ -1081,7 +1081,7 @@ test('a code carrying both addresses is read as both', async ({ page }) => {
 
   const asLink = await bothFrom(
     page,
-    'https://posnic.io/setup?server=azure&lan=http://192.168.1.8:5555'
+    'https://hitechpos.vn/setup?server=azure&lan=http://192.168.1.8:5555'
   );
   expect(asLink).toEqual({ lan: LAN, cloud: CLOUD });
 
@@ -1093,7 +1093,7 @@ test('a bare host on the LAN side is filled in the way a typed one is', async ({
   /* The till prints what it knows - a hostname, an IP, sometimes a full URL -
      and all three have to arrive as the same address. */
   await page.goto('/index.html');
-  const said = await bothFrom(page, 'https://posnic.io/setup?server=azure&lan=192.168.1.8:5555');
+  const said = await bothFrom(page, 'https://hitechpos.vn/setup?server=azure&lan=192.168.1.8:5555');
   expect(said.lan).toBe(LAN);
 });
 
@@ -1106,7 +1106,7 @@ test('the codes already stuck to walls keep working', async ({ page }) => {
 
   expect(await bothFrom(page, 'azure')).toEqual({ lan: null, cloud: CLOUD });
   expect(await bothFrom(page, 'http://192.168.1.8:5555')).toEqual({ lan: LAN, cloud: null });
-  expect(await bothFrom(page, 'https://posnic.io/join?server=azure')).toEqual({
+  expect(await bothFrom(page, 'https://hitechpos.vn/join?server=azure')).toEqual({
     lan: null,
     cloud: CLOUD,
   });
@@ -1422,7 +1422,7 @@ test('A TILL THAT IS SIMPLY OFF IS NAMED AS THE THING THAT IS OFF', async ({ pag
 
   /* The check needs the network interface, so it lands a moment after the
      screen rather than holding it up. */
-  await expect(page.locator('#posnic-offline-title')).toContainText('not running POSNIC', {
+  await expect(page.locator('#posnic-offline-title')).toContainText('not running HiTechPOS', {
     timeout: 15000,
   });
   await expect(page.locator('#posnic-offline-body')).toContainText('right Wi-Fi');

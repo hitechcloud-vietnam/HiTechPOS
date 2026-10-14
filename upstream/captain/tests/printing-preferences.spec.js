@@ -7,7 +7,7 @@ for(const [width,language] of [[320,'ta'],[800,'ar']]) {
     await page.setViewportSize({width,height:900});
     await onTheMenu(page,'nothing');
     await page.evaluate(()=>localStorage.setItem('printing-draft','keep'));
-    await page.route('https://smoke.posnic.io/api/**',route=>route.abort());
+    await page.route('https://smoke.hitechpos.vn/api/**',route=>route.abort());
     await page.goto('/me.html#preferences');
     await page.locator('a[href="#printers"]').click();
     const panel=page.locator('[data-me-page=printers]');

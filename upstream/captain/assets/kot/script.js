@@ -439,7 +439,7 @@ document.addEventListener('click', async function (event) {
         const status = error && (error.status || error.statusCode);
         showToast(
             status === 404
-                ? 'This till is too old to print bills from a phone. Update POSNIC on the till.'
+                ? 'This till is too old to print bills from a phone. Update HiTechPOS on the till.'
                 : (error && error.message) || 'Could not ask for the bill',
             'error'
         );

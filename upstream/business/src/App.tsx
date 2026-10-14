@@ -1077,7 +1077,7 @@ export default function App() {
         <BusinessApp />
       ) : (
         <View>
-          <Text>Posnic Business</Text>
+          <Text>HiTechPOS Business</Text>
         </View>
       )}
     </SafeAreaProvider>

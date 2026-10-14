@@ -107,7 +107,7 @@ test("browser authorization binds its page, verifier and grant to the chosen iss
     fetcher: async (_url, options) => {
       const body = JSON.parse(String(options?.body));
       challenge = body.codeChallenge;
-      assert.equal(body.deviceName, "Posnic Business");
+      assert.equal(body.deviceName, "HiTechPOS Business");
       assert.equal(body.password, undefined);
       assert.equal(body.stepUp, undefined);
       return json({

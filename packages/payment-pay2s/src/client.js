@@ -1,6 +1,6 @@
 'use strict';
 
-const { requestJson, fail } = require('@hitechpos/payment-core');
+const { requestJson, fail, trimTrailingSlashes } = require('@hitechpos/payment-core');
 const { CREATE_PAYMENT_FIELDS, REDIRECT_FIELDS, IPN_FIELDS, sign, verify } = require('./signature');
 
 const BASE_URLS = { sandbox: 'https://sandbox-payment.pay2s.vn', production: 'https://payment.pay2s.vn' };
@@ -30,7 +30,7 @@ function createPay2SClient(config, { transport = globalThis.fetch, timeoutMs = 1
   const accessKey = required(config.accessKey, 'accessKey');
   const partnerCode = required(config.partnerCode, 'partnerCode');
   const secretKey = required(config.secretKey, 'secretKey');
-  const baseUrl = String(config.baseUrl || BASE_URLS[environment]).replace(/\/+$/, '');
+  const baseUrl = trimTrailingSlashes(config.baseUrl || BASE_URLS[environment]);
 
   /* Every callback must name this merchant before its signature is even
      considered; a valid signature for another partner is still not ours. */

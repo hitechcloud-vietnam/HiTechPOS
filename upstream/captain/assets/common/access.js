@@ -213,7 +213,7 @@
         let pending = state.pendingConnections;
         if (!pending) {
           const metadata = await post(
-            "https://www.posnic.com",
+            host.POSNIC.constants.ACCOUNT_ORIGIN,
             "/api/mobile/connections",
             {
               connectionToken: state.cloudAuthorization.connectionToken,

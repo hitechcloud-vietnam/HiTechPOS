@@ -1513,7 +1513,7 @@ function Till() {
                       >
                         <View style={styles.menuIcon}>{icon("server")}</View>
                         <View style={{ flex: 1, minWidth: 0 }}>
-                          <Text style={styles.menuTitle}>Posnic POS</Text>
+                          <Text style={styles.menuTitle}>HiTechPOS</Text>
                           <Text style={styles.small}>{server}</Text>
                         </View>
                         {icon("check-circle")}
@@ -1539,7 +1539,7 @@ function Till() {
                           {actionRow(
                             "server",
                             t("useServer") + " · " + new URL(hit.address).host,
-                            "Posnic POS · " +
+                            "HiTechPOS · " +
                               (hit.compatible
                                 ? hit.version
                                 : t("serverUpgrade")),

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cổng đối tác – HiTechPOS</title>
+<style>
+  :root { --brand: #0b6bcb; --ink: #1d2733; --muted: #5d6b7a; --bg: #f5f8fb; --line: #dde5ee; --ok: #12805c; --err: #c0392b; --warn: #a76300; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  header { background: var(--brand); color: #fff; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  header a { color: #fff; }
+  main { max-width: 1000px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  h2 { margin: 0 0 12px; font-size: 1.15rem; }
+  .row { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); align-items: end; }
+  .row + .row { margin-top: 12px; }
+  label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); }
+  input, button { font: inherit; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--line); color: var(--ink); }
+  button { background: var(--brand); color: #fff; border: 0; cursor: pointer; font-weight: 600; }
+  button.ghost { background: #fff; color: var(--brand); border: 1px solid var(--brand); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  .wrap { overflow-x: auto; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: .8rem; background: #eef4fb; }
+  .paid, .active, .approved { background: #e5f6ef; color: var(--ok); }
+  .pending, .trialing { background: #fff4e0; color: var(--warn); }
+  .reversed, .expired, .suspended, .install_failed { background: #fbeaea; color: var(--err); }
+  .muted { color: var(--muted); font-size: .85rem; }
+  .msg { min-height: 1.2em; font-size: .9rem; }
+  .err { color: var(--err); } .ok { color: var(--ok); }
+  .link { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .link input { flex: 1 1 260px; background: #f0f3f7; }
+  .stats { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .stat { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .stat b { display: block; font-size: 1.15rem; }
+  #login { max-width: 420px; margin: 40px auto; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <strong>HiTechPOS · Cổng đối tác</strong>
+  <span><span id="who"></span> <a href="#" id="logout" hidden>Đăng xuất</a></span>
+</header>
+
+<section class="card" id="login" hidden>
+  <h2>Đăng nhập đối tác</h2>
+  <p class="muted">Dành cho đại lý và cộng tác viên của HiTechPOS. Tài khoản do HiTechPOS cấp.</p>
+  <form id="loginForm" class="row">
+    <label>Email <input name="email" type="email" autocomplete="username" required></label>
+    <label>Mật khẩu <input name="password" type="password" autocomplete="current-password" required></label>
+    <button>Đăng nhập</button>
+  </form>
+  <p class="msg" id="loginMsg"></p>
+</section>
+
+<main id="app" hidden>
+  <section class="card">
+    <h2>Liên kết giới thiệu</h2>
+    <p class="muted">Gửi liên kết này cho khách. Cửa hàng đăng ký qua liên kết (hoặc nhập mã của bạn) sẽ được ghi nhận cho bạn một lần duy nhất.</p>
+    <div class="link">
+      <input id="refLink" readonly aria-label="Liên kết giới thiệu">
+      <button type="button" id="copyLink">Sao chép</button>
+    </div>
+    <p class="msg" id="copyMsg"></p>
+    <div class="row">
+      <div><div class="muted">Mã giới thiệu</div><b id="refCode"></b></div>
+      <div><div class="muted">Hoa hồng</div><b id="ruleText"></b></div>
+      <div><div class="muted">Ưu đãi cho khách</div><b id="discountText"></b></div>
+      <div><div class="muted">Trạng thái</div><span class="pill" id="partnerStatus"></span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Hoa hồng</h2>
+    <div class="stats">
+      <div class="stat"><span class="muted">Chờ duyệt</span><b id="tPending"></b></div>
+      <div class="stat"><span class="muted">Đã duyệt, chờ chi trả</span><b id="tApproved"></b></div>
+      <div class="stat"><span class="muted">Đã chi trả</span><b id="tPaid"></b></div>
+    </div>
+    <div class="wrap" style="margin-top:12px">
+      <table>
+        <thead><tr><th>Ngày</th><th>Cửa hàng</th><th>Gói</th><th class="num">Tháng tính</th><th class="num">Doanh thu tính</th><th class="num">Tỷ lệ</th><th class="num">Hoa hồng</th><th>Trạng thái</th></tr></thead>
+        <tbody id="commissions"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Cửa hàng bạn giới thiệu</h2>
+    <div class="wrap">
+      <table>
+        <thead><tr><th>Cửa hàng</th><th>Gói</th><th>Trạng thái</th><th>Hiệu lực đến</th><th>Ngày ghi nhận</th></tr></thead>
+        <tbody id="shops"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Đổi mật khẩu</h2>
+    <form id="pwForm" class="row">
+      <label>Mật khẩu hiện tại <input name="currentPassword" type="password" autocomplete="current-password" required></label>
+      <label>Mật khẩu mới (≥ 8 ký tự) <input name="newPassword" type="password" autocomplete="new-password" minlength="8" required></label>
+      <button>Đổi mật khẩu</button>
+    </form>
+    <p class="msg" id="pwMsg"></p>
+  </section>
+</main>
+<footer style="text-align:center;padding:16px;color:#5d6b7a;font-size:.85rem">HiTechPOS · AGPL-3.0 · <a href="/source">Mã nguồn</a></footer>
+<script src="/doi-tac.js"></script>
+</body>
+</html>

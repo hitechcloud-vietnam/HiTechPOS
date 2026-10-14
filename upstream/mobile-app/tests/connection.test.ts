@@ -26,12 +26,14 @@ const ack = {
 test("typing, pasting and scanning understand shop codes, LAN addresses and pairing payloads", () => {
   assert.equal(
     parseServerInput(" demo ").address,
-    "https://demo.posnic.io/api",
+    "https://demo.hitechpos.vn/api",
   );
   assert.equal(parseServerInput("192.168.1.8").address, local);
   assert.equal(parseServerInput("shop.example/login").address, remote);
   assert.deepEqual(
-    parseServerInput("https://posnic.io/pair?server=shop.example&code=001234"),
+    parseServerInput(
+      "https://hitechpos.vn/pair?server=shop.example&code=001234",
+    ),
     { address: remote, code: "001234" },
   );
   assert.deepEqual(

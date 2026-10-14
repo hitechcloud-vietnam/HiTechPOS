@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Thanh toán gói cước – HiTechPOS</title>
+<style>
+  body { font-family: system-ui, "Segoe UI", Roboto, sans-serif; background: #f5f8fb; color: #1d2733; margin: 0; padding: 16px; }
+  main { max-width: 480px; margin: 12vh auto 0; background: #fff; border-radius: 12px; padding: 24px; text-align: center; }
+  a.btn { display: inline-block; background: #0b6bcb; color: #fff; padding: 10px 18px; border-radius: 8px; text-decoration: none; }
+  .muted { color: #5d6b7a; font-size: .9rem; }
+  @media (prefers-color-scheme: dark) { body { background: #10161d; color: #e6edf3; } main { background: #18212b; } .muted { color: #9fb0c0; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Đã quay lại từ cổng thanh toán</h1>
+  <p>HiTechPOS kích hoạt gói ngay khi cổng thanh toán xác nhận giao dịch, thường trong vài giây.</p>
+  <p class="muted" id="order"></p>
+  <p><a class="btn" href="/account" id="go">Về trang quản lý</a></p>
+  <p class="muted">Nếu sau vài phút gói chưa được gia hạn, hãy xem mục <a href="/help/goi-cuoc">Gói cước</a> trong trợ giúp.</p>
+</main>
+<script src="/billing/return.js"></script>
+</body>
+</html>

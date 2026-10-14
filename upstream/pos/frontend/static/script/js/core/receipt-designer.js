@@ -195,7 +195,15 @@
         var layout = contract.layoutFor(designs, format);
         var sheet = !!contract.formats[format].height;
         var currency = (typeof data.currency_type === 'string' ? data.currency_type : '') || PosnicPro.local.get('currencySign') || '';
-        var money = function (v) { return esc(currency) + ' ' + esc(Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })); };
+        // The bill's precision (a transferred bill states its own) and the
+        // shop's grouping - not the cashier's browser locale, which printed
+        // "₫ 135.000,00" on one till and "₫ 135,000.00" on the next.
+        var billDigits = data.transferred_bill && Number.isInteger(data.transferred_bill.currencyDigits) ? data.transferred_bill.currencyDigits : null;
+        var figure = function (v) {
+            return PosnicPro.money ? PosnicPro.money.number(Number(v || 0), billDigits)
+                : Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+        var money = function (v) { return esc(currency) + ' ' + esc(figure(v)); };
         var pair = function (name, value, total) { return '<div class="rd-total-row' + (total ? ' rd-grand-total' : '') + '"><span>' + esc(label(name)) + '</span><span>' + value + '</span></div>'; };
         var items = data.items || [];
         // Saved/reprinted receipts can supply canonical lines without legacy items.
@@ -271,7 +279,7 @@
                     content += '<tr><td' + (columns ? ' class="rd-item-fixed"' : '') + '>' + (b.showRowNumbers ? '<span class="rd-row-number">' + (index + 1) + '. </span>' : '') + esc(name) + (compact ? ' × ' + esc(qty) : '') + (b.hsn && hsn ? '<div class="rd-line-detail">HSN/SAC: ' + esc(hsn) + '</div>' : '');
                     if (!sheet && !compact && !columns) content += '<div class="rd-line-detail">' + esc(qty + ' ' + (item.item_unit || '') + ' × ') + money(item.item_price) + '</div>';
                     if (Number(item.item_discount) || Number(item.item_discount_percentage)) content += '<div class="rd-line-detail">' + esc(label('Discount')) + ': ' + (Number(item.item_discount_percentage) ? esc(item.item_discount_percentage) + '%' : money(item.item_discount)) + '</div>';
-                    content += '</td>' + (sheet ? '<td class="rd-number">' + esc(qty + ' ' + (item.item_unit || '')) + '</td><td class="rd-number">' + money(item.item_price) + '</td>' : columns ? '<td class="rd-number">' + Number(item.item_price || 0).toFixed(2) + '</td><td class="rd-number">' + esc(qty) + '</td>' : '') + '<td class="rd-number">' + (columns ? Number(item.total_amount || 0).toFixed(2) : money(item.total_amount)) + '</td></tr>';
+                    content += '</td>' + (sheet ? '<td class="rd-number">' + esc(qty + ' ' + (item.item_unit || '')) + '</td><td class="rd-number">' + money(item.item_price) + '</td>' : columns ? '<td class="rd-number">' + esc(figure(item.item_price)) + '</td><td class="rd-number">' + esc(qty) + '</td>' : '') + '<td class="rd-number">' + (columns ? esc(figure(item.total_amount)) : money(item.total_amount)) + '</td></tr>';
                 });
                 if (columns && hasField('total_quantity')) content += '<tr class="rd-total-quantity"><td colspan="2">' + esc(label('Total Items')) + ': ' + receiptItems.length + '</td><td class="rd-number">' + esc(values.total_quantity) + '</td><td></td></tr>';
                 content += '</tbody></table>';

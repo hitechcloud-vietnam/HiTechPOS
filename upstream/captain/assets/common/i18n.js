@@ -4,6 +4,7 @@
   const packs = {}, patterns = {}, originals = new WeakMap(), attributes = new WeakMap();
   const ATTRS = ['placeholder', 'title', 'aria-label', 'alt'];
   const SKIP = 'script,style,noscript,textarea,[translate="no"],[data-i18n-ignore],[contenteditable="true"]';
+  const DEFAULT_LANGUAGE = 'vi';
   let current = 'en', watching = false;
   const normalize = value => String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
   const escape = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -115,8 +116,9 @@
   }
   function start() {
     if (root.POSNIC_LANG_TA) { register('ta', root.POSNIC_LANG_TA); delete root.POSNIC_LANG_TA; }
-    let language = 'en';
-    try { language = localStorage.getItem('posnic.language') || 'en'; } catch {}
+    // HiTechPOS: a phone nobody has chosen a language on starts in Vietnamese.
+    let language = DEFAULT_LANGUAGE;
+    try { language = localStorage.getItem('posnic.language') || DEFAULT_LANGUAGE; } catch {}
     use(language, {remember:false});
     document.querySelectorAll('[data-language-picker]').forEach(select => {
       populate(select);

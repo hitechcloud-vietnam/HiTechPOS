@@ -167,6 +167,17 @@ class UsersController extends BaseController {
         license: req.user.license,
       };
 
+      /* Plan limit on staff logins (helpers/limits.js), new users only. */
+      if (!id) {
+        const max = await require('../helpers/limits').userLimit();
+        if (max) {
+          const count = await require('../models/user.model').countDocuments({ license: req.user.license });
+          if (count >= max) {
+            return this.error(res, `Your plan covers ${max} staff login${max > 1 ? 's' : ''}. Upgrade it from your account to add more.`, 402);
+          }
+        }
+      }
+
       const response = await this.userModel.userInsertUpdate(data, id, context);
 
       // PHP lines 187-193: Handle response
@@ -578,6 +589,8 @@ class UsersController extends BaseController {
         branch_timezone: checkUserBranch.time_zone,
         branch_timeformat: checkUserBranch.time_format || 'enable',
         currency_type: checkUserBranch.currency_type,
+        // ISO code, so the till knows the dong has no decimals (utils/currency.js).
+        currency_code: require('../utils/currency').policy(checkUserBranch).currencyCode,
         branchCount: branchAccess.length,
         branchId: String(branchId),
         print_type: user.printing_design,
@@ -2467,6 +2480,8 @@ class UsersController extends BaseController {
         branch_timezone: checkUserBranch.time_zone,
         branch_timeformat: checkUserBranch.time_format || 'enable',
         currency_type: checkUserBranch.currency_type,
+        // ISO code, so the till knows the dong has no decimals (utils/currency.js).
+        currency_code: require('../utils/currency').policy(checkUserBranch).currencyCode,
         branchCount: branchLength,
         branchId: String(branchId),
         print_type: recordsFiltered.printing_design,

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
     <head>
         <script type="application/javascript" src="script/login.js"></script>
 
@@ -17,39 +17,42 @@
                 : 'http://localhost:5555/';
         </script>
 
-        <title>Posnic POS - Offline POS & Billing Software</title>
+        <title>HiTechPOS - Phần mềm quản lý bán hàng</title>
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="description" content="Posnic POS is offline-first open source POS and billing software for retail stores, restaurants, and small businesses.">
+        <meta name="description" content="HiTechPOS là phần mềm quản lý bán hàng cho cửa hàng, quán ăn và nhà hàng, dựa trên mã nguồn mở Posnic (AGPL-3.0).">
         <meta name="keywords" content="POS, Billing Software, Offline POS, Online/Offline POS, open source POS">
-        <meta name="application-name" content="Posnic POS">
-        <meta name="author" content="Posnic">
+        <meta name="application-name" content="HiTechPOS">
+        <meta name="author" content="Phố Tuệ Software Solutions JSC">
         <meta name="robots" content="index, follow">
-        <link rel="canonical" href="https://www.posnic.com/">
+        <link rel="canonical" href="https://hitechpos.vn/">
         <meta property="og:type" content="website">
-        <meta property="og:site_name" content="Posnic POS">
-        <meta property="og:title" content="Posnic POS - Offline POS & Billing Software">
-        <meta property="og:description" content="Offline-first open source POS and billing software for retail stores, restaurants, and small businesses.">
-        <meta property="og:url" content="https://www.posnic.com/">
-        <meta property="og:image" content="https://www.posnic.com/static/images/icons-pwa/icon-512.png">
+        <meta property="og:site_name" content="HiTechPOS">
+        <meta property="og:title" content="HiTechPOS - Phần mềm quản lý bán hàng">
+        <meta property="og:description" content="Phần mềm quản lý bán hàng cho cửa hàng, quán ăn và nhà hàng.">
+        <meta property="og:url" content="https://hitechpos.vn/">
+        <meta property="og:image" content="static/images/icons-pwa/hitechpos-512.png">
         <meta name="twitter:card" content="summary">
-        <meta name="twitter:title" content="Posnic POS - Offline POS & Billing Software">
-        <meta name="twitter:description" content="Offline-first open source POS and billing software for retail stores, restaurants, and small businesses.">
-        <meta name="twitter:image" content="https://www.posnic.com/static/images/icons-pwa/icon-512.png">
+        <meta name="twitter:title" content="HiTechPOS - Phần mềm quản lý bán hàng">
+        <meta name="twitter:description" content="Phần mềm quản lý bán hàng cho cửa hàng, quán ăn và nhà hàng.">
+        <meta name="twitter:image" content="static/images/icons-pwa/hitechpos-512.png">
+        <!-- HiTechPOS: id kept from upstream so the discovery test can find it. -->
         <script type="application/ld+json" id="posnic-software-schema">
         {
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            "name": "Posnic POS",
-            "description": "Offline-first open source POS and billing software for retail stores, restaurants, and small businesses.",
-            "url": "https://www.posnic.com/",
-            "codeRepository": "https://github.com/Posnic/POS",
+            "name": "HiTechPOS",
+            "description": "Phần mềm quản lý bán hàng cho cửa hàng, quán ăn và nhà hàng, dựa trên mã nguồn mở Posnic.",
+            "url": "https://hitechpos.vn/",
+            "codeRepository": "https://github.com/hitechcloud-vietnam/HiTechPOS",
+            "isBasedOn": "https://github.com/Posnic/POS",
             "applicationCategory": "BusinessApplication",
-            "operatingSystem": "Windows, macOS, Linux, Web",
+            "operatingSystem": "Web",
             "softwareVersion": "1.9.2",
-            "license": "https://github.com/Posnic/POS/blob/develop/LICENSE",
-            "isAccessibleForFree": true,
+            "license": "https://spdx.org/licenses/AGPL-3.0-only.html",
+            "author": { "@type": "Organization", "name": "Phố Tuệ Software Solutions JSC" },
+            "isAccessibleForFree": false,
             "keywords": [
                 "POS",
                 "Billing Software",
@@ -60,13 +63,12 @@
         }
         </script>
         <!-- App favicon -->
-        <link rel="shortcut icon" href="static/images/favicon/favicon.ico" type="image/x-icon">
-        <link rel="icon" href="static/images/favicon/favicon.ico" type="image/x-icon">
+        <link rel="shortcut icon" href="static/images/favicon/hitechpos.ico" type="image/x-icon">
+        <link rel="icon" href="static/images/logo/hitechpos-logo.svg" type="image/svg+xml">
         <!-- PWA (S4): installable on a phone or tablet. -->
         <link rel="manifest" href="static/manifest.webmanifest">
-        <meta name="theme-color" content="#506fe4">
-        <link rel="apple-touch-icon" href="static/images/icons-pwa/apple-touch-icon.png">
-        <link rel="apple-touch-icon" href="static/images/logo/posnic-logo.svg">
+        <meta name="theme-color" content="#0b6bcb">
+        <link rel="apple-touch-icon" href="static/images/icons-pwa/hitechpos-apple-touch-icon.png">
         <link crossorigin="anonymous" media="all" rel="stylesheet" href="style/login.css">
         <style>
             .error{
@@ -120,7 +122,7 @@
                                 <div class="card loginform_card">
                                     <div class="card-body">
                                         <div class="form-head">
-                                            <a href="javascript:void(0)" class="logo"><img src="static/images/logo/posnic.svg" class="img-fluid" alt="logo"></a>
+                                            <a href="javascript:void(0)" class="logo"><img src="static/images/logo/hitechpos.svg" class="img-fluid" alt="HiTechPOS" width="232" height="56"></a>
                                         </div>
 
                                         <form id="Branch_selection_form" enctype="multipart/form-data" style="display:none;">
@@ -167,7 +169,7 @@
                                             </div>                          
                                             <button type="submit" class="btn btn-success btn-lg btn-block font-18"><lang class="lang_foget_mail">Reset Password</lang></button>
                                             <p id="offline_recovery_email_help" class="mt-3" hidden><lang class="lang_email_unavailable_use_the_recovery_codes_y">Email unavailable? Use the recovery codes you saved when setting up this shop.</lang></p>
-                                            <p class="mb-0 mt-3"><lang class="lang_remeber_password">Already have a POSNIC account? </lang><a id="Loginslide" href="#"><lang class="lang_login_title">Log in </lang></a></p>
+                                            <p class="mb-0 mt-3"><lang class="lang_already_have_a_hitechpos_account">Already have a HiTechPOS account? </lang><a id="Loginslide" href="#"><lang class="lang_login_title">Log in </lang></a></p>
                                         </form>
 
                                         <p id="offline_recovery_login" class="text-center mt-3" hidden><button type="button" class="btn btn-link" id="offline_recovery_open"><lang class="lang_recover_with_an_offline_code">Recover with an offline code</lang></button></p>
@@ -200,7 +202,7 @@
                                                     <p class="text-danger text-left"> <lang class="lang_you_ve_tried_to_sign_in_too_many_times_wit">You've tried to sign in too many times with an incorrect account or password.</lang> </p>
                                                     <p class="text-left"> <lang class="lang_sign_in_with">Sign-in with</lang> <span class="user-text-update text-success font-18"><lang class="lang_satheesh">satheesh</lang></span> <lang class="lang_entered_the_wrong_password_too_many_times">entered the wrong password too many times.</lang> </p>
                                                     <p id="redirect_slide" style="color:#3a5de1; cursor:pointer ;margin-top:-15px;"><lang class="lang_reset_your_password">Reset your password?</lang> </p>
-                                                    <p> <lang class="lang_another_posnic_account">Another posnic account ?</lang><a id="redirect_login" href="#"><lang class="lang_log_in">Log in</lang></a> </p>
+                                                    <p> <lang class="lang_another_hitechpos_account">Another HiTechPOS account ?</lang><a id="redirect_login" href="#"><lang class="lang_log_in">Log in</lang></a> </p>
                                                 </div>
                                             </div>
                                         </div>
@@ -225,6 +227,13 @@
                                         -->
                                         <div class="text-center mt-2">
                                             <small id="posnic_version_login" class="text-muted" style="font-size:11.5px;letter-spacing:.02em;"></small>
+                                        </div>
+                                        <!-- HiTechPOS: AGPL-3.0 source offer. Keep this link - the licence of
+                                             the Posnic code this till runs on requires it (section 13). -->
+                                        <div class="text-center mt-1 hitechpos-source-note">
+                                            <small class="text-muted" style="font-size:11.5px;">
+                                                <a href="https://github.com/hitechcloud-vietnam/HiTechPOS" target="_blank" rel="noopener" class="text-muted"><lang class="lang_based_on_posnic_agpl_source">Based on Posnic (AGPL-3.0) · Source code</lang></a>
+                                            </small>
                                         </div>
                                     </div>
                                 </div>
@@ -461,6 +470,13 @@
       };
     })();
     </script>
+    <style>
+        /* HiTechPOS: the desktop-app card above advertises Posnic's installer, and
+           HiTechPOS has no desktop build yet. Hidden with CSS rather than by editing
+           the injector; delete this <style> to show it again (and point its
+           download link at a HiTechPOS build first). */
+        #posnic_app_card { display: none !important; }
+    </style>
     <script>
         /* Static-asset service worker (web / LAN counters only). The desktop
            shell is skipped: its assets are local files owned by the installer

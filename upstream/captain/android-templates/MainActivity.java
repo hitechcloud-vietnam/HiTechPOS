@@ -1,4 +1,4 @@
-package com.posnic.captain;
+package vn.hitechpos.captain;
 
 import android.os.Bundle;
 import android.content.Intent;
@@ -68,8 +68,8 @@ public class MainActivity extends BridgeActivity {
      *
      * So an emulator in CI can now ask the app directly:
      *
-     *     adb shell am start -n com.posnic.captain/.MainActivity \
-     *       -e selftest https://develop.posnic.io/api
+     *     adb shell am start -n vn.hitechpos.captain/.MainActivity \
+     *       -e selftest https://demo.hitechpos.vn/api
      *
      * and read the one line the app prints. See assets/common/self-test.js and
      * .github/workflows/device-test.yml.

@@ -52,8 +52,14 @@ function createMemoryStore() {
       Object.assign(row, structuredClone(patch));
       return structuredClone(row);
     },
-    async list() {
-      return [...rows.values()].map((r) => structuredClone(r));
+    /* Equality filter on (dotted) fields, newest first - enough for the
+       lookups hosts do (by tenant reference, by metadata.saleRef). */
+    async list(query = {}) {
+      const get = (doc, path) => path.split('.').reduce((v, k) => (v == null ? v : v[k]), doc);
+      return [...rows.values()]
+        .filter((r) => Object.entries(query).every(([k, v]) => get(r, k) === v))
+        .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : b.orderCode - a.orderCode))
+        .map((r) => structuredClone(r));
     },
   };
 }

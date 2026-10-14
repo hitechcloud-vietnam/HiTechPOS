@@ -1,5 +1,7 @@
 # Captain for Posnic POS
 
+> **HiTechPOS:** this app ships as HiTechPOS Captain (`vn.hitechpos.captain`), based on Posnic (AGPL-3.0). HiTechPOS changes and open items: [HITECHPOS.md](HITECHPOS.md).
+
 The mobile order-taking companion for
 [Posnic open-source POS and billing software](https://www.posnic.com/).
 Restaurant floor staff can take an order at the table, send it to the kitchen,
@@ -39,7 +41,7 @@ re-chooses whenever the one it is on stops answering:
    server identifies itself there, so a printer answering on port 5555 is not
    mistaken for a till.
 3. **The shop's online address.** A shop code becomes
-   `https://<code>.posnic.io/api`; a shop on its own domain can be entered in
+   `https://<code>.hitechpos.vn/api`; a shop on its own domain can be entered in
    full.
 
 A request that fails because the Wi-Fi dropped mid-service is retried once
@@ -134,7 +136,7 @@ amount of desktop Chromium proves anything about those. With a phone plugged in
 
 ```powershell
 npm.cmd run check:device
-npm.cmd run check:device -- https://your-shop.posnic.io/api
+npm.cmd run check:device -- https://your-shop.hitechpos.vn/api
 ```
 
 It builds the APK, installs it, starts it pointed at a server and reads back

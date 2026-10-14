@@ -3,7 +3,7 @@ import os, re, subprocess, time, json
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
-app = 'com.posnic.business.pinqa'
+app = 'vn.hitechpos.business.pinqa'
 pin = os.environ.get('QA_PIN', '826493')
 evidence = Path('pin-evidence') / (str(len(pin)) + '-digit'); evidence.mkdir(parents=True,exist_ok=True)
 timings = {}

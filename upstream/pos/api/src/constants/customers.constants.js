@@ -123,8 +123,14 @@ const FIELD_LIMITS = {
 const VALIDATION_PATTERNS = {
   EMAIL: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
   PHONE: /^[+]?[0-9]{10,15}$/,
-  GST_NUMBER: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
-  PINCODE: /^[0-9]{6}$/,
+  /* The customer's tax identifier: an Indian GSTIN, or a Vietnamese mã số
+     thuế - 10 digits, a branch unit's 10-3 form, or the 12-digit personal
+     code (CCCD-based). Checksums are the tax-code helper's job; this only
+     decides the shape. (HiTechPOS: the GSTIN-only pattern refused every
+     Vietnamese business customer.) */
+  GST_NUMBER: /^(?:[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}|[0-9]{10}(?:-[0-9]{3})?|[0-9]{12})$/,
+  /* Indian PIN (6 digits) or Vietnamese postcode (5 digits). */
+  PINCODE: /^[0-9]{5,6}$/,
 };
 
 module.exports = {

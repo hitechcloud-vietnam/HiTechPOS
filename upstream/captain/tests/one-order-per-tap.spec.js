@@ -38,7 +38,7 @@ const RUNTIME_INFO = {
   features: { account: true, idempotentOrders: true },
 };
 
-const SHOP_ORIGIN = "https://smoke.posnic.io";
+const SHOP_ORIGIN = "https://smoke.hitechpos.vn";
 const API_BASE = `${SHOP_ORIGIN}/api`;
 
 const branchData = {

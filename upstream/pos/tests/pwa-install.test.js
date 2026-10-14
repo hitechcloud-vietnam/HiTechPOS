@@ -39,7 +39,8 @@ test('both entry pages carry the install plumbing', () => {
     const s = read(page);
     assert.match(s, /rel="manifest" href="static\/manifest\.webmanifest"/, page);
     assert.match(s, /name="theme-color"/, page);
-    assert.match(s, /rel="apple-touch-icon" href="static\/images\/icons-pwa\/apple-touch-icon\.png"/,
+    // HiTechPOS: the tile is the HiTechPOS mark (see docs/UPSTREAM.md).
+    assert.match(s, /rel="apple-touch-icon" href="static\/images\/icons-pwa\/hitechpos-apple-touch-icon\.png"/,
       page + ' - iOS needs the PNG tile, not an SVG');
   }
 });

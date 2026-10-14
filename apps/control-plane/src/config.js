@@ -1,6 +1,7 @@
 'use strict';
 
 const { masterKey } = require('./secrets');
+const { trimTrailingSlashes } = require('@hitechpos/payment-core');
 
 /* Read inside a function, never at module scope (see upstream ARCHITECTURE.md
    "Module-scope process.env reads"). */
@@ -14,7 +15,7 @@ function loadConfig(env = process.env) {
   return {
     port: Number(env.PORT || 4100),
     host: env.HOST || '127.0.0.1',
-    publicUrl: String(env.PUBLIC_URL || 'http://localhost:4100').replace(/\/+$/, ''),
+    publicUrl: trimTrailingSlashes(env.PUBLIC_URL || 'http://localhost:4100'),
     store: memory ? 'memory' : 'mongo',
     mongoUri: memory ? null : required('CONTROL_URI'),
     controlDb: env.CONTROL_DB || 'hitechpos_control',
@@ -28,8 +29,24 @@ function loadConfig(env = process.env) {
     posnicSecret: env.POSNIC_SECRET || null,
     sessionSecret: memory && !env.SESSION_SECRET ? 'dev-only-session-secret' : required('SESSION_SECRET'),
     adminKey: env.ADMIN_API_KEY || null,
+    /* /metrics accepts this bearer token as well as the admin key; /readyz
+       probes the shard (when SHARD_URL is set) unless READYZ_SHARD=0. */
+    ops: {
+      metricsToken: env.METRICS_TOKEN || null,
+      readyzShard: !['0', 'false', 'no'].includes(String(env.READYZ_SHARD || '').toLowerCase()),
+      readyzTimeoutMs: Number(env.READYZ_TIMEOUT_MS) > 0 ? Number(env.READYZ_TIMEOUT_MS) : 1500,
+    },
+    /* Owner app sign-in (business-cloud.js): issuer defaults to PUBLIC_URL;
+       CORS only for the Expo web preview origins listed here. */
+    businessCloud: {
+      issuer: env.BUSINESS_CLOUD_ISSUER || null,
+      corsOrigins: String(env.BUSINESS_CLOUD_CORS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean),
+    },
     saasVatRate: env.SAAS_VAT_RATE === undefined || env.SAAS_VAT_RATE === 'KCT' ? 'KCT' : Number(env.SAAS_VAT_RATE),
     graceDays: Number(env.GRACE_DAYS || 7),
+    smtpUrl: env.SMTP_URL || null,
+    mailFrom: env.MAIL_FROM || null,
+    sourceUrl: env.SOURCE_URL || 'https://github.com/hitechcloud-vietnam/HiTechPOS',
     payos: env.PAYOS_CLIENT_ID ? { clientId: env.PAYOS_CLIENT_ID, apiKey: env.PAYOS_API_KEY, checksumKey: env.PAYOS_CHECKSUM_KEY, partnerCode: env.PAYOS_PARTNER_CODE } : null,
     pay2s: env.PAY2S_ACCESS_KEY ? { environment: env.PAY2S_ENV || 'sandbox', accessKey: env.PAY2S_ACCESS_KEY, partnerCode: env.PAY2S_PARTNER_CODE, secretKey: env.PAY2S_SECRET_KEY, partnerName: env.PAY2S_PARTNER_NAME } : null,
   };

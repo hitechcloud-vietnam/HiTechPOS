@@ -170,8 +170,8 @@
       'ஏற்கனவே கடை Wi-Fi இல் உள்ள போனுக்கு. இதுதான் வேகமானது, இணையம் தேவையில்லை.',
     'Find the till on this Wi-Fi': 'இந்த Wi-Fi இல் பில்லிங் கணினியை கண்டுபிடி',
     'Point at the code by the till.': 'பில்லிங் அருகே உள்ள QR குறியீட்டை காட்டுங்கள்.',
-    'That code is not a Posnic shop. Keep looking.':
-      'அது Posnic கடையின் குறியீடு அல்ல. மீண்டும் முயலுங்கள்.',
+    'That code is not a HiTechPOS shop. Keep looking.':
+      'அது HiTechPOS கடையின் குறியீடு அல்ல. மீண்டும் முயலுங்கள்.',
     'Access Denied': 'அனுமதி இல்லை',
     'You are not authorized to view this page.': 'இந்த பக்கத்தை பார்க்க உங்களுக்கு அனுமதி இல்லை.',
     'Go to Home': 'முகப்புக்கு செல்',
@@ -376,7 +376,7 @@
   "A code needs the shop address. Community shops do not need a cloud account.": "குறியீட்டுடன் கடை முகவரியும் தேவை. Community கடைகளுக்கு கிளவுட் கணக்கு தேவையில்லை.",
   "Connect this phone": "இந்தத் தொலைபேசியை இணைக்கவும்",
   "Enter an address": "முகவரியை உள்ளிடவும்",
-  "☁ Posnic Cloud": "☁ Posnic கிளவுட்",
+  "☁ HiTechPOS Cloud": "☁ HiTechPOS கிளவுட்",
   "Approve this phone in your browser.": "உலாவியில் இந்தத் தொலைபேசிக்கு அனுமதி வழங்கவும்.",
   "Sign in": "உள்நுழைக",
   "Create account / Free trial": "கணக்கை உருவாக்கு / இலவச சோதனை",
@@ -385,12 +385,12 @@
   "Connect Captain": "Captain இணைப்பு",
   "demo or 192.168.1.5:5555": "demo அல்லது 192.168.1.5:5555",
   "Code shown by your manager": "மேலாளர் காட்டிய குறியீடு",
-  "Posnic Cloud": "Posnic கிளவுட்"
+  "HiTechPOS Cloud": "HiTechPOS கிளவுட்"
 });
 
   Object.assign(TAMIL, {
   "Captain · Sign in": "Captain · உள்நுழைவு",
-  "By Posnic": "Posnic வழங்கும்",
+  "HiTechPOS · based on Posnic (AGPL-3.0)": "HiTechPOS · Posnic (AGPL-3.0) அடிப்படையில்",
   "Enter your shop address, or find it using the options below.": "உங்கள் கடை முகவரியை உள்ளிடவும் அல்லது கீழுள்ள வழிகளில் கண்டறியவும்.",
   "Shop code or server address": "கடைக் குறியீடு அல்லது சேவையக முகவரி",
   "Shop Wi-Fi is fastest.": "கடையின் வைஃபை வேகமானது.",
@@ -402,7 +402,7 @@
   "Enter the code from Captain settings on your shop’s POS.": "உங்கள் கடை POS-இல் Captain அமைப்புகளில் உள்ள குறியீட்டை உள்ளிடவும்.",
   "I confirmed this shop address with my manager": "இந்தக் கடை முகவரியை எனது மேலாளருடன் உறுதிசெய்தேன்",
   "Pair phone": "ஃபோனை இணைக்கவும்",
-  "Using Posnic Cloud?": "Posnic Cloud பயன்படுத்துகிறீர்களா?",
+  "Using HiTechPOS Cloud?": "HiTechPOS Cloud பயன்படுத்துகிறீர்களா?",
   "Sign in with your account": "உங்கள் கணக்கில் உள்நுழையவும்",
   "Create account": "கணக்கை உருவாக்கவும்",
   "Staff sign-in": "பணியாளர் உள்நுழைவு",

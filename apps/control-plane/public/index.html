@@ -30,19 +30,23 @@
   .ok { color: var(--ok); } .err { color: var(--err); }
   #cycle { margin-bottom: 12px; }
 </style>
+<link rel="sitemap" type="application/xml" href="/sitemap.xml">
 </head>
 <body>
 <header>
   <h1>HiTechPOS</h1>
   <div>Phần mềm bán hàng trên nền tảng đám mây cho cửa hàng Việt Nam – tạp hóa, cà phê, nhà hàng, nhà thuốc, thời trang, spa…</div>
-  <div class="muted" style="color:#dbe9f7">Thanh toán VietQR · payOS · Pay2S · Dùng thử miễn phí</div>
+  <div class="muted" style="color:#dbe9f7">Thanh toán VietQR · payOS · Pay2S · Dùng thử miễn phí · <a href="/account" style="color:#fff">Đăng nhập</a> · <a href="/help/" style="color:#fff">Trợ giúp</a></div>
+  <nav class="muted" style="color:#dbe9f7;margin-top:6px"><a href="/tinh-nang" style="color:#fff">Tính năng</a> · <a href="/nganh-nghe" style="color:#fff">Ngành nghề</a> · <a href="/bang-gia" style="color:#fff">Bảng giá</a> · <a href="/doi-tac" style="color:#fff">Đối tác</a></nav>
 </header>
 <main>
   <h2>Bảng giá</h2>
+  <p class="muted"><a href="/bang-gia#so-sanh">So sánh chi tiết các gói và câu hỏi thường gặp</a></p>
   <label id="cycle">Chu kỳ thanh toán <select id="months"></select></label>
   <div class="grid" id="plans"></div>
 
   <h2>Chọn ngành nghề</h2>
+  <p class="muted"><a href="/nganh-nghe">Xem tính năng có sẵn của từng ngành</a></p>
   <div class="grid" id="industries"></div>
 
   <h2>Đăng ký dùng thử</h2>
@@ -59,11 +63,13 @@
       <label>Số điện thoại <input name="phone" required placeholder="0912 345 678"></label>
       <label>Mã số thuế (không bắt buộc) <input name="taxCode"></label>
       <label>Mật khẩu <input name="password" type="password" minlength="8" required></label>
+      <p class="muted">Bằng việc tạo cửa hàng, bạn đồng ý với <a href="/dieu-khoan">Điều khoản sử dụng</a> và <a href="/bao-mat">Chính sách bảo mật</a>.</p>
       <button type="submit">Tạo cửa hàng</button>
       <div id="msg"></div>
     </form>
   </div>
 </main>
+<footer style="text-align:center;padding:16px;color:#5d6b7a;font-size:.85rem">HiTechPOS · Phần mềm nguồn mở AGPL-3.0, dựa trên Posnic · <a href="/source">Mã nguồn</a> · <a href="/help/">Trợ giúp</a> · <a href="/tinh-nang">Tính năng</a> · <a href="/bang-gia">Bảng giá</a> · <a href="/dieu-khoan">Điều khoản</a> · <a href="/bao-mat">Bảo mật</a></footer>
 <script>
 const vnd = (n) => new Intl.NumberFormat('vi-VN').format(n) + ' ₫';
 const $ = (s) => document.querySelector(s);
@@ -115,6 +121,7 @@ $('input[name=subdomain]').addEventListener('input', (e) => {
 $('#signup').addEventListener('submit', async (e) => {
   e.preventDefault();
   const body = Object.fromEntries(new FormData(e.target));
+  body.referralCode = new URLSearchParams(location.search).get('ref') || undefined;
   $('#msg').className = ''; $('#msg').textContent = 'Đang khởi tạo cửa hàng…';
   const res = await fetch('/api/signup', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
   const json = await res.json();
@@ -122,7 +129,7 @@ $('#signup').addEventListener('submit', async (e) => {
   try { localStorage.setItem('hitechpos_token', json.token); } catch {}
   const url = json.tenant.urls[0];
   $('#msg').className = 'ok';
-  $('#msg').innerHTML = `Đã tạo cửa hàng! Truy cập <a href="${url}">${url}</a> và đăng nhập bằng email vừa đăng ký.`;
+  $('#msg').innerHTML = `Đã tạo cửa hàng! Bán hàng tại <a href="${url}">${url}</a> (đăng nhập bằng email vừa đăng ký). Quản lý gói cước và thanh toán tại <a href="/account">trang quản lý</a>.`;
 });
 
 init();

@@ -1,0 +1,66 @@
+/* Sổ sách & báo cáo thuế (so-sach.html). Same look as account.html. */
+:root { --brand: #0b6bcb; --ink: #1d2733; --muted: #5d6b7a; --bg: #f5f8fb; --line: #dde5ee; --ok: #12805c; --err: #c0392b; --warn: #a76300; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+header { background: var(--brand); color: #fff; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+header a { color: #fff; margin-left: 12px; }
+main { max-width: 1100px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+#report { display: grid; gap: 16px; }
+/* grid items may shrink below their content, so wide tables scroll inside .wrap */
+main > *, #report > * { min-width: 0; }
+#book td:nth-child(4) { min-width: 220px; }
+#book td:nth-child(2) { min-width: 150px; }
+#book th { min-width: 90px; }
+label, select { min-width: 0; max-width: 100%; }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+h2 { margin: 0 0 12px; font-size: 1.15rem; }
+.center { text-align: center; }
+.row { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); align-items: end; }
+label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); }
+input, select, button { font: inherit; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--line); color: var(--ink); }
+button { background: var(--brand); color: #fff; border: 0; cursor: pointer; font-weight: 600; }
+button.ghost { background: #fff; color: var(--brand); border: 1px solid var(--brand); }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th.n, td.n { text-align: right; white-space: nowrap; }
+tfoot td { font-weight: 700; }
+tr.ret td { font-style: italic; color: var(--err); }
+.wrap { overflow-x: auto; }
+.muted { color: var(--muted); font-size: .85rem; }
+.msg { min-height: 1.2em; font-size: .9rem; }
+.err { color: var(--err); } .ok { color: var(--ok); }
+.notice { border: 2px solid var(--warn); background: #fff4e0; color: #5a3600; border-radius: 10px; padding: 10px 14px; }
+.notice.small { padding: 6px 10px; margin-bottom: 10px; font-weight: 600; text-align: center; }
+.warn { color: var(--warn); padding-left: 18px; }
+.headrow { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.form { text-align: center; font-size: .9rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-top: 8px; }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: .8rem; background: #eef4fb; }
+.pill.owner { background: #e5f6ef; color: var(--ok); }
+.pill.preset { background: #eef4fb; color: var(--brand); }
+.pill.default { background: #f0f3f7; color: var(--muted); }
+#login { max-width: 420px; margin: 40px auto; }
+footer { text-align: center; padding: 16px; color: var(--muted); font-size: .85rem; }
+.sign { display: flex; justify-content: space-around; margin-top: 20px; text-align: center; }
+.sign i { display: block; font-size: .85rem; margin-bottom: 70px; }
+.printonly { display: none; }
+[hidden] { display: none !important; }
+
+/* A4 print: only the book, the summary and the notice. */
+@media print {
+  @page { size: A4 landscape; margin: 12mm; }
+  body { background: #fff; font: 10.5pt/1.35 "Times New Roman", Times, serif; color: #000; }
+  .noprint { display: none !important; }
+  .printonly { display: flex; }
+  main { max-width: none; padding: 0; gap: 8px; }
+  #report { gap: 8px; }
+  .card { border: 0; border-radius: 0; padding: 0; }
+  .wrap { overflow: visible; }
+  table { font-size: 9pt; page-break-inside: auto; }
+  thead { display: table-header-group; }
+  tr { page-break-inside: avoid; }
+  th, td { border: 1px solid #000; padding: 3px 4px; }
+  tr.ret td { color: #000; }
+  .notice { border: 1.5pt solid #000; background: #fff; color: #000; border-radius: 0; }
+  .sign { page-break-inside: avoid; }
+}

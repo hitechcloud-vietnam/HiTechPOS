@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "Posnic Business",
-    "slug": "posnic-business",
-    "scheme": "com.posnic.business",
+    "name": "HiTechPOS Business",
+    "slug": "hitechpos-business",
+    "scheme": "vn.hitechpos.business",
     "version": "0.1.0",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.posnic.business",
+      "bundleIdentifier": "vn.hitechpos.business",
       "supportsTablet": true,
       "buildNumber": "1"
     },
     "android": {
-      "package": "com.posnic.business",
+      "package": "vn.hitechpos.business",
       "versionCode": 14,
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -22,14 +22,14 @@
     },
     "web": {
       "bundler": "metro",
-      "name": "Posnic Business"
+      "name": "HiTechPOS Chủ cửa hàng"
     },
     "plugins": [
       "expo-web-browser",
       [
         "expo-secure-store",
         {
-          "faceIDPermission": "Use Face ID to unlock your Posnic Business account on this phone."
+          "faceIDPermission": "Use Face ID to unlock your HiTechPOS Business account on this phone."
         }
       ]
     ],

@@ -255,7 +255,7 @@ test("locked till can sign out without a PIN when no sales or carts are pending"
 }) => {
   await page.goto("/");
   await expect(
-    page.getByText("Posnic Cloud account", { exact: true }),
+    page.getByText("HiTechPOS Cloud account", { exact: true }),
   ).toBeVisible();
   await expect(
     page.getByText("Your own server", { exact: true }),

@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {onTheMenu,item,SHOP_ORIGIN} from './support/shop.js';
 test('translated item names survive search, cart and offline submission without changing identity',async({page})=>{
-  await page.addInitScript(()=>{if(!localStorage.getItem('posnic.language'))localStorage.setItem('posnic.language','nl')});
+  await page.addInitScript(()=>{if(!sessionStorage.getItem('language-seeded')){localStorage.setItem('posnic.language','nl');sessionStorage.setItem('language-seeded','1');}});
   await onTheMenu(page,'nothing',{menu:[{category_name:'Drinks',items:[item('coffee','Coffee',100,{default_language:'en',translations:[{locale:'nl',name:'Koffie'},{locale:'ar',name:'قهوة'}]})]}]});
   await expect(page.locator('.dish-name')).toContainText('Koffie');
   await page.locator('#product-search-input').fill('Koffie');

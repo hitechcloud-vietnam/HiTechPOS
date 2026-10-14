@@ -797,7 +797,24 @@ function renderSale(sale, options = {}, renderer) {
    */
   const symbol = sale.currency ? String(sale.currency) : '';
   const digits = Number.isInteger(sale.currencyDigits) && sale.currencyDigits >= 0 && sale.currencyDigits <= 4 ? sale.currencyDigits : 2;
-  const money = (n) => symbol + Number(n || 0).toFixed(digits);
+  /*
+   * Grouped the way the shop writes money, when the sale says how.
+   *
+   * A dong has no decimals and a Vietnamese bill reads 135.000, not
+   * 135000.00. The page that rendered the receipt (or the bill builder, from
+   * the branch's country) passes the marks; a payload without them prints
+   * bare numbers, as it always has.
+   */
+  const mark = (value) => (typeof value === 'string' && /^[.,' ]$/.test(value) ? value : null);
+  const decimalMark = mark(sale.currencyDecimal);
+  const groupMark = decimalMark && mark(sale.currencyGroup) !== decimalMark ? mark(sale.currencyGroup) : null;
+  const money = (n) => {
+    const fixed = Number(n || 0).toFixed(digits);
+    if (!decimalMark) return symbol + fixed;
+    const [whole, fraction] = fixed.split('.');
+    const grouped = groupMark ? whole.replace(/\B(?=(\d{3})+(?!\d))/g, groupMark) : whole;
+    return symbol + grouped + (fraction ? decimalMark + fraction : '');
+  };
 
   /*
    * The logo goes above the name, where a letterhead goes.

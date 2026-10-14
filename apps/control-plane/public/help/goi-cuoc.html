@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Gói cước và thanh toán phí – Trợ giúp HiTechPOS</title>
+<meta name="description" content="Bảng giá, chu kỳ trả trước, cách gia hạn hoặc nâng cấp, chuyện gì xảy ra khi hết hạn và giới hạn của từng gói.">
+<link rel="stylesheet" href="/help/help.css">
+<script src="/help/help.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#noi-dung">Bỏ qua, tới nội dung</a>
+<header class="top">
+  <a class="brand" href="/help/"><strong>HiTechPOS</strong><span>Trung tâm trợ giúp</span></a>
+  <nav class="toplinks" aria-label="Liên kết chính"><a href="/">Trang chủ</a><a href="/account">Quản lý cửa hàng</a></nav>
+</header>
+<div class="layout">
+  <aside class="side">
+    <div class="search" data-help-search>
+      <label class="sr" for="help-q">Tìm trong trợ giúp</label>
+      <input id="help-q" type="search" placeholder="Tìm: VietQR, ký hiệu, mật khẩu…" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="help-q-results" aria-expanded="false">
+      <ul class="results" id="help-q-results" role="listbox" hidden></ul>
+    </div>
+    <button class="navtoggle" type="button" aria-expanded="false" aria-controls="help-nav">Danh mục trợ giúp</button>
+    <nav class="nav" id="help-nav" aria-label="Danh mục trợ giúp">
+      <a href="/help/">Trang chủ trợ giúp</a>
+      <div class="group"><div class="gt">Bắt đầu</div><a href="/help/bat-dau">Bắt đầu sử dụng</a></div>
+      <div class="group"><div class="gt">Bán hàng</div><a href="/help/ban-hang">Bán hàng tại quầy</a><a href="/help/thanh-toan-qr">Thanh toán QR chuyển khoản</a></div>
+      <div class="group"><div class="gt">Cài đặt</div><a href="/help/cau-hinh-thanh-toan">Cấu hình thanh toán QR</a><a href="/help/hoa-don-dien-tu">Hoá đơn điện tử</a></div>
+      <div class="group"><div class="gt">Tài khoản</div><a href="/help/goi-cuoc" aria-current="page">Gói cước và thanh toán phí</a><a href="/help/ten-mien-rieng">Tên miền riêng</a><a href="/help/tai-khoan">Mật khẩu, khoá API, dữ liệu</a></div>
+      <div class="group"><div class="gt">Hỗ trợ</div><a href="/help/cau-hoi-thuong-gap">Câu hỏi thường gặp</a></div>
+    </nav>
+  </aside>
+  <main id="noi-dung" class="content">
+    <nav class="crumbs" aria-label="Vị trí"><a href="/help/">Trợ giúp</a> <span aria-hidden="true">›</span> <span>Tài khoản</span></nav>
+    <article>
+    <h1>Gói cước và thanh toán phí</h1>
+    <p class="lead">Bảng giá, chu kỳ trả trước, cách gia hạn hoặc nâng cấp, chuyện gì xảy ra khi hết hạn và giới hạn của từng gói.</p>
+    <nav class="toc" aria-label="Trên trang này"><div class="gt">Trên trang này</div><ol><li><a href="#bang-gia">Bảng giá</a></li><li><a href="#chu-ky">Chu kỳ thanh toán</a></li><li><a href="#gia-han">Gia hạn hoặc nâng cấp</a></li><li><a href="#cach-tinh">Cách tính thời hạn</a></li><li><a href="#het-han">Hết hạn và tạm ngưng</a></li><li><a href="#gioi-han">Giới hạn của gói</a></li></ol></nav>
+<section>
+<h2 id="bang-gia">Bảng giá <a class="anchor" href="#bang-gia" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Giá tính bằng VND cho mỗi tháng. Bảng giá luôn cập nhật ở <a href="/">trang chủ</a>.</p>
+<div class="table"><table>
+<thead><tr><th>Gói</th><th>Giá/tháng</th><th>Chi nhánh</th><th>Nhân viên</th><th>Thiết bị bán hàng</th><th>Mặt hàng</th><th>Bao gồm</th></tr></thead>
+<tbody>
+<tr><td><b>Dùng thử</b></td><td>Miễn phí 14 ngày</td>
+<td>1</td><td>3</td><td>2</td><td>500</td>
+<td>VietQR</td></tr>
+<tr><td><b>Cơ bản</b></td><td>199.000 ₫</td>
+<td>1</td><td>3</td><td>2</td><td>5.000</td>
+<td>VietQR, payOS, Pay2S, Báo cáo</td></tr>
+<tr><td><b>Chuyên nghiệp</b></td><td>399.000 ₫</td>
+<td>3</td><td>15</td><td>10</td><td>50.000</td>
+<td>VietQR, payOS, Pay2S, Báo cáo, Ứng dụng gọi món Captain, Màn hình bếp, Ứng dụng chủ cửa hàng, Tích điểm, Hoá đơn điện tử</td></tr>
+<tr><td><b>Doanh nghiệp</b></td><td>899.000 ₫</td>
+<td>20</td><td>200</td><td>100</td><td>Không giới hạn</td>
+<td>VietQR, payOS, Pay2S, Báo cáo, Ứng dụng gọi món Captain, Màn hình bếp, Ứng dụng chủ cửa hàng, Tích điểm, Hoá đơn điện tử, Tên miền riêng</td></tr>
+</tbody></table></div>
+<p>Gói Dùng thử được cấp tự động khi đăng ký, không mua được.</p>
+</section>
+<section>
+<h2 id="chu-ky">Chu kỳ thanh toán <a class="anchor" href="#chu-ky" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Trả trước càng dài, giảm giá càng nhiều:</p>
+<ul><li><b>1 tháng</b>: không giảm</li><li><b>3 tháng</b>: giảm 5%</li><li><b>6 tháng</b>: giảm 10%</li><li><b>12 tháng</b>: giảm 20%</li><li><b>24 tháng</b>: giảm 30%</li></ul>
+<p>Trước khi thanh toán, trang quản lý hiện báo giá: tạm tính, phần giảm giá, VAT (nếu có) và tổng số tiền phải trả.</p>
+</section>
+<section>
+<h2 id="gia-han">Gia hạn hoặc nâng cấp <a class="anchor" href="#gia-han" aria-label="Liên kết tới mục này">#</a></h2>
+<ol class="steps">
+<li>Đăng nhập <a href="/account">trang quản lý</a>, mục <b class="ui">Gia hạn / nâng cấp gói</b>.</li>
+<li>Chọn <b>Gói</b>, <b>Thời hạn</b> và <b>Cổng thanh toán</b> (payOS hoặc Pay2S).</li>
+<li>Bấm <b class="ui">Thanh toán</b>. Trình duyệt chuyển sang trang thanh toán của cổng; quét mã QR bằng ứng dụng ngân hàng và chuyển <b>đúng số tiền</b>, không sửa nội dung.</li>
+<li>Khi cổng báo đã nhận tiền, gói được kích hoạt tự động và bạn nhận email xác nhận. Quay lại trang quản lý để thấy gói và ngày hết hạn mới; giao dịch nằm ở <b class="ui">Lịch sử thanh toán gói cước</b>.</li>
+</ol>
+<p class="note">Link thanh toán có hiệu lực 30 phút. Nếu chuyển khoản sai số tiền, giao dịch chuyển sang “Cần đối soát” và gói chưa được kích hoạt cho tới khi bộ phận hỗ trợ kiểm tra sao kê – hãy <a href="/help/cau-hoi-thuong-gap#lien-he">liên hệ hỗ trợ</a>.</p>
+</section>
+<section>
+<h2 id="cach-tinh">Cách tính thời hạn <a class="anchor" href="#cach-tinh" aria-label="Liên kết tới mục này">#</a></h2>
+<ul>
+<li><b>Đang dùng gói trả phí</b>: thời hạn mới được cộng nối tiếp từ ngày hết hạn hiện tại, gia hạn sớm không mất ngày nào.</li>
+<li><b>Đang dùng thử</b> hoặc <b>đã hết hạn</b>: thời hạn tính từ ngày thanh toán. Số ngày dùng thử còn lại không được cộng dồn.</li>
+<li><b>Đổi gói</b>: gói mới có hiệu lực ngay khi thanh toán thành công, áp dụng cho cả thời gian còn lại và số tháng vừa mua.</li>
+</ul>
+</section>
+<section>
+<h2 id="het-han">Hết hạn và tạm ngưng <a class="anchor" href="#het-han" aria-label="Liên kết tới mục này">#</a></h2>
+<ol class="steps">
+<li>Khi dùng thử, bạn nhận email nhắc 3 ngày và 1 ngày trước ngày kết thúc.</li>
+<li>Sau ngày hết hạn, cửa hàng còn một <b>thời gian ân hạn</b> (mặc định 7 ngày) để gia hạn.</li>
+<li>Hết thời gian ân hạn, cửa hàng bị <b>tạm ngưng</b>: máy bán hàng không truy cập được, thanh toán QR tại quầy và phát hành hoá đơn điện tử tự động dừng lại. Bạn nhận email thông báo.</li>
+</ol>
+<p class="note">Dữ liệu bán hàng vẫn được giữ nguyên khi tạm ngưng. Trang quản lý vẫn đăng nhập được: gia hạn tại đó để mở lại cửa hàng ngay khi thanh toán thành công.</p>
+</section>
+<section>
+<h2 id="gioi-han">Giới hạn của gói <a class="anchor" href="#gioi-han" aria-label="Liên kết tới mục này">#</a></h2>
+<ul>
+<li>Số <b>chi nhánh</b>, <b>tài khoản nhân viên</b> và <b>mặt hàng</b> của gói được áp vào máy bán hàng; khi đã đạt giới hạn, máy bán hàng không cho tạo thêm. Nâng cấp gói để tăng giới hạn – giới hạn mới được cập nhật ngay khi thanh toán thành công.</li>
+<li><b>Tên miền riêng</b> chỉ dùng được với gói Doanh nghiệp.</li>
+</ul>
+</section>
+    </article>
+    <nav class="pager" aria-label="Trang trước và sau">
+      <a class="prev" href="/help/hoa-don-dien-tu"><small>Trang trước</small>Hoá đơn điện tử</a>
+      <a class="next" href="/help/ten-mien-rieng"><small>Trang sau</small>Tên miền riêng</a>
+    </nav>
+  </main>
+</div>
+<footer class="foot">
+  <p>HiTechPOS · HiTechCloud-VN · Phố Tuệ Software Solutions JSC</p>
+  <p><a href="/help/cau-hoi-thuong-gap#lien-he">Liên hệ hỗ trợ</a> · Phần mềm nguồn mở AGPL-3.0, dựa trên Posnic · <a href="/source">Mã nguồn</a></p>
+</footer>
+</body>
+</html>

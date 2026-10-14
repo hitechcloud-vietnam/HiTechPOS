@@ -2,6 +2,10 @@ import { type ExpoConfig } from "expo/config";
 import config from "./app.json";
 import permissionDescriptions from "./src/i18n/native-permissions.json";
 
+/* Home-screen name. expo.name stays ASCII ("HiTechPOS Business") because
+   prebuild derives the Xcode project/scheme name from it. */
+export const DISPLAY_NAME = "HiTechPOS Chủ cửa hàng";
+
 const projectId = process.env.POSNIC_BUSINESS_EXPO_PROJECT_ID;
 if (projectId && !/^[a-f\d]{8}-(?:[a-f\d]{4}-){3}[a-f\d]{12}$/i.test(projectId))
   throw new Error(
@@ -20,6 +24,7 @@ export default {
     buildNumber:
       process.env.POSNIC_IOS_BUILD_NUMBER || config.expo.ios.buildNumber,
     infoPlist: {
+      CFBundleDisplayName: DISPLAY_NAME,
       CFBundleDevelopmentRegion: "en",
       CFBundleLocalizations: Object.keys(permissionDescriptions),
     },
@@ -34,6 +39,7 @@ export default {
   plugins: [
     ...config.expo.plugins,
     "./plugins/withBusinessNavigation.js",
+    ["./plugins/withDisplayName.js", { name: DISPLAY_NAME }],
     ["expo-notifications", { defaultChannel: "business-updates" }],
   ],
   ...(projectId ? { extra: { eas: { projectId } } } : {}),

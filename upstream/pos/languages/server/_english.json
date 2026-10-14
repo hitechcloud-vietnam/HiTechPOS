@@ -1030,6 +1030,9 @@
   "Invalid PIN or not authorised for this action": [
     "src/services/authorization.service.js"
   ],
+  "Invalid QR id": [
+    "src/routes/sales.routes.js"
+  ],
   "Invalid branch ID format. ID must be a 24 character hex string.": [
     "src/routes/branches.routes.js"
   ],
@@ -1655,6 +1658,9 @@
   "Payment Gateway Updated": [
     "src/models/setting.model.js"
   ],
+  "Payment confirmed": [
+    "src/services/hitech-pay.js"
+  ],
   "Payment details retrieved successfully": [
     "src/services/customer.service.js",
     "src/services/supplier.service.js"
@@ -1772,7 +1778,11 @@
     "app.js"
   ],
   "QR Code Generate successfully": [
-    "src/models/sale.model.js"
+    "src/models/sale.model.js",
+    "src/services/hitech-pay.js"
+  ],
+  "QR closed": [
+    "src/services/hitech-pay.js"
   ],
   "QR code ID is required": [
     "src/models/sale.model.js"
@@ -1781,7 +1791,8 @@
     "src/models/sale.model.js"
   ],
   "QR status retrieved successfully": [
-    "src/models/sale.model.js"
+    "src/models/sale.model.js",
+    "src/services/hitech-pay.js"
   ],
   "Quantity updated": [
     "src/repositories/item.repository.js"
@@ -2620,7 +2631,8 @@
     "src/controllers/customer-categories.controller.js",
     "src/controllers/customers.controller.js",
     "src/controllers/settings.controller.js",
-    "src/controllers/users.controller.js"
+    "src/controllers/users.controller.js",
+    "src/routes/sales.routes.js"
   ],
   "Unauthorized access": [
     "src/controllers/inventory-counts.controller.js"

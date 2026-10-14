@@ -226,7 +226,7 @@ test('A PHONE WORKING OVER THE INTERNET COMES HOME TO THE TILL', async () => {
    * No sweep would ever run on its own, because a sweep only happens when
    * EVERY address has failed, and one has not.
    */
-  const CLOUD = 'https://azure.posnic.io/api';
+  const CLOUD = 'https://azure.hitechpos.vn/api';
   const { POSNIC } = load((url) => url.startsWith(MOVED_TO) || url.startsWith(CLOUD), {
     lan: WAS_AT,
     cloud: CLOUD,
@@ -248,7 +248,7 @@ test('A PHONE WORKING OVER THE INTERNET COMES HOME TO THE TILL', async () => {
 test('and a phone with no till address has nowhere to come home to', async () => {
   /* A handset set up from the car park, on the cloud only. Sweeping a subnet
      it has never seen a till on is a flat battery for nothing. */
-  const CLOUD = 'https://azure.posnic.io/api';
+  const CLOUD = 'https://azure.hitechpos.vn/api';
   const { POSNIC, asked } = load((url) => url.startsWith(CLOUD), { cloud: CLOUD, active: CLOUD });
 
   await POSNIC.net.check(false);

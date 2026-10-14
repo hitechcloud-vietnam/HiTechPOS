@@ -1,26 +1,25 @@
 {
   "expo": {
-    "name": "Posnic POS",
-    "slug": "posnic-mobile",
-    "scheme": "com.posnic.mobile",
+    "name": "HiTechPOS",
+    "slug": "hitechpos-mobile",
+    "scheme": "vn.hitechpos.mobile",
     "version": "0.3.0-beta.22",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.posnic.mobile",
-      "appleTeamId": "VMG89YGXKR",
+      "bundleIdentifier": "vn.hitechpos.mobile",
       "version": "0.3.0",
       "buildNumber": "1",
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocalNetworkUsageDescription": "Connect to your shop's Posnic till and printers.",
+        "NSLocalNetworkUsageDescription": "Connect to your shop's HiTechPOS till and printers.",
         "NSAppTransportSecurity": {
           "NSAllowsLocalNetworking": true
         }
       }
     },
     "android": {
-      "package": "com.posnic.mobile",
+      "package": "vn.hitechpos.mobile",
       "permissions": ["CAMERA", "ACCESS_NETWORK_STATE", "ACCESS_WIFI_STATE"],
       "versionCode": 32,
       "adaptiveIcon": {
@@ -38,7 +37,7 @@
     },
     "web": {
       "bundler": "metro",
-      "name": "Posnic POS",
+      "name": "HiTechPOS",
       "favicon": "./assets/icon.png"
     },
     "plugins": [

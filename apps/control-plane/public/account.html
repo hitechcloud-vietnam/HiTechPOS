@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quản lý cửa hàng – HiTechPOS</title>
+<style>
+  :root { --brand: #0b6bcb; --ink: #1d2733; --muted: #5d6b7a; --bg: #f5f8fb; --line: #dde5ee; --ok: #12805c; --err: #c0392b; --warn: #a76300; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  header { background: var(--brand); color: #fff; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  header a { color: #fff; }
+  main { max-width: 1000px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  h2 { margin: 0 0 12px; font-size: 1.15rem; }
+  .row + .row { margin-top: 12px; }
+  .row { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); align-items: end; }
+  label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); }
+  input, select, button { font: inherit; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--line); color: var(--ink); }
+  button { background: var(--brand); color: #fff; border: 0; cursor: pointer; font-weight: 600; }
+  button.ghost { background: #fff; color: var(--brand); border: 1px solid var(--brand); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); }
+  .wrap { overflow-x: auto; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: .8rem; background: #eef4fb; }
+  .paid, .active, .issued { background: #e5f6ef; color: var(--ok); }
+  .pending, .trialing, .unverified { background: #fff4e0; color: var(--warn); }
+  .cancelled, .expired, .failed, .review { background: #fbeaea; color: var(--err); }
+  .muted { color: var(--muted); font-size: .85rem; }
+  .msg { min-height: 1.2em; font-size: .9rem; }
+  .err { color: var(--err); } .ok { color: var(--ok); }
+  code { background: #f0f3f7; padding: 2px 6px; border-radius: 6px; word-break: break-all; }
+  #login { max-width: 420px; margin: 40px auto; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <strong>HiTechPOS · Quản lý cửa hàng</strong>
+  <span><span id="who"></span> <a href="/so-sach">Sổ sách thuế</a> <a href="/help/">Trợ giúp</a> <a href="#" id="logout" hidden>Đăng xuất</a></span>
+</header>
+
+<section class="card" id="login" hidden>
+  <h2>Đăng nhập</h2>
+  <form id="loginForm" class="row">
+    <label>Email <input name="email" type="email" required></label>
+    <label>Mật khẩu <input name="password" type="password" required></label>
+    <button>Đăng nhập</button>
+  </form>
+  <p class="msg" id="loginMsg"></p>
+  <p class="muted"><a href="/reset">Quên mật khẩu?</a> · Chưa có cửa hàng? <a href="/">Đăng ký dùng thử</a></p>
+</section>
+
+<main id="app" hidden>
+  <section class="card">
+    <h2>Cửa hàng</h2>
+    <div class="row">
+      <div><div class="muted">Tên</div><b id="shopName"></b></div>
+      <div><div class="muted">Địa chỉ bán hàng</div><span id="shopUrl"></span></div>
+      <div><div class="muted">Gói</div><b id="plan"></b> <span class="pill" id="subStatus"></span></div>
+      <div><div class="muted">Hiệu lực đến</div><b id="periodEnd"></b></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Gia hạn / nâng cấp gói</h2>
+    <form id="renewForm" class="row">
+      <label>Gói <select name="plan" id="planSel"></select></label>
+      <label>Thời hạn <select name="months" id="monthsSel"></select></label>
+      <label>Cổng thanh toán <select name="provider" id="providerSel"></select></label>
+      <button>Thanh toán</button>
+    </form>
+    <p class="msg" id="quote"></p>
+    <p class="msg" id="renewMsg"></p>
+  </section>
+
+  <section class="card">
+    <h2>Thanh toán tại quầy</h2>
+    <p class="muted">Tiền khách trả chuyển thẳng vào tài khoản của cửa hàng. HiTechPOS không giữ tiền.</p>
+    <form id="vietqrForm" class="row">
+      <label>Ngân hàng (VietQR) <input name="bank" list="banks" placeholder="VD: MB, Vietcombank, 970436"></label>
+      <label>Số tài khoản <input name="accountNumber"></label>
+      <label>Tên chủ tài khoản <input name="accountName"></label>
+      <button>Lưu VietQR</button>
+    </form>
+    <datalist id="banks"></datalist>
+    <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+    <form id="payosForm" class="row">
+      <label>payOS Client ID <input name="clientId" autocomplete="off"></label>
+      <label>API Key <input name="apiKey" type="password" autocomplete="new-password"></label>
+      <label>Checksum Key <input name="checksumKey" type="password" autocomplete="new-password"></label>
+      <button>Lưu payOS</button>
+    </form>
+    <p class="muted">Webhook payOS: <code id="payosHook"></code></p>
+    <form id="pay2sForm" class="row">
+      <label>Pay2S Partner Code <input name="partnerCode" autocomplete="off"></label>
+      <label>Access Key <input name="accessKey" autocomplete="off"></label>
+      <label>Secret Key <input name="secretKey" type="password" autocomplete="new-password"></label>
+      <label>Môi trường <select name="environment"><option value="production">Production</option><option value="sandbox">Sandbox</option></select></label>
+      <button>Lưu Pay2S</button>
+    </form>
+    <p class="muted">IPN Pay2S: <code id="pay2sHook"></code></p>
+    <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+    <form id="bankFeedForm" class="row">
+      <label>Tự động xác nhận VietQR qua biến động số dư Pay2S – mã bảo mật webhook (≥ 16 ký tự)
+        <input name="token" type="password" autocomplete="new-password" minlength="16"></label>
+      <button>Lưu</button>
+    </form>
+    <p class="muted">Trong Pay2S, tạo webhook giao dịch trỏ tới <code id="bankFeedHook"></code> với xác thực <code>Bearer &lt;mã bảo mật&gt;</code>. Tiền vào tài khoản VietQR có mã đơn trong nội dung sẽ tự xác nhận hoá đơn. Trạng thái: <b id="bankFeedState">chưa bật</b></p>
+    <p class="muted">Ô “QR chuyển khoản” trên màn hình bán hàng dùng:
+      <select id="defaultMethod"><option value="">Tự chọn</option><option value="vietqr">VietQR</option><option value="payos">payOS</option><option value="pay2s">Pay2S</option></select></p>
+    <p class="msg" id="settingsMsg"></p>
+    <p class="muted">Đang bật: <b id="methods">–</b></p>
+  </section>
+
+  <section class="card">
+    <h2>Khoá API cho máy bán hàng</h2>
+    <form id="keyForm" class="row">
+      <label>Tên thiết bị <input name="label" placeholder="Quầy 1"></label>
+      <button>Tạo khoá</button>
+    </form>
+    <p class="msg" id="newKey"></p>
+    <div class="wrap"><table><thead><tr><th>Thiết bị</th><th>Đuôi khoá</th><th>Ngày tạo</th><th>Trạng thái</th><th></th></tr></thead><tbody id="keys"></tbody></table></div>
+  </section>
+
+  <section class="card">
+    <h2>Hoá đơn điện tử</h2>
+    <p class="muted">Phát hành hoá đơn điện tử (kể cả hoá đơn khởi tạo từ máy tính tiền) qua hợp đồng của cửa hàng với nhà cung cấp.</p>
+    <form id="einvoiceForm">
+      <div class="row">
+        <label>Nhà cung cấp <select name="provider" id="eiProvider">
+          <option value="viettel">Viettel S-Invoice</option><option value="misa">MISA meInvoice</option><option value="matbao">Mắt Bão</option><option value="mock">Thử nghiệm (không gửi cơ quan thuế)</option></select></label>
+        <label>Môi trường <select name="environment"><option value="sandbox">Thử nghiệm (sandbox)</option><option value="production">Chính thức</option></select></label>
+        <label>Loại hoá đơn <select name="invoiceType"><option value="GTGT">Hoá đơn GTGT</option><option value="BANHANG">Hoá đơn bán hàng</option></select></label>
+        <label>Ký hiệu (VD 1C26MAA) <input name="series" required></label>
+      </div>
+      <div class="row" id="eiConn"></div>
+      <div class="row">
+        <label>MST đơn vị bán <input name="sellerTaxCode" required></label>
+        <label>Tên đơn vị bán <input name="sellerName" required></label>
+        <label>Địa chỉ <input name="sellerAddress" required></label>
+        <label>Điện thoại <input name="sellerPhone"></label>
+      </div>
+      <div class="row">
+        <label style="flex-direction:row;display:flex;gap:8px;align-items:center"><input type="checkbox" name="fromCashRegister" checked> Khởi tạo từ máy tính tiền</label>
+        <label style="flex-direction:row;display:flex;gap:8px;align-items:center"><input type="checkbox" name="autoIssue"> Tự động phát hành khi chốt đơn</label>
+        <button>Lưu cấu hình hoá đơn</button>
+      </div>
+    </form>
+    <p class="msg" id="eiMsg"></p>
+    <div id="eiErrors" class="msg"></div>
+    <div class="wrap"><table><thead><tr><th>Thời gian</th><th>Đơn hàng</th><th>Số HĐ</th><th>Ký hiệu</th><th>Mã tra cứu</th><th>Trạng thái</th><th></th></tr></thead><tbody id="eiList"></tbody></table></div>
+  </section>
+
+  <section class="card">
+    <h2>Giao dịch tại quầy gần đây</h2>
+    <div class="wrap"><table><thead><tr><th>Thời gian</th><th>Hoá đơn</th><th>Phương thức</th><th>Số tiền</th><th>Trạng thái</th></tr></thead><tbody id="sales"></tbody></table></div>
+  </section>
+
+  <section class="card">
+    <h2>Lịch sử thanh toán gói cước</h2>
+    <div class="wrap"><table><thead><tr><th>Thời gian</th><th>Gói</th><th>Số tiền</th><th>Cổng</th><th>Trạng thái</th></tr></thead><tbody id="subs"></tbody></table></div>
+  </section>
+  <section class="card" id="domainsCard">
+    <h2>Tên miền riêng</h2>
+    <p class="muted">Dùng địa chỉ của chính cửa hàng (ví dụ <code>pos.cuahang.vn</code>) – có trong gói Doanh nghiệp.</p>
+    <form id="domainForm" class="row">
+      <label>Tên miền <input name="domain" placeholder="pos.cuahang.vn"></label>
+      <button>Thêm tên miền</button>
+    </form>
+    <p class="msg" id="domainMsg"></p>
+    <div id="domainList"></div>
+  </section>
+
+  <section class="card">
+    <h2>Dữ liệu cửa hàng</h2>
+    <p class="muted">Tải toàn bộ dữ liệu bán hàng, hàng hoá, khách hàng… (định dạng NDJSON nén) để tự lưu trữ hoặc chuyển sang hệ thống khác. Mật khẩu và khoá đăng nhập không được xuất.</p>
+    <button class="ghost" id="exportBtn">Tải dữ liệu cửa hàng</button>
+    <p class="msg" id="exportMsg"></p>
+  </section>
+
+  <section class="card">
+    <h2>Đổi mật khẩu</h2>
+    <form id="pwForm" class="row">
+      <label>Mật khẩu hiện tại <input name="currentPassword" type="password" required autocomplete="current-password"></label>
+      <label>Mật khẩu mới <input name="newPassword" type="password" minlength="8" required autocomplete="new-password"></label>
+      <button>Đổi mật khẩu</button>
+    </form>
+    <p class="msg" id="pwMsg"></p>
+  </section>
+</main>
+
+<footer style="text-align:center;padding:16px;color:#5d6b7a;font-size:.85rem">HiTechPOS · Phần mềm nguồn mở AGPL-3.0, dựa trên Posnic · <a href="/source">Mã nguồn</a> · <a href="/help/">Trợ giúp</a></footer>
+<script>
+const $ = (s) => document.querySelector(s);
+const vnd = (n) => new Intl.NumberFormat('vi-VN').format(n) + ' ₫';
+const dt = (s) => s ? new Date(s).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : '–';
+const STATUS = { issued: 'Đã phát hành', paid: 'Đã thanh toán', pending: 'Chờ thanh toán', cancelled: 'Đã huỷ', expired: 'Hết hạn', failed: 'Thất bại', review: 'Cần đối soát', active: 'Đang hoạt động', trialing: 'Dùng thử' };
+const pill = (s) => `<span class="pill ${s}">${STATUS[s] || s}</span>`;
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let token = null;
+try { token = localStorage.getItem('hitechpos_token'); } catch {}
+
+async function api(method, path, body) {
+  const res = await fetch(path, { method, headers: { 'content-type': 'application/json', ...(token ? { authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  if (res.status === 401 && path !== '/api/auth/login') { showLogin(); throw new Error('Phiên đăng nhập đã hết hạn'); }
+  const json = res.status === 204 ? null : await res.json().catch(() => null);
+  if (!res.ok) throw new Error((json && json.message) || 'Có lỗi xảy ra');
+  return json;
+}
+function say(el, text, ok) { el.className = 'msg ' + (ok ? 'ok' : 'err'); el.textContent = text; }
+function showLogin() { $('#login').hidden = false; $('#app').hidden = true; $('#logout').hidden = true; }
+
+$('#loginForm').onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    token = (await api('POST', '/api/auth/login', Object.fromEntries(new FormData(e.target)))).token;
+    try { localStorage.setItem('hitechpos_token', token); } catch {}
+    load();
+  } catch (err) { say($('#loginMsg'), err.message); }
+};
+$('#logout').onclick = (e) => { e.preventDefault(); token = null; try { localStorage.removeItem('hitechpos_token'); } catch {} showLogin(); };
+
+let catalogue;
+async function updateQuote() {
+  const plan = $('#planSel').value, months = $('#monthsSel').value;
+  if (!plan) return;
+  const q = await api('GET', `/api/plans/${plan}/quote?months=${months}`);
+  $('#quote').className = 'msg';
+  $('#quote').textContent = `Tạm tính ${vnd(q.subtotal)}${q.discount ? ` − giảm ${q.discountPercent}% (${vnd(q.discount)})` : ''}${q.vat ? ` + VAT ${vnd(q.vat)}` : ''} = ${vnd(q.total)}`;
+}
+
+$('#renewForm').onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const out = await api('POST', '/api/billing/checkout', Object.fromEntries(new FormData(e.target)));
+    say($('#renewMsg'), 'Đang chuyển sang trang thanh toán…', true);
+    location.href = out.checkoutUrl;
+  } catch (err) { say($('#renewMsg'), err.message); }
+};
+
+async function saveSettings(body, form) {
+  try {
+    const s = await api('PUT', '/api/shop/payment-settings', body);
+    say($('#settingsMsg'), 'Đã lưu cấu hình thanh toán.', true);
+    form.querySelectorAll('input[type=password]').forEach((i) => (i.value = ''));
+    renderSettings(s);
+  } catch (err) { say($('#settingsMsg'), err.message); }
+}
+$('#vietqrForm').onsubmit = (e) => { e.preventDefault(); saveSettings({ vietqr: Object.fromEntries(new FormData(e.target)) }, e.target); };
+$('#payosForm').onsubmit = (e) => { e.preventDefault(); saveSettings({ payos: Object.fromEntries(new FormData(e.target)) }, e.target); };
+$('#bankFeedForm').onsubmit = (e) => { e.preventDefault(); saveSettings({ bankFeed: Object.fromEntries(new FormData(e.target)) }, e.target); };
+$('#defaultMethod').onchange = (e) => saveSettings({ defaultMethod: e.target.value || null }, $('#defaultMethod').form || document.body);
+$('#pay2sForm').onsubmit = (e) => { e.preventDefault(); saveSettings({ pay2s: Object.fromEntries(new FormData(e.target)) }, e.target); };
+
+function renderSettings(s) {
+  if (s.vietqr) { $('#vietqrForm').bank.value = s.vietqr.bankName; $('#vietqrForm').accountNumber.value = s.vietqr.accountNumber; $('#vietqrForm').accountName.value = s.vietqr.accountName; }
+  if (s.payos) $('#payosForm').clientId.value = s.payos.clientId;
+  if (s.pay2s) { $('#pay2sForm').partnerCode.value = s.pay2s.partnerCode; $('#pay2sForm').environment.value = s.pay2s.environment; }
+  $('#payosHook').textContent = s.webhooks.payos;
+  $('#pay2sHook').textContent = s.webhooks.pay2s;
+  $('#bankFeedHook').textContent = s.webhooks.bankFeed;
+  $('#bankFeedState').textContent = s.bankFeed ? 'đang bật' : 'chưa bật';
+  $('#defaultMethod').value = s.defaultMethod || '';
+  $('#methods').textContent = s.methods.length ? s.methods.map((m) => ({ vietqr: 'VietQR', payos: 'payOS', pay2s: 'Pay2S' }[m])).join(', ') : 'chưa cấu hình';
+}
+
+async function loadDomains() {
+  const list = await api('GET', '/api/shop/domains');
+  $('#domainList').innerHTML = list.map((d) => `<div class="card" style="margin-top:10px"><b>${esc(d.domain)}</b> ${d.verified ? pill('active') : pill('pending')}
+    ${d.verified ? '' : `<p class="muted">Tạo hai bản ghi DNS rồi bấm Xác minh:</p><div class="wrap"><table><tr><th>Loại</th><th>Tên</th><th>Giá trị</th></tr>${d.dns.map((r) => `<tr><td>${r.type}</td><td><code>${esc(r.name)}</code></td><td><code>${esc(r.value)}</code></td></tr>`).join('')}</table></div>
+    <button class="ghost" data-verify="${esc(d.domain)}">Xác minh</button>`} <button class="ghost" data-remove="${esc(d.domain)}">Gỡ</button></div>`).join('');
+  document.querySelectorAll('[data-verify]').forEach((b) => b.onclick = async () => {
+    try { await api('POST', `/api/shop/domains/${encodeURIComponent(b.dataset.verify)}/verify`); say($('#domainMsg'), 'Đã xác minh. Chứng chỉ HTTPS sẽ được cấp ở lần truy cập đầu tiên.', true); loadDomains(); } catch (err) { say($('#domainMsg'), err.message); }
+  });
+  document.querySelectorAll('[data-remove]').forEach((b) => b.onclick = async () => {
+    if (!confirm('Gỡ tên miền này?')) return;
+    await api('DELETE', `/api/shop/domains/${encodeURIComponent(b.dataset.remove)}`); loadDomains();
+  });
+}
+$('#domainForm').onsubmit = async (e) => {
+  e.preventDefault();
+  try { await api('POST', '/api/shop/domains', { domain: e.target.domain.value }); e.target.reset(); say($('#domainMsg'), 'Đã thêm. Tạo bản ghi DNS bên dưới rồi bấm Xác minh.', true); loadDomains(); } catch (err) { say($('#domainMsg'), err.message); }
+};
+$('#exportBtn').onclick = async () => {
+  say($('#exportMsg'), 'Đang chuẩn bị tệp…', true);
+  const res = await fetch('/api/shop/export', { headers: { authorization: 'Bearer ' + token } });
+  if (!res.ok) return say($('#exportMsg'), ((await res.json().catch(() => ({}))).message) || 'Không xuất được dữ liệu');
+  const name = (/filename="([^"]+)"/.exec(res.headers.get('content-disposition') || '') || [])[1] || 'hitechpos.ndjson.gz';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(await res.blob()); a.download = name; a.click();
+  say($('#exportMsg'), 'Đã tải xong ' + name, true);
+};
+$('#pwForm').onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const r = await api('POST', '/api/me/password', Object.fromEntries(new FormData(e.target)));
+    token = r.token;
+    try { localStorage.setItem('hitechpos_token', token); } catch {}
+    e.target.reset();
+    say($('#pwMsg'), 'Đã đổi mật khẩu. Các phiên đăng nhập khác đã bị đăng xuất.', true);
+  } catch (err) { say($('#pwMsg'), err.message); }
+};
+$('#keyForm').onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const k = await api('POST', '/api/shop/api-keys', Object.fromEntries(new FormData(e.target)));
+    $('#newKey').className = 'msg ok';
+    $('#newKey').innerHTML = `Khoá mới (chỉ hiển thị một lần, hãy dán vào máy bán hàng): <code>${esc(k.key)}</code>`;
+    loadKeys();
+  } catch (err) { say($('#newKey'), err.message); }
+};
+async function loadKeys() {
+  const keys = await api('GET', '/api/shop/api-keys');
+  $('#keys').innerHTML = keys.map((k) => `<tr><td>${esc(k.label)}</td><td>…${esc(k.last4)}</td><td>${dt(k.createdAt)}</td>
+    <td>${k.revokedAt ? pill('cancelled') : pill('active')}</td><td>${k.revokedAt ? '' : `<button class="ghost" data-revoke="${esc(k.id)}">Thu hồi</button>`}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Chưa có khoá</td></tr>';
+  document.querySelectorAll('[data-revoke]').forEach((b) => b.onclick = async () => {
+    if (!confirm('Thu hồi khoá này? Máy bán hàng dùng khoá sẽ không thanh toán QR được nữa.')) return;
+    await api('DELETE', '/api/shop/api-keys/' + b.dataset.revoke); loadKeys();
+  });
+}
+
+const EI_FIELDS = { viettel: [['username', 'Tài khoản (thường là MST)'], ['password', 'Mật khẩu', 1], ['supplierTaxCode', 'MST người bán (nếu khác tài khoản)']],
+  misa: [['appId', 'AppID'], ['taxCode', 'MST'], ['username', 'Tài khoản'], ['password', 'Mật khẩu', 1]],
+  matbao: [['taxCode', 'MST'], ['username', 'Tài khoản'], ['password', 'Mật khẩu', 1]], mock: [] };
+const EI_STATE = { done: 'issued', pending: 'pending', unknown: 'review' };
+function renderEiConn(values = {}) {
+  const p = $('#eiProvider').value;
+  $('#eiConn').innerHTML = EI_FIELDS[p].map(([k, label, secret]) => `<label>${label} <input name="conn_${k}" ${secret ? 'type="password" autocomplete="new-password"' : ''} value="${esc(values[k] || '')}"></label>`).join('');
+}
+$('#eiProvider').onchange = () => renderEiConn();
+$('#einvoiceForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const connection = {};
+  for (const [k, v] of f.entries()) if (k.startsWith('conn_')) connection[k.slice(5)] = v;
+  try {
+    await api('PUT', '/api/shop/einvoice-settings', { provider: f.get('provider'), environment: f.get('environment'), invoiceType: f.get('invoiceType'), series: f.get('series'),
+      connection, seller: { taxCode: f.get('sellerTaxCode'), name: f.get('sellerName'), address: f.get('sellerAddress'), phone: f.get('sellerPhone') || undefined },
+      fromCashRegister: f.get('fromCashRegister') === 'on', autoIssue: f.get('autoIssue') === 'on' });
+    say($('#eiMsg'), 'Đã lưu cấu hình hoá đơn điện tử.', true);
+    loadEinvoices();
+  } catch (err) { say($('#eiMsg'), err.message); }
+};
+async function loadEinvoices() {
+  const s = await api('GET', '/api/shop/einvoice-settings');
+  const form = $('#einvoiceForm');
+  if (s) {
+    form.provider.value = s.provider; form.environment.value = s.environment; form.invoiceType.value = s.invoiceType; form.series.value = s.series;
+    form.sellerTaxCode.value = s.seller.taxCode; form.sellerName.value = s.seller.name; form.sellerAddress.value = s.seller.address; form.sellerPhone.value = s.seller.phone || '';
+    form.fromCashRegister.checked = s.fromCashRegister; form.autoIssue.checked = s.autoIssue;
+  } else if (!form.series.value) {
+    form.series.value = '1C' + String(new Date().getFullYear()).slice(2) + 'MAA';
+  }
+  renderEiConn(s ? s.connection : {});
+  const errs = await api('GET', '/api/shop/einvoice-errors').catch(() => []);
+  const EI_ERR = { einvoice_adjustment_needed: 'Đơn đã xuất hoá đơn bị trả hàng – cần lập hoá đơn điều chỉnh', sale_returned_before_issue: 'Đơn bị trả hàng trước khi xuất hoá đơn',
+    einvoice_outcome_unknown: 'Chưa rõ kết quả – bấm Đối soát', einvoice_invalid: 'Dữ liệu đơn không hợp lệ để xuất hoá đơn' };
+  $('#eiErrors').className = 'msg' + (errs.length ? ' err' : '');
+  $('#eiErrors').innerHTML = errs.length ? '<b>Cần xử lý:</b><br>' + errs.slice(0, 10).map((e) => `${esc(e.saleNo || e.refId)} – ${esc(EI_ERR[e.code] || e.message || e.code)}${e.final ? '' : ' (sẽ thử lại)'}`).join('<br>') : '';
+  const rows = await api('GET', '/api/shop/einvoices');
+  $('#eiList').innerHTML = rows.map((r) => `<tr><td>${dt(r.issuedAt || r.updatedAt)}</td><td>${esc(r.refId)}</td><td>${esc(r.invoiceNo || '')}</td><td>${esc((r.templateCode || '') + (r.series || ''))}</td>
+    <td>${r.lookupUrl && /^https:\/\//i.test(r.lookupUrl) ? `<a href="${esc(r.lookupUrl)}" target="_blank" rel="noopener">${esc(r.lookupCode || 'Tra cứu')}</a>` : esc(r.lookupCode || '')}</td>
+    <td>${pill(EI_STATE[r.state] || r.status || r.state)}</td>
+    <td>${r.state === 'unknown' ? `<button class="ghost" data-reconcile="${esc(r.refId)}">Đối soát</button>` : r.state === 'done' ? `<a href="#" data-pdf="${esc(r.refId)}">PDF</a>` : ''}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">Chưa có hoá đơn</td></tr>';
+  document.querySelectorAll('[data-reconcile]').forEach((b) => b.onclick = async () => {
+    try { await api('POST', `/api/shop/einvoices/${encodeURIComponent(b.dataset.reconcile)}/reconcile`); loadEinvoices(); } catch (err) { alert(err.message); }
+  });
+  document.querySelectorAll('[data-pdf]').forEach((a) => a.onclick = async (ev) => {
+    ev.preventDefault();
+    const res = await fetch(`/api/shop/einvoices/${encodeURIComponent(a.dataset.pdf)}/pdf`, { headers: { authorization: 'Bearer ' + token } });
+    if (!res.ok) return alert(((await res.json().catch(() => ({}))).message) || 'Không tải được PDF');
+    window.open(URL.createObjectURL(await res.blob()), '_blank');
+  });
+}
+
+async function load() {
+  if (!token) return showLogin();
+  const me = await api('GET', '/api/me');
+  $('#login').hidden = true; $('#app').hidden = false; $('#logout').hidden = false;
+  const t = me.tenant;
+  $('#who').textContent = t ? t.businessName : '';
+  $('#shopName').textContent = t.businessName;
+  $('#shopUrl').innerHTML = t.urls.map((u) => `<a href="${esc(u)}">${esc(u)}</a>`).join('<br>');
+  $('#plan').textContent = t.plan.id === 'trial' ? 'Dùng thử' : (catalogue.plans.find((p) => p.id === t.plan.id) || {}).name || t.plan.id;
+  $('#subStatus').outerHTML = `<span id="subStatus">${pill(t.suspended ? 'expired' : t.subscription.status)}</span>`;
+  $('#periodEnd').textContent = dt(t.subscription.currentPeriodEnd);
+  $('#subs').innerHTML = me.payments.map((p) => `<tr><td>${dt(p.createdAt)}</td><td>${esc(p.quote ? `${p.quote.planName} ${p.quote.months} tháng` : '')}</td>
+    <td>${vnd(p.amount)}</td><td>${esc(p.provider)}</td><td>${pill(p.status)}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Chưa có giao dịch</td></tr>';
+  renderSettings(await api('GET', '/api/shop/payment-settings'));
+  loadKeys();
+  loadEinvoices().catch(() => {});
+  loadDomains().catch(() => {});
+  const sales = await api('GET', '/api/shop/payments');
+  $('#sales').innerHTML = sales.map((p) => `<tr><td>${dt(p.createdAt)}</td><td>${esc(p.metadata && p.metadata.saleRef)}</td><td>${esc(p.provider)}</td>
+    <td>${vnd(p.amount)}</td><td>${pill(p.status)}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Chưa có giao dịch</td></tr>';
+}
+
+(async () => {
+  catalogue = await api('GET', '/api/plans');
+  $('#planSel').innerHTML = catalogue.plans.map((p) => `<option value="${p.id}">${p.name} – ${vnd(p.monthlyPrice)}/tháng</option>`).join('');
+  $('#monthsSel').innerHTML = catalogue.cycles.map((c) => `<option value="${c.months}">${c.months} tháng${c.discountPercent ? ` (−${c.discountPercent}%)` : ''}</option>`).join('');
+  $('#providerSel').innerHTML = catalogue.paymentProviders.map((p) => `<option value="${p}">${({ payos: 'payOS', pay2s: 'Pay2S' })[p] || p}</option>`).join('') || '<option value="">Chưa cấu hình cổng</option>';
+  $('#planSel').onchange = $('#monthsSel').onchange = updateQuote;
+  updateQuote();
+  const banks = await api('GET', '/api/banks');
+  $('#banks').innerHTML = banks.map((b) => `<option value="${esc(b.shortName)}">${esc(b.name)} (${b.bin})</option>`).join('');
+  load().catch(() => {});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+# Nightly HiTechPOS backup (scripts/backup/backup.sh). Install:
+#   sudo cp deploy/systemd/hitechpos-backup.{service,timer} /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now hitechpos-backup.timer
+# Run now / follow:  sudo systemctl start hitechpos-backup && journalctl -u hitechpos-backup -f
+# Adjust /opt/hitechpos to where the repository is checked out.
+[Unit]
+Description=HiTechPOS backup (mongodump of every shop + control DB)
+Wants=network-online.target
+After=network-online.target mongod.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/hitechpos/scripts/backup/backup.sh
+Environment=BACKUP_ENV_FILE=/etc/hitechpos/backup.env
+# Reads /etc/hitechpos/*.env (0600, root); writes only the backup directory.
+User=root
+UMask=0077
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/backups/hitechpos
+TimeoutStartSec=6h

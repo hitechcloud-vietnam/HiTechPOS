@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Quản trị – HiTechPOS</title>
+<style>
+  :root { --brand: #1d2733; --accent: #0b6bcb; --ink: #1d2733; --muted: #5d6b7a; --bg: #f5f8fb; --line: #dde5ee; --ok: #12805c; --err: #c0392b; --warn: #a76300;
+    --c1: #0b6bcb; --c2: #12805c; --c3: #8e44ad; --c4: #a76300; --c5: #5d6b7a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  header { background: var(--brand); color: #fff; padding: 12px 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; }
+  header form { display: flex; gap: 6px; flex-wrap: wrap; }
+  nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; max-width: 1280px; margin: 12px auto 0; padding: 0 16px; }
+  nav.tabs button { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+  nav.tabs button[aria-selected="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+  main { max-width: 1280px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; min-width: 0; }
+  h2 { margin: 0 0 10px; font-size: 1.05rem; }
+  h3 { margin: 16px 0 6px; font-size: .95rem; }
+  .stats { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .stat b { display: block; font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+  .muted { color: var(--muted); font-size: .85rem; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.click { cursor: pointer; } tr.click:hover { background: #f0f6fd; }
+  .wrap { overflow-x: auto; }
+  input, select, button, textarea { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); }
+  textarea { width: 100%; min-height: 70px; resize: vertical; }
+  button { background: var(--accent); color: #fff; border: 0; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  button.ghost { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+  button.danger { background: var(--err); }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: .78rem; background: #eef4fb; white-space: nowrap; }
+  .ok { background: #e5f6ef; color: var(--ok); } .warn { background: #fff4e0; color: var(--warn); } .bad { background: #fbeaea; color: var(--err); }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+  .toolbar label { display: flex; gap: 4px; align-items: center; }
+  .pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 8px; }
+  details summary { cursor: pointer; color: var(--accent); }
+  code { font-size: .8rem; }
+  [hidden] { display: none !important; }
+  /* detail drawer */
+  .backdrop { position: fixed; inset: 0; background: rgba(15, 25, 35, .35); z-index: 10; }
+  aside.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(720px, 100vw); background: #fff; z-index: 11; overflow-y: auto; padding: 16px; box-shadow: -8px 0 24px rgba(0, 0, 0, .12); }
+  .drawer-head { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+  .actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+  dl.kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; }
+  dl.kv dt { color: var(--muted); } dl.kv dd { margin: 0; overflow-wrap: anywhere; }
+  .warnbox { background: #fff4e0; color: var(--warn); border-radius: 8px; padding: 8px 10px; margin: 8px 0; }
+  dialog { border: 1px solid var(--line); border-radius: 12px; padding: 16px; width: min(460px, calc(100vw - 32px)); }
+  dialog::backdrop { background: rgba(15, 25, 35, .45); }
+  dialog form > * { margin: 0 0 10px; }
+  dialog label { display: block; }
+  dialog label > input, dialog label > select { width: 100%; margin-top: 4px; }
+  .row-end { display: flex; justify-content: flex-end; gap: 8px; }
+  /* charts */
+  .chart svg { width: 100%; height: auto; display: block; }
+  .chart text { font-size: 11px; fill: var(--muted); }
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .82rem; color: var(--muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .bar { height: 10px; background: var(--c1); border-radius: 3px; }
+  .bar.red { background: var(--err); } .bar.amber { background: var(--c4); }
+  .grid2 { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  #toast { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); background: var(--brand); color: #fff; padding: 8px 14px; border-radius: 8px; z-index: 20; max-width: calc(100vw - 32px); }
+</style>
+</head>
+<body>
+<header>
+  <strong>HiTechPOS · Quản trị hệ thống</strong>
+  <form id="keyForm">
+    <input id="actor" placeholder="Tên người thao tác" autocomplete="name" maxlength="64" title="Ghi vào nhật ký thao tác">
+    <input id="adminKey" type="password" placeholder="Admin API key" autocomplete="off">
+    <button>Kết nối</button>
+  </form>
+</header>
+
+<nav class="tabs" id="tabs" role="tablist" hidden>
+  <button role="tab" data-tab="overview" aria-selected="true">Tổng quan</button>
+  <button role="tab" data-tab="tenants">Cửa hàng</button>
+  <button role="tab" data-tab="revenue">Doanh thu</button>
+  <button role="tab" data-tab="audit">Nhật ký thao tác</button>
+</nav>
+
+<main id="app" hidden>
+  <!-- Tổng quan -->
+  <section data-panel="overview" class="card">
+    <h2>Tổng quan</h2>
+    <div class="stats" id="stats"></div>
+    <div class="toolbar" style="margin-top:12px">
+      <button class="ghost" id="jobExpiry">Chạy kiểm tra hết hạn</button>
+      <button class="ghost" id="jobReminders">Gửi nhắc hết hạn dùng thử</button>
+    </div>
+  </section>
+  <section data-panel="overview" class="card">
+    <h2>Giao dịch cần đối soát</h2>
+    <p class="muted">Số tiền nhận khác số tiền yêu cầu. Kiểm tra sao kê trước khi chấp nhận.</p>
+    <div class="wrap"><table><thead><tr><th>Thời gian</th><th>Mã đơn</th><th>Loại</th><th>Cổng</th><th class="num">Yêu cầu</th><th class="num">Đã nhận</th><th></th></tr></thead><tbody id="review"></tbody></table></div>
+  </section>
+
+  <!-- Cửa hàng -->
+  <section data-panel="tenants" class="card" hidden>
+    <h2>Cửa hàng</h2>
+    <form class="toolbar" id="filters">
+      <input name="q" type="search" placeholder="Tên miền, tên shop, email chủ…" style="min-width:220px">
+      <select name="status" aria-label="Trạng thái">
+        <option value="">Mọi trạng thái</option>
+        <option value="trialing">Dùng thử</option>
+        <option value="active">Đang trả phí</option>
+        <option value="expired">Hết hạn</option>
+        <option value="suspended">Bị khoá</option>
+        <option value="install_failed">Cài lỗi</option>
+      </select>
+      <select name="plan" aria-label="Gói cước"><option value="">Mọi gói</option></select>
+      <label>Tạo từ <input name="from" type="date"></label>
+      <label>đến <input name="to" type="date"></label>
+      <select name="sort" aria-label="Sắp xếp">
+        <option value="created">Mới tạo trước</option>
+        <option value="created-asc">Cũ trước</option>
+        <option value="period-end">Sắp hết hạn trước</option>
+        <option value="name">Theo tên</option>
+      </select>
+      <button>Lọc</button>
+      <button type="reset" class="ghost">Xoá lọc</button>
+    </form>
+    <div class="muted" id="counts"></div>
+    <div class="wrap"><table><thead><tr><th>Cửa hàng</th><th>Chủ cửa hàng</th><th>Gói</th><th>Hết hạn</th><th>Trạng thái</th><th>Ngày tạo</th></tr></thead><tbody id="tenants"></tbody></table></div>
+    <div class="pager" id="tenantPager"></div>
+  </section>
+
+  <!-- Doanh thu -->
+  <section data-panel="revenue" class="card" hidden>
+    <div class="toolbar">
+      <h2 style="margin:0;flex:1">Doanh thu thuê bao</h2>
+      <label>Khoảng <select id="revMonths"><option value="6">6 tháng</option><option value="12" selected>12 tháng</option><option value="24">24 tháng</option></select></label>
+    </div>
+    <div class="stats" id="revStats"></div>
+    <h3>Theo tháng (đã thanh toán, giờ Việt Nam)</h3>
+    <div class="legend" id="revLegend"></div>
+    <div class="chart" id="revChart"></div>
+    <div class="grid2">
+      <div><h3>Theo gói</h3><div class="wrap"><table><thead><tr><th>Gói</th><th class="num">Giao dịch</th><th class="num">Doanh thu</th></tr></thead><tbody id="revPlans"></tbody></table></div></div>
+      <div><h3>Theo cổng thanh toán</h3><div class="wrap"><table><thead><tr><th>Cổng</th><th class="num">Giao dịch</th><th class="num">Doanh thu</th></tr></thead><tbody id="revProviders"></tbody></table></div></div>
+    </div>
+    <div class="grid2">
+      <div><h3>Chuyển đổi dùng thử → trả phí theo tháng đăng ký</h3><div class="wrap"><table><thead><tr><th>Tháng</th><th class="num">Đăng ký</th><th class="num">Trả phí</th><th class="num">Tỉ lệ</th><th style="width:30%"></th></tr></thead><tbody id="revCohorts"></tbody></table></div></div>
+      <div><h3>Rời bỏ theo tháng</h3><div class="wrap"><table><thead><tr><th>Tháng</th><th class="num">Hết hạn (đã trả phí)</th><th class="num">Hết dùng thử</th><th class="num">Bị khoá</th></tr></thead><tbody id="revChurn"></tbody></table></div>
+        <p class="muted" id="revChurnNote"></p></div>
+    </div>
+  </section>
+
+  <!-- Nhật ký -->
+  <section data-panel="audit" class="card" hidden>
+    <h2>Nhật ký thao tác quản trị</h2>
+    <form class="toolbar" id="auditFilters">
+      <select name="action" aria-label="Thao tác"><option value="">Mọi thao tác</option></select>
+      <input name="actor" placeholder="Người thao tác" maxlength="64">
+      <input name="tenantId" placeholder="Mã cửa hàng" maxlength="64">
+      <button>Lọc</button>
+      <button type="reset" class="ghost">Xoá lọc</button>
+    </form>
+    <div class="wrap"><table><thead><tr><th>Thời gian</th><th>Người thao tác</th><th>Cửa hàng</th><th>Thao tác</th><th>Lý do / ghi chú</th><th>Trước → sau</th></tr></thead><tbody id="auditRows"></tbody></table></div>
+    <div class="pager" id="auditPager"></div>
+  </section>
+</main>
+
+<div class="backdrop" id="backdrop" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-label="Chi tiết cửa hàng"></aside>
+
+<dialog id="actionDialog">
+  <form method="dialog" id="actionForm">
+    <h2 id="dlgTitle"></h2>
+    <p id="dlgText" class="muted"></p>
+    <div id="dlgWarn" class="warnbox" hidden></div>
+    <label id="dlgDaysWrap" hidden>Số ngày gia hạn <input name="days" type="number" min="1" max="366" step="1" value="7"></label>
+    <label id="dlgPlanWrap" hidden>Gói mới <select name="plan"></select></label>
+    <label id="dlgForceWrap" hidden><input name="force" type="checkbox"> Tôi đã kiểm tra, cửa hàng đã được cài đặt lại đầy đủ</label>
+    <label id="dlgReasonWrap"><span id="dlgReasonLabel">Lý do</span><textarea name="reason" maxlength="500"></textarea></label>
+    <p id="dlgError" class="bad" hidden style="padding:6px 8px;border-radius:8px"></p>
+    <div class="row-end">
+      <button value="cancel" class="ghost" formnovalidate>Huỷ</button>
+      <button value="ok" id="dlgOk">Xác nhận</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" hidden role="status"></div>
+<footer style="text-align:center;padding:16px;color:#5d6b7a;font-size:.85rem">HiTechPOS · AGPL-3.0 · <a href="/source">Mã nguồn</a></footer>
+<script src="/admin.js" defer></script>
+</body>
+</html>

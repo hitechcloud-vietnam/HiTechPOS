@@ -1,0 +1,14 @@
+{
+  "name": "@hitechpos/einvoice-vn",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hoá đơn điện tử Việt Nam (NĐ 123/2020, NĐ 70/2025, TT 78/2021, TT 32/2025) cho HiTechPOS: mô hình hoá đơn chuẩn, máy tính tiền, adapter Viettel S-Invoice, MISA meInvoice, Mắt Bão",
+  "license": "AGPL-3.0-only",
+  "main": "src/index.js",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test" },
+  "dependencies": {
+    "@hitechpos/payment-core": "0.1.0",
+    "@hitechpos/vn-locale": "0.1.0"
+  }
+}

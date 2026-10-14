@@ -9,7 +9,9 @@
  *
  *   1. an address someone pinned - an explicit choice always wins
  *   2. the shop's own server on this Wi-Fi
- *   3. the shop's cloud address, https://<code>.posnic.io/api
+ *   3. the shop's cloud address, https://<code>.hitechpos.vn/api
+ *      (CLOUD_SUFFIX below; overridable at build time, see
+ *      scripts/hitechpos-config.js)
  *
  * and the choice is re-made whenever the active one stops answering.
  *
@@ -31,7 +33,21 @@
 
   /* ---------------------------------------------------------------- config */
 
-  const CLOUD_SUFFIX = '.posnic.io';
+  /*
+   * HITECHPOS CLOUD. The only two places the app's cloud lives.
+   *
+   * CLOUD_SUFFIX turns a bare shop code into https://<code><suffix>/api.
+   * ACCOUNT_ORIGIN is the account service that approves a phone from the
+   * browser (/api/mobile/*, see HITECHPOS.md).
+   *
+   * `vite build` rewrites these two lines in dist/config.js when the
+   * HITECHPOS_CLOUD_SUFFIX / HITECHPOS_ACCOUNT_ORIGIN environment variables
+   * are set (scripts/hitechpos-config.js); build-apk.js and build-ipa.js
+   * carry the account host into the native browser allow-list the same way.
+   * Keep each a single-line string literal so the build can find it.
+   */
+  const CLOUD_SUFFIX = '.hitechpos.vn';
+  const ACCOUNT_ORIGIN = 'https://app.hitechpos.vn';
   const API_PATH = '/api';
   const LAN_PORT = 5555;
 
@@ -239,7 +255,7 @@
   /**
    * Turn whatever someone typed into a base URL, or null.
    *
-   * Accepts a shop code ("azure"), a hostname ("azure.posnic.io"), an address
+   * Accepts a shop code ("azure"), a hostname ("azure.hitechpos.vn"), an address
    * with a port ("192.168.1.5:5555"), or a full URL carrying its own path
    * ("https://pos.myshop.com/api").
    */
@@ -728,7 +744,7 @@
     UNREACHABLE: 'Could not reach it. Check the phone is online and the address is right.',
     TIMED_OUT: 'It did not answer in time. It may be slow, or not listening.',
     REFUSED: 'It answered, but refused: ',
-    NOT_POSNIC: 'Something answered, but it is not a Posnic server.',
+    NOT_POSNIC: 'Something answered, but it is not a HiTechPOS server.',
     UNREADABLE: 'It answered with something this app could not read.',
   };
 
@@ -1408,7 +1424,7 @@
         const dialog=document.createElement('dialog');dialog.id='captain-internet-consent';
         dialog.setAttribute('aria-labelledby','internet-consent-title');
         dialog.style.cssText='width:min(380px,calc(100vw - 32px));box-sizing:border-box;border:1px solid var(--line,#dce4ee);border-radius:18px;padding:22px;background:var(--surface,#fff);color:var(--ink,#17243a);font:15px/1.5 Inter,system-ui;box-shadow:0 16px 60px #0004';
-        dialog.innerHTML='<h2 id="internet-consent-title" style="font-size:20px;margin:0 0 12px">Switch to internet?</h2><p>The shop’s Wi-Fi server is unavailable. Use Posnic Cloud instead? Orders may reach the kitchen more slowly than over shop Wi-Fi.</p><p>Your pending orders stay saved on this phone if you choose to wait.</p><div style="display:flex;gap:10px"><button type="button" data-wait style="flex:1;min-height:48px;border:1px solid #cad5e4;border-radius:10px;background:#f4f7fb;color:#26394f">Stay on Wi-Fi</button><button type="button" data-switch style="flex:1;min-height:48px;border:0;border-radius:10px;background:#2459de;color:white">Switch to internet</button></div>';
+        dialog.innerHTML='<h2 id="internet-consent-title" style="font-size:20px;margin:0 0 12px">Switch to internet?</h2><p>The shop’s Wi-Fi server is unavailable. Use HiTechPOS Cloud instead? Orders may reach the kitchen more slowly than over shop Wi-Fi.</p><p>Your pending orders stay saved on this phone if you choose to wait.</p><div style="display:flex;gap:10px"><button type="button" data-wait style="flex:1;min-height:48px;border:1px solid #cad5e4;border-radius:10px;background:#f4f7fb;color:#26394f">Stay on Wi-Fi</button><button type="button" data-switch style="flex:1;min-height:48px;border:0;border-radius:10px;background:#2459de;color:white">Switch to internet</button></div>';
         const finish=yes=>{write(base,yes?'yes':'no');dialog.close();dialog.remove();if(!yes)offerAgain(base);resolve(yes);};
         dialog.querySelector('[data-wait]').onclick=()=>finish(false);
         dialog.querySelector('[data-switch]').onclick=()=>finish(true);
@@ -1852,7 +1868,7 @@
       if (error.status === 401 && !session.token && !path.includes('kioskMobileLogin')) {
         error.code = 'SERVER_TOO_OLD';
         error.message =
-          'This shop’s server is too old for this screen. Update POSNIC on the till.';
+          'This shop’s server is too old for this screen. Update HiTechPOS on the till.';
       }
 
       /*
@@ -2247,7 +2263,7 @@
         if (title) title.textContent = local ? 'The till is not responding' : 'The shop server is not responding';
         if (body) {
           body.textContent = local
-            ? 'Cannot connect to the shop server. Make sure Posnic is running on the till and both devices are on the same network, then try again. Closing the Posnic window is OK if it is still running in the system tray.'
+            ? 'Cannot connect to the shop server. Make sure HiTechPOS is running on the till and both devices are on the same network, then try again. Closing the HiTechPOS window is OK if it is still running in the system tray.'
             : 'Cannot connect to the shop server. Check your internet connection, then try again.';
         }
         if (url) url.textContent = server.baseUrl || '';
@@ -2364,10 +2380,10 @@
                * phone is the thing in their hand. Naming the computer sends
                * them to the thing that is actually off.
                */
-              if (title) title.textContent = 'The till computer is not running POSNIC';
+              if (title) title.textContent = 'The till computer is not running HiTechPOS';
               if (body) {
                 body.textContent =
-                  'This phone is on the right Wi-Fi, so the till computer is switched off or POSNIC is not open on it. Switch it on and open POSNIC, and this phone will connect by itself.';
+                  'This phone is on the right Wi-Fi, so the till computer is switched off or HiTechPOS is not open on it. Switch it on and open HiTechPOS, and this phone will connect by itself.';
               }
             })
             .catch(() => {
@@ -2512,6 +2528,7 @@
     ApiError,
     constants: {
       CLOUD_SUFFIX,
+      ACCOUNT_ORIGIN,
       API_PATH,
       LAN_PORT,
       requestTimeoutMs: REQUEST_TIMEOUT_MS,

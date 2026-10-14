@@ -28,6 +28,8 @@ test("scanner rejects control frames, payment data, sign-in links and oversized 
     "upi://pay?pa=test@bank",
     "https://example.test",
     "posnic://pair",
+    "hitechpos://pair",
+    "vn.hitechpos.mobile://authorized",
     "%B4111111111111111^TEST",
     ";4111111111111111=123",
   ]) {

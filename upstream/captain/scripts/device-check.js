@@ -36,10 +36,10 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const APK = path.join(ROOT, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
-const APP = 'com.posnic.captain/.MainActivity';
+const APP = 'vn.hitechpos.captain/.MainActivity';
 const MARKER = 'POSNIC_SELFTEST';
 
-const target = process.argv[2] || 'https://develop.posnic.io/api';
+const target = process.argv[2] || 'https://demo.hitechpos.vn/api';
 
 const run = (command, args, options = {}) =>
   spawnSync(command, args, { encoding: 'utf8', timeout: 120000, ...options });

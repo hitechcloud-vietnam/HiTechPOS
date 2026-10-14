@@ -70,7 +70,7 @@ test("UPI binds the selected recipient, amount and merchant without treating it 
   );
 });
 test("server locator upgrades public HTTP, rejects URL credentials, keeps explicit LAN origin", () => {
-  assert.equal(serverAddress("demo"), "https://demo.posnic.io/api");
+  assert.equal(serverAddress("demo"), "https://demo.hitechpos.vn/api");
   assert.equal(
     serverAddress("http://192.168.1.5:5555"),
     "http://192.168.1.5:5555/api",

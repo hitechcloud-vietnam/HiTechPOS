@@ -135,13 +135,17 @@ run(`${npx} cap sync android`);
 /* After sync, because `cap add` writes the gradle file this edits. */
 stamp.stampGradle(path.join(androidDir, 'app', 'build.gradle'), version);
 
-const javaSourceDir = path.join(androidDir, 'app', 'src', 'main', 'java', 'com', 'posnic', 'captain');
+/* The Java package follows capacitor.config.json's appId (vn.hitechpos.captain). */
+const appId = JSON.parse(fs.readFileSync(path.join(__dirname, 'capacitor.config.json'), 'utf8')).appId;
+const javaSourceDir = path.join(androidDir, 'app', 'src', 'main', 'java', ...appId.split('.'));
 const javaTemplateDir = path.join(__dirname, 'android-templates');
+const hitechpos = require('./scripts/hitechpos-config');
 fs.mkdirSync(javaSourceDir, { recursive: true });
 for (const fileName of ['MainActivity.java', 'LocalNetworkPlugin.java', 'SecureSessionPlugin.java']) {
-  fs.copyFileSync(
-    path.join(javaTemplateDir, fileName),
-    path.join(javaSourceDir, fileName)
+  const template = fs.readFileSync(path.join(javaTemplateDir, fileName), 'utf8');
+  fs.writeFileSync(
+    path.join(javaSourceDir, fileName),
+    fileName === 'SecureSessionPlugin.java' ? hitechpos.applyToNative(template) : template
   );
 }
 
@@ -254,12 +258,12 @@ if (fs.existsSync(manifestPath)) {
         '\n            android:windowSoftInputMode=\"adjustResize\"'
     );
   }
-  if (!manifest.includes('android:scheme="com.posnic.captain"')) {
+  if (!manifest.includes(`android:scheme="${appId}"`)) {
     manifest = manifest.replace('</activity>', `<intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="com.posnic.captain" android:host="authorized" />
+                <data android:scheme="${appId}" android:host="authorized" />
             </intent-filter>\n        </activity>`);
   }
   manifest = manifest.replace(/android:allowBackup="true"/g, 'android:allowBackup="false"');

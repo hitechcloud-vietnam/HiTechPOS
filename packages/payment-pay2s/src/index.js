@@ -4,4 +4,5 @@ module.exports = {
   ...require('./signature'),
   ...require('./client'),
   ...require('./provider'),
+  ...require('./bank-feed'),
 };

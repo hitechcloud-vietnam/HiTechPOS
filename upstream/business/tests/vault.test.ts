@@ -63,7 +63,7 @@ test("PIN policy and credential schema reject trivial PINs, account passwords an
   for (const authorizationOrigin of [
     undefined,
     credential.origin,
-    "https://www.posnic.com",
+    "https://app.hitechpos.vn",
   ])
     assert.equal(
       credentialSchema.parse({ ...credential, authorizationOrigin })
@@ -72,8 +72,8 @@ test("PIN policy and credential schema reject trivial PINs, account passwords an
     );
   for (const authorizationOrigin of [
     "https://attacker.example.com",
-    "http://www.posnic.com",
-    "https://www.posnic.com/path",
+    "http://app.hitechpos.vn",
+    "https://app.hitechpos.vn/path",
   ])
     assert.throws(() =>
       credentialSchema.parse({ ...credential, authorizationOrigin }),

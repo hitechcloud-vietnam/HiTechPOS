@@ -16,7 +16,7 @@ def adb(*args):
 
 def screen(name, expected, scroll_search=False):
     for attempt in range(30):
-        if not adb('shell', 'pidof', 'com.posnic.business').strip():
+        if not adb('shell', 'pidof', 'vn.hitechpos.business').strip():
             raise RuntimeError('App exited before the expected screen appeared')
         adb('shell', 'uiautomator', 'dump', '/sdcard/business-ui.xml')
         xml = adb('shell', 'cat', '/sdcard/business-ui.xml')
@@ -30,7 +30,7 @@ def screen(name, expected, scroll_search=False):
         if scroll_search and attempt in (3, 6, 9):
             (evidence / f'{name}-scroll-{attempt}.png').write_bytes(adb('exec-out', 'screencap', '-p'))
             for node in root.iter('node'):
-                if node.get('scrollable') == 'true' and node.get('package') == 'com.posnic.business':
+                if node.get('scrollable') == 'true' and node.get('package') == 'vn.hitechpos.business':
                     x1, y1, x2, y2 = map(int, re.findall(r'\d+', node.get('bounds', '')))
                     center = str((x1 + x2) // 2)
                     adb('shell', 'input', 'swipe', center, str(y1 + (y2 - y1) * 4 // 5), center, str(y1 + (y2 - y1) // 5), '350')
@@ -50,7 +50,7 @@ def tap(node):
 
 try:
     adb('logcat', '-c')
-    adb('shell', 'am', 'start', '-W', '-n', 'com.posnic.business/.MainActivity')
+    adb('shell', 'am', 'start', '-W', '-n', 'vn.hitechpos.business/.MainActivity')
     tap(screen('welcome', 'Explore sample business', scroll_search=True))
     screen('sample', 'Today')
     tap(screen('tabs', 'Insights'))
@@ -59,7 +59,7 @@ try:
     tap(screen('item-next', 'Next'))
     screen('next-item', 'Previous')
     adb('shell', 'input', 'keyevent', '3')
-    adb('shell', 'am', 'start', '-W', '-n', 'com.posnic.business/.MainActivity')
+    adb('shell', 'am', 'start', '-W', '-n', 'vn.hitechpos.business/.MainActivity')
     screen('resumed', 'Previous')
     print('Standalone install, welcome, dashboard, insights, item paging and resume passed.')
 finally:

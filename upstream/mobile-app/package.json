@@ -1,9 +1,9 @@
 {
-  "name": "posnic-mobile",
+  "name": "hitechpos-mobile",
   "version": "0.3.0-beta.22",
   "private": true,
   "main": "index.ts",
-  "description": "Offline-first mobile till for Posnic POS",
+  "description": "HiTechPOS offline-first mobile till (based on Posnic Mobile-App, AGPL-3.0)",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",

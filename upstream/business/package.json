@@ -1,8 +1,8 @@
 {
-  "name": "posnic-business",
+  "name": "hitechpos-business",
   "version": "0.1.0",
   "private": true,
-  "description": "Posnic owner and manager companion for Android and iOS",
+  "description": "HiTechPOS owner and manager companion for Android and iOS (based on Posnic Business, AGPL-3.0)",
   "license": "AGPL-3.0-only",
   "main": "index.ts",
   "repository": {

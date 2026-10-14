@@ -1,5 +1,7 @@
 # Posnic Business
 
+> **HiTechPOS:** this app ships as HiTechPOS Chủ cửa hàng (`vn.hitechpos.business`), based on Posnic (AGPL-3.0). HiTechPOS changes and open items: [HITECHPOS.md](HITECHPOS.md).
+
 **[Download the latest build](https://github.com/Posnic/posnic-business/releases)** — Android APK. Open the newest release and download its `.apk` under **Assets**. Preview builds are for testing.
 
 An owner and manager companion for Android and iOS. See daily performance, understand useful exceptions, and eventually review important business decisions away from the shop.

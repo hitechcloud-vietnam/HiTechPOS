@@ -66,3 +66,28 @@ Gói cước dùng nhật ký này cho thanh toán thuê bao. Cùng hợp đồn
 - **extension** – HiTechPOS phải xây mới (IMEI/bảo hành, trả góp, lịch hẹn, hoa hồng, thẻ liệu trình, FEFO, đơn thuốc, liên thông dược quốc gia, in tem ly, đặt bánh có cọc, định lượng nguyên liệu, **hoá đơn điện tử VN**).
 
 `posnicModuleSettings(id)` trả về các công tắc `module_*` cần ghi tường minh sau khi cài đặt (Posnic coi thiếu = bật).
+
+## Thanh toán tại quầy
+
+Tiền của khách mua hàng thuộc về cửa hàng: mỗi shop tự cấu hình tài khoản ngân hàng (VietQR), payOS hoặc Pay2S ở `/account`; secret niêm phong bằng `TENANT_SECRET_KEY`.
+
+```
+Màn hình bán hàng Posnic ── ô "QR chuyển khoản" ──► shard: sales/generateQrCode
+   (upstream/pos/frontend)                              │ services/hitech-pay.js (HITECH_POS_KEY của shop)
+                                                        ▼
+                                     control plane: POST /pos/v1/payments ──► VietQR / payOS / Pay2S
+                                                        ▲
+   payOS webhook / Pay2S IPN / Pay2S biến động số dư ───┘  /webhooks/shop/:tenantId/{payos|pay2s|bank-feed}
+```
+
+- Khi chủ shop lưu cấu hình, control plane cấp một khoá nội bộ, niêm phong vào `tenant.secrets.HITECH_POS_KEY` (shard tự đọc trong phạm vi shop) và bật `branches.payment_gateway = { status: 'true', provider: 'hitechpos' }` trong DB của shop.
+- Một `saleRef` chỉ có một QR còn hiệu lực; webhook xác thực bằng khoá riêng của chính shop đó.
+- VietQR trực tiếp: nội dung chuyển khoản bắt đầu bằng mã đơn → webhook biến động số dư Pay2S tự xác nhận; nếu không có, thu ngân bấm “Đã nhận tiền”.
+
+## Hoá đơn điện tử
+
+`packages/einvoice-vn` chuẩn hoá hoá đơn (GTGT/bán hàng, máy tính tiền, khách lẻ, nhiều thuế suất, số tiền bằng chữ) và có adapter Viettel S-Invoice, MISA meInvoice, Mắt Bão. Control plane (`src/einvoices.js`) giữ cấu hình theo shop và bảng chống trùng `einvoices` (khoá `<tenantId>:<refId>`): kết quả không xác định chặn phát hành lại cho tới khi đối soát.
+
+## Bản vá Posnic
+
+Danh sách đầy đủ trong [UPSTREAM.md](UPSTREAM.md). Đáng chú ý: lỗi chung của Posnic ở chế độ shard đa tenant (`model-registry.js` làm mất các hàm `Sale.*Model`) được phát hiện khi chạy thật và đã sửa.

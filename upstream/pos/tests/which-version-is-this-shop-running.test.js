@@ -64,7 +64,7 @@ async function run(t, opts = {}) {
 
 test('desktop details distinguish the installed app, page and server versions', async (t) => {
   const { node, open } = await run(t, { appVersion: '1.6.1', serverVersion: '1.7.0' });
-  assert.equal(node('posnic_version_line').textContent, 'Posnic 1.6.1');
+  assert.equal(node('posnic_version_line').textContent, 'HiTechPOS 1.6.1');
   assert.equal(node('posnic_version_line').hidden, false);
   await open();
   assert.equal(node('posnic_about_dialog').getAttribute('aria-modal'), 'true');
@@ -93,7 +93,7 @@ test('viewing details never copies; only Copy details does, with written confirm
   assert.equal(node('posnic_about_copy_status').textContent, '');
   node('posnic_about_copy').click();
   await settled();
-  assert.deepEqual(copied, ['Posnic 1.6.1 | desktop | page 2eca0dab | server 1.7.0']);
+  assert.deepEqual(copied, ['HiTechPOS 1.6.1 | desktop | page 2eca0dab | server 1.7.0']);
   assert.equal(node('posnic_about_copy_status').textContent, 'Details copied to clipboard.');
   assert.equal(node('posnic_about_copy_status').getAttribute('role'), 'status');
   $('#posnic_about_dialog').modal('hide');
@@ -144,13 +144,13 @@ test('unavailable versions do not show a misleading footer version or enable cop
 test('the sign-in screen shows its known versions without asking the protected API', async (t) => {
   const { node, asked } = await run(t, { login: true, scripts: ['script/login.91f31103.js'], appVersion: '1.6.1' });
   assert.deepEqual(asked, []);
-  assert.equal(node('posnic_version_login').textContent, 'Posnic 1.6.1 · 91f31103');
+  assert.equal(node('posnic_version_login').textContent, 'HiTechPOS 1.6.1 · 91f31103');
 });
 
 test('browser sign-in can identify the page without a desktop shell or session', async (t) => {
   const { node, asked } = await run(t, { login: true, scripts: ['script/login.91f31103.js'] });
   assert.deepEqual(asked, []);
-  assert.equal(node('posnic_version_login').textContent, 'Posnic · 91f31103');
+  assert.equal(node('posnic_version_login').textContent, 'HiTechPOS · 91f31103');
 });
 
 /* --------------------------------------------- the numbers have sources --- */

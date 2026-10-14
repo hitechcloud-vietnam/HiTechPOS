@@ -125,15 +125,15 @@ test('takeaway transition retains its type on retry and requires confirmation fr
 });
 
 test('an interrupted move cannot be replayed against another issuing server',async()=>{
- const a=app();a.context.POSNIC.session.base='https://first.posnic.io/api';
+ const a=app();a.context.POSNIC.session.base='https://first.hitechpos.vn/api';
  a.context.POSNIC.api.post=async()=>{throw new Error('lost acknowledgement');};
  await assert.rejects(a.api.move('order-1',choice));
  const saved=a.api.pending('order-1');
- const b=app(a.storage);b.context.POSNIC.session.base='https://second.posnic.io/api';
+ const b=app(a.storage);b.context.POSNIC.session.base='https://second.hitechpos.vn/api';
  await assert.rejects(b.api.resume('order-1'),/Reconnect to the server/);
  assert.equal(b.calls.length,0);
  assert.equal(b.api.pending('order-1').body.request_id,saved.body.request_id);
- b.context.POSNIC.session.base='https://first.posnic.io/api';
+ b.context.POSNIC.session.base='https://first.hitechpos.vn/api';
  await b.api.resume('order-1');
  assert.equal(b.calls.length,2);
  assert.equal(b.api.pending('order-1'),null);

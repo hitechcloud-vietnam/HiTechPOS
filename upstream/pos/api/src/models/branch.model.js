@@ -1085,8 +1085,8 @@ class BranchModel {
           return {
             status: false,
             message:
-              `Your Posnic plan covers ${cloudBranchLimit} outlet${cloudBranchLimit > 1 ? 's' : ''}. ` +
-              'Add another from your account, or contact your provider.',
+              `Your plan covers ${cloudBranchLimit} outlet${cloudBranchLimit > 1 ? 's' : ''}. ` +
+              'Upgrade it from your account, or contact your provider.',
             data: null,
           };
         }

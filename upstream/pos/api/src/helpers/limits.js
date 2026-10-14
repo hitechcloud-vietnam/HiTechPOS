@@ -14,9 +14,25 @@ const { currentConnection } = require('../db/tenant-context');
 const path = require('path');
 
 const TTL_MS = 30_000;
-let cache = { at: 0, limits: null };
+/* Keyed by the database the limits were read from. A single process-wide
+   entry served one shop's plan to every other shop in a multi-tenant shard
+   for up to TTL_MS. (HiTechPOS fix.) */
+const caches = new Map();
+
+function cacheKey() {
+  if (process.env.POSNIC_BRAND_DIR) return 'brand-dir';
+  try {
+    const mongoose = require('mongoose');
+    const conn = currentConnection(mongoose.connection);
+    return (conn && conn.name) || 'default';
+  } catch {
+    return 'default';
+  }
+}
 
 async function getLimits() {
+  const key = cacheKey();
+  const cache = caches.get(key) || { at: 0, limits: null };
   if (Date.now() - cache.at < TTL_MS) return cache.limits;
   let limits = null;
   try {
@@ -35,20 +51,29 @@ async function getLimits() {
   } catch (err) {
     limits = null;
   }
-  cache = { at: Date.now(), limits };
+  caches.set(key, { at: Date.now(), limits });
   return limits;
 }
 
 /** Outlets this shop may run, or null when nothing is enforcing a number. */
 async function branchLimit() {
+  return limitOf('branches');
+}
+
+async function limitOf(key) {
   const limits = await getLimits();
-  const n = limits && Number(limits.branches);
+  const n = limits && Number(limits[key]);
   return Number.isInteger(n) && n > 0 ? n : null;
 }
 
+/** Staff logins and catalogue size, written by the HiTechPOS control plane
+    from the shop's plan. Absent means unlimited, as for branches. */
+const userLimit = () => limitOf('users');
+const itemLimit = () => limitOf('products');
+
 /** Drops the cache so a freshly synced limit applies without a restart. */
 function invalidate() {
-  cache = { at: 0, limits: null };
+  caches.clear();
 }
 
-module.exports = { getLimits, branchLimit, invalidate };
+module.exports = { getLimits, branchLimit, userLimit, itemLimit, invalidate };
