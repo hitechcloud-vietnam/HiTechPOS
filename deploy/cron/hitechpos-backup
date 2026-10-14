@@ -1,0 +1,7 @@
+# /etc/cron.d/hitechpos-backup - alternative to the systemd timer; use one, not both.
+# 19:15 UTC = 02:15 Vietnam time. backup.sh takes a lock (exit 75 if a run is
+# still going) and exits non-zero on failure, which cron mails to MAILTO.
+MAILTO=root
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+15 19 * * * root BACKUP_ENV_FILE=/etc/hitechpos/backup.env /opt/hitechpos/scripts/backup/backup.sh >> /var/log/hitechpos-backup.log 2>&1

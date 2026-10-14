@@ -29,6 +29,13 @@ function loadConfig(env = process.env) {
     posnicSecret: env.POSNIC_SECRET || null,
     sessionSecret: memory && !env.SESSION_SECRET ? 'dev-only-session-secret' : required('SESSION_SECRET'),
     adminKey: env.ADMIN_API_KEY || null,
+    /* /metrics accepts this bearer token as well as the admin key; /readyz
+       probes the shard (when SHARD_URL is set) unless READYZ_SHARD=0. */
+    ops: {
+      metricsToken: env.METRICS_TOKEN || null,
+      readyzShard: !['0', 'false', 'no'].includes(String(env.READYZ_SHARD || '').toLowerCase()),
+      readyzTimeoutMs: Number(env.READYZ_TIMEOUT_MS) > 0 ? Number(env.READYZ_TIMEOUT_MS) : 1500,
+    },
     saasVatRate: env.SAAS_VAT_RATE === undefined || env.SAAS_VAT_RATE === 'KCT' ? 'KCT' : Number(env.SAAS_VAT_RATE),
     graceDays: Number(env.GRACE_DAYS || 7),
     smtpUrl: env.SMTP_URL || null,

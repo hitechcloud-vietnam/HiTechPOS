@@ -16,6 +16,7 @@ const { rateLimit, securityHeaders } = require('./security');
 const { isEmail } = require('@hitechpos/payment-core');
 const { hashPassword, verifyPassword } = require('./passwords');
 const { signToken, verifyToken } = require('./tokens');
+const { createOps } = require('./ops');
 
 
 /* Error codes map to Vietnamese messages for the signup/billing UI. */
@@ -78,7 +79,7 @@ function httpError(code, status) {
   return Object.assign(new Error(code), { code, status });
 }
 
-function createApp({ store, config, providers, installer, onboarding, now = () => new Date(), logger = console, counterOptions = {}, einvoiceOptions = {}, mailTransport, resolveTxt }) {
+function createApp({ store, config, providers, installer, onboarding, now = () => new Date(), logger = console, counterOptions = {}, einvoiceOptions = {}, mailTransport, resolveTxt, ops: opsOptions = {} }) {
   const tenants = createTenantService({ store, config, installer, onboarding, now });
   const domains = createDomainService({ store, config, now, ...(resolveTxt ? { resolveTxt } : {}) });
   const einvoices = createEInvoiceService({ store, config, now, providerOptions: einvoiceOptions, logger });
@@ -88,6 +89,9 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
+  /* readiness, Prometheus metrics, admin ops summary (src/ops.js) */
+  const ops = createOps({ store, config, now, ...opsOptions });
+  app.use(ops.httpMetrics);
   app.use(securityHeaders);
   const limits = config.rateLimits || {};
   /* Every route has a ceiling per client; sign-in, signup, admin and the
@@ -159,6 +163,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   };
 
   app.get('/healthz', (_req, res) => res.json({ ok: true, store: store.kind, providers: providers.list() }));
+  ops.mount(app, { admin });
   app.get('/api/plans', (_req, res) => res.json({ ...publicCatalogue(), paymentProviders: providers.list() }));
   app.get('/api/plans/:id/quote', (req, res) => res.json(quote(req.params.id, Number(req.query.months || 1), { vatRate: config.saasVatRate })));
   app.get('/api/industries', (_req, res) => res.json(presets.listPresets()));
@@ -406,8 +411,8 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   });
   app.post('/api/admin/tenants/:id/suspend', admin, async (req, res) => res.json(adminView(await tenants.setSuspended(req.params.id, true, (req.body || {}).reason))));
   app.post('/api/admin/tenants/:id/resume', admin, async (req, res) => res.json(adminView(await tenants.setSuspended(req.params.id, false))));
-  app.post('/api/admin/jobs/reminders', admin, async (_req, res) => res.json({ sent: await notifier.runReminders() }));
-  app.post('/api/admin/jobs/enforce-expiry', admin, async (_req, res) => res.json({ suspended: await billing.enforceExpiry() }));
+  app.post('/api/admin/jobs/reminders', admin, async (_req, res) => res.json({ sent: await ops.trackJob('reminders', () => notifier.runReminders()) }));
+  app.post('/api/admin/jobs/enforce-expiry', admin, async (_req, res) => res.json({ suspended: await ops.trackJob('expiry', () => billing.enforceExpiry()) }));
 
   app.get('/vendor/qrcode.js', (_req, res) => res.type('js').sendFile(require.resolve('qrcode-generator/qrcode.js')));
   app.use(express.static(path.join(__dirname, '..', 'public'), { extensions: ['html'] }));
@@ -425,7 +430,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
     res.status(status).json({ error: code, message, ...(details ? { details } : {}) });
   });
 
-  return { app, tenants, billing, counter, notifier, einvoices };
+  return { app, tenants, billing, counter, notifier, einvoices, ops };
 }
 
 module.exports = { createApp, MESSAGES };

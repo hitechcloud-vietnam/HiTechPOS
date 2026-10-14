@@ -39,20 +39,26 @@ async function main() {
     ? createOnboarding({ shardUrl: config.shardUrl, shopHeader: config.shardShopHeader, baseDomain: config.shopBaseDomains[0], branchPatcher: tenantClient && createMongoBranchPatcher({ client: tenantClient }) })
     : null;
   const providers = providersFromConfig(config);
-  const { app, billing, einvoices, notifier } = createApp({ store, config, providers, installer, onboarding });
+  /* /readyz pings and /metrics counts read the control DB through a small
+     client of their own; the driver connects on first use. */
+  const opsClient = config.store !== 'memory' ? new (require('mongodb').MongoClient)(config.mongoUri, { maxPoolSize: 2, serverSelectionTimeoutMS: 5000 }) : null;
+  const { app, billing, einvoices, notifier, ops } = createApp({ store, config, providers, installer, onboarding, ops: { controlDb: opsClient && opsClient.db(config.controlDb) } });
 
   const server = app.listen(config.port, config.host, () => {
     console.log(`[control-plane] http://${config.host}:${config.port} store=${store.kind} providers=${providers.list().join(',') || 'none'}`);
   });
-  const expiry = setInterval(() => billing.enforceExpiry().then((s) => s.length && console.log('[control-plane] suspended', s)).catch((e) => console.error('[control-plane] expiry job', e)), 3600000);
+  ops.declareJob('expiry', 3600000);
+  ops.declareJob('reminders', 3600000);
+  const expiry = setInterval(() => ops.trackJob('expiry', () => billing.enforceExpiry()).then((s) => s.length && console.log('[control-plane] suspended', s)).catch((e) => console.error('[control-plane] expiry job', e)), 3600000);
   expiry.unref();
   /* Trial reminders: hourly is enough, each message is sent once per key. */
-  const reminders = setInterval(() => notifier.runReminders().then((r) => r.length && console.log('[control-plane] reminders', JSON.stringify(r))).catch((e) => console.error('[control-plane] reminders job', e)), 3600000);
+  const reminders = setInterval(() => ops.trackJob('reminders', () => notifier.runReminders()).then((r) => r.length && console.log('[control-plane] reminders', JSON.stringify(r))).catch((e) => console.error('[control-plane] reminders job', e)), 3600000);
   reminders.unref();
   let einvoiceTimer = null;
   if (einvoiceWorkerOn) {
     const worker = createEInvoiceWorker({ store, einvoices, tenantDb: (tenant) => tenantClient.db(tenant.tenantDb) });
-    const tick = () => worker.runOnce()
+    ops.declareJob('einvoice_worker', einvoiceInterval);
+    const tick = () => ops.trackJob('einvoice_worker', () => worker.runOnce())
       .then((runs) => {
         for (const r of runs) if (r.error || r.issued || r.failed || r.blocked) console.log('[control-plane] einvoice', JSON.stringify({ shop: r.subdomain, issued: r.issued, failed: r.failed, blocked: r.blocked, stopped: r.stopped, error: r.error }));
       })
@@ -62,7 +68,8 @@ async function main() {
   }
   const stop = () => {
     if (einvoiceTimer) clearInterval(einvoiceTimer);
-    server.close(() => Promise.all([store.close(), tenantClient && tenantClient.close()]).finally(() => process.exit(0)));
+    ops.close();
+    server.close(() => Promise.all([store.close(), tenantClient && tenantClient.close(), opsClient && opsClient.close()]).finally(() => process.exit(0)));
   };
   process.on('SIGTERM', stop);
   process.on('SIGINT', stop);

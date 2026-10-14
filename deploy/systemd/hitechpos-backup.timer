@@ -1,0 +1,12 @@
+# 02:15 Vietnam time every night; a run missed while the machine was off
+# starts at boot (Persistent). backup.sh holds a lock, so runs never overlap.
+[Unit]
+Description=Nightly HiTechPOS backup
+
+[Timer]
+OnCalendar=*-*-* 02:15:00 Asia/Ho_Chi_Minh
+RandomizedDelaySec=10m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

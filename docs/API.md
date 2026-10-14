@@ -91,3 +91,36 @@ curl -s -X POST https://app.hitechpos.vn/pos/v1/payments \
   -H "authorization: Bearer $KEY" -H 'content-type: application/json' \
   -d '{"saleRef":"HD-000123","amount":85000}'
 ```
+
+## Vận hành – `/readyz`, `/metrics`, `/api/admin/ops`
+
+- `GET /readyz` (không cần xác thực): `200` khi control DB trả lời ping (và shard, nếu cấu hình `SHARD_URL`), ngược lại `503`. Mỗi bước kiểm tra tối đa `READYZ_TIMEOUT_MS`. Lỗi chỉ là mã cố định (`timeout`, `unreachable`, `http_<mã>`).
+
+  ```json
+  { "ok": true, "checks": { "controlDb": { "ok": true, "ms": 3 }, "shard": { "ok": true, "status": 404, "ms": 4 } } }
+  ```
+
+- `GET /metrics`: định dạng Prometheus, header `Authorization: Bearer <METRICS_TOKEN>` hoặc `X-Admin-Key`. Danh sách chỉ số: [DEPLOYMENT.md](DEPLOYMENT.md#giám-sát).
+- `GET /api/admin/ops` (`X-Admin-Key`): tóm tắt cho trang quản trị.
+
+  ```json
+  {
+    "generatedAt": "2026-10-14T10:01:00.553Z",
+    "ready": { "ok": true, "checks": { "controlDb": { "ok": true, "ms": 3 } } },
+    "process": { "uptimeSeconds": 86400, "startedAt": "…", "node": "v22.22.0",
+                 "memory": { "rss": 88342528, "heapUsed": 24717168, "heapTotal": 35618816, "external": 2193442 },
+                 "eventLoopLag": { "meanMs": 0.4, "maxMs": 12.1, "p50Ms": 0.1, "p90Ms": 0.6, "p99Ms": 3.2 } },
+    "http": { "requests": 1520, "errors5xx": 0,
+              "topRoutes": [{ "method": "POST", "route": "/pos/v1/payments", "count": 210, "errors5xx": 0, "avgMs": 41.2 }] },
+    "stats": { "ok": true, "generatedAt": "…" },
+    "tenants": { "total": 42, "suspended": 3, "byStatus": { "active": 40, "install_failed": 2 } },
+    "payments": { "total": 380, "byStatus": { "paid": 350, "pending": 20, "review": 1, "expired": 9 },
+                  "byProvider": { "payos": { "paid": 120 }, "vietqr": { "paid": 230, "pending": 20 } } },
+    "einvoices": { "byState": { "done": 900, "unknown": 1 } },
+    "jobs": { "expiry": { "intervalMs": 3600000, "running": false, "runs": 24, "failures": 0,
+                          "lastSuccessAt": "…", "lastFailureAt": null, "lastDurationMs": 35, "lastError": null },
+              "reminders": { "…": "…" }, "einvoice_worker": { "…": "…" } }
+  }
+  ```
+
+  `http` tính từ khi tiến trình khởi động, theo mẫu route (không chứa URL thật). `stats.ok = false` nghĩa là không đọc được control DB và số liệu là bản gần nhất. `jobs.*.lastSuccessAt = null`: chưa chạy kể từ khi khởi động (`expiry`, `reminders` chạy mỗi giờ; `intervalMs = null` là job không chạy trong tiến trình này).
