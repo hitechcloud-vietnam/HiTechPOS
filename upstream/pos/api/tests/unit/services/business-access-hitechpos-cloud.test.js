@@ -22,7 +22,10 @@ const {
 } = require('../../../src/services/business-access');
 
 const CONTROL_PLANE = path.join(__dirname, '../../../../../../apps/control-plane/src');
-const present = fs.existsSync(path.join(CONTROL_PLANE, 'business-handoff.js'));
+/* Runs only where the control plane and its dependencies are installed
+   (root `npm ci`); the Posnic-only CI job has neither. */
+const resolvable = (m) => { try { require.resolve(m, { paths: [CONTROL_PLANE] }); return true; } catch { return false; } };
+const present = fs.existsSync(path.join(CONTROL_PLANE, 'business-handoff.js')) && resolvable('mongodb') && resolvable('@hitechpos/payment-core');
 const maybe = present ? describe : describe.skip;
 
 maybe('HiTechPOS Cloud hand-over row', () => {
