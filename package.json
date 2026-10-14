@@ -1,0 +1,12 @@
+{
+  "name": "@posnic/extension-dojo",
+  "version": "0.1.0-dev.1",
+  "private": true,
+  "description": "Free, open-source Dojo payment provider for Posnic (development)",
+  "author": "Sridhar Bala",
+  "license": "AGPL-3.0-only",
+  "main": "src/services/dojo-client.js",
+  "engines": { "node": ">=24 <25" },
+  "scripts": { "test": "node --test tests/*.test.cjs", "check:attribution": "node scripts/check-ai-attribution.js --all --commits" },
+  "repository": { "type": "git", "url": "https://github.com/Posnic/posnic-extension-dojo.git" }
+}
