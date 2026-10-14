@@ -1,0 +1,36 @@
+name: Release
+
+# Pushing a tag vX.Y.Z on main publishes a GitHub release whose notes are
+# that version's section of CHANGELOG.md, with a source archive.
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Release notes from CHANGELOG.md
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#v}"
+          awk -v v="$version" '
+            /^## \[/ { on = index($0, "[" v "]") > 0; next }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then echo "CHANGELOG.md has no section for $version" >&2; exit 1; fi
+      - name: Source archive
+        env:
+          TAG: ${{ github.ref_name }}
+        run: git archive --format=tar.gz --prefix="hitechpos-${TAG}/" -o "hitechpos-${TAG}.tar.gz" "$TAG"
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" "hitechpos-${TAG}.tar.gz" --title "HiTechPOS ${TAG}" --notes-file notes.md --verify-tag

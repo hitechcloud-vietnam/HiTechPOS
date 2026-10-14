@@ -1,6 +1,6 @@
 {
   "name": "hitechpos",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "HiTechPOS - nền tảng POS SaaS đa ngành cho thị trường Việt Nam, xây dựng trên Posnic (AGPL-3.0)",
   "license": "AGPL-3.0-only",
