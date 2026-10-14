@@ -2360,7 +2360,7 @@ PosnicPro.sales = {
         if (localStorage.getItem("payment_gateway") === 'true') {
             let paymentMethod = '<div class="col-lg-4 col-md-2 col-xs-12">' +
                 '<label class="btn btn-block btn-payment-mode Qrpay_active payment_detail change_active save_enable qr_active qr_btn ' + active_qrpay_mode + ' ">' +
-                '<input type="radio" class="payment_mode" name="payment_mode" id="Qrpay" value="Qrpay" style="display: none;"/><lang class="lang_razorpay"> Razorpay </lang>' +
+                '<input type="radio" class="payment_mode" name="payment_mode" id="Qrpay" value="Qrpay" style="display: none;"/><lang class="lang_qr_transfer"> QR transfer </lang>' +
                 '</label>' +
                 '</div>';
             $('#payment_id').append(paymentMethod);
@@ -2859,7 +2859,7 @@ PosnicPro.sales = {
         if (PosnicPro.sales.paymentMethodEnabled('Cash')) addPaymentBlock('Cash', 'Cash', normalizeKey(activePaymentMethod) === normalizeKey('Cash'));
         // --- QR / Razorpay ---
         if (localStorage.getItem("payment_gateway") === 'true') {
-            addPaymentBlock('Qrpay', PosnicPro.i18n.t('lang_razorpay', 'Razorpay'), normalizeKey(activePaymentMethod) === normalizeKey('Qrpay') || normalizeKey(activePaymentMethod) === normalizeKey('Razorpay'));
+            addPaymentBlock('Qrpay', PosnicPro.i18n.t('lang_qr_transfer', 'QR transfer'), normalizeKey(activePaymentMethod) === normalizeKey('Qrpay') || normalizeKey(activePaymentMethod) === normalizeKey('Razorpay'));
         }
 
         // --- Other Configured Payment Modes ---
@@ -12852,15 +12852,17 @@ function updatePaymentStatusLabel() {
     const isPaid = $('#unpaid_payment_toggle').is(':checked');
     const customerPartialBalance = $('#sales_new_customer_partial_balance').val();
     
-    let statusText = 'Unpaid';
+    /* Translated for display (HiTechPOS); the state itself is the toggle. */
+    var t = function (key, en) { return String(PosnicPro.i18n.t(key, en)).replace(/[:：]\s*$/, ''); };
+    let statusText = t('lang_unpaid', 'Unpaid');
     let statusClass = 'text-warning';
     
     if (isPaid) {
         if (customerPartialBalance === 'Partial') {
-            statusText = 'Partially Paid';
+            statusText = t('lang_partially_paid', 'Partially Paid');
             statusClass = 'text-info';
         } else {
-            statusText = 'Paid';
+            statusText = t('lang_paid', 'Paid');
             statusClass = 'text-success';
         }
     }

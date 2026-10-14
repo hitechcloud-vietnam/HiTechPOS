@@ -124,16 +124,18 @@
         },
 
         /* What the shop reads out, shortest useful form first. */
+        /* Product name from the brand (HiTechPOS sets it in the page). */
         headline: function (v) {
-            if (v.app) { return 'Posnic ' + v.app; }
-            if (v.server) { return 'Posnic ' + v.server; }
-            return 'Posnic';
+            var name = (typeof window !== 'undefined' && window.POSNIC_BRAND_NAME) || 'HiTechPOS';
+            if (v.app) { return name + ' ' + v.app; }
+            if (v.server) { return name + ' ' + v.server; }
+            return name;
         },
 
         /* What lands in the clipboard: one line, every number, labelled. */
         line: function (v) {
             var bits = [];
-            bits.push('Posnic ' + (v.app || v.server || '?'));
+            bits.push(((typeof window !== 'undefined' && window.POSNIC_BRAND_NAME) || 'HiTechPOS') + ' ' + (v.app || v.server || '?'));
             bits.push(v.app ? 'desktop' : 'browser');
             if (v.page) { bits.push('page ' + v.page); }
             if (v.server) { bits.push('server ' + v.server); }

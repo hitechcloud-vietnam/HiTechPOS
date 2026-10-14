@@ -3255,7 +3255,7 @@
   "lang_rate_differs_from_the_hsn_reference": "Tỷ lệ khác với tham HSN chiếu",
   "lang_rates_apply_to_every_sale_automatically": "Thuế suất tự động áp dụng cho mọi đơn bán",
   "lang_rates_shown_are_indicative_confirm_the_cur": "Thuế suất hiển thị chỉ mang tính tham khảo - hãy xác nhận mức GST hiện hành.",
-  "lang_razorpay": "QR chuyển khoản",
+  "lang_razorpay": "Razorpay",
   "lang_razorpay_needs_key": "Thêm id Razorpay khóa và bí mật của bạn trong Cài đặt cốt lõi, Cổng thanh toán và điều này có thể được bật.",
   "lang_rc": "RC",
   "lang_rd_a4": "A4",
@@ -4750,5 +4750,6 @@
   "lang_about_hitechpos": "Giới thiệu HiTechPOS",
   "lang_hitechpos_company": "HiTechPOS · Phố Tuệ Software Solutions JSC (HiTechCloud-VN)",
   "lang_already_have_a_hitechpos_account": "Đã có tài khoản HiTechPOS?",
-  "lang_another_hitechpos_account": "Dùng tài khoản HiTechPOS khác?"
+  "lang_another_hitechpos_account": "Dùng tài khoản HiTechPOS khác?",
+  "lang_qr_transfer": "QR chuyển khoản"
 }
