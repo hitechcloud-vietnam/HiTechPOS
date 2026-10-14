@@ -386,19 +386,55 @@ const RECEIPT_TITLES = Object.freeze({
 });
 const TITLE_STYLE = 'font-size: 14px !important;font-weight: 900;';
 
+/*
+ * Labels in the installer's receipt templates (branches.thermal_body_print
+ * and regular_body_print). Only a text node that is exactly one of these
+ * labels (ignoring &nbsp;, spaces and a trailing colon) is translated, so
+ * template variables, markup and anything the owner wrote stay untouched.
+ * India-only GST blocks are hidden by Posnic when GST is off and are left as
+ * they are.
+ */
+const RECEIPT_LABELS = Object.freeze({
+  'Receipt': 'Phiếu thanh toán', 'Product': 'Sản phẩm', 'Item': 'Mặt hàng', 'Qty.': 'SL', 'Qty': 'SL',
+  'Price': 'Đơn giá', 'Disc': 'CK', 'Tax': 'Thuế', 'Total': 'Thành tiền', 'Hsn': 'Mã',
+  'Payment': 'Thanh toán', 'Payments/Credits': 'Đã thanh toán', 'Balance Due': 'Còn lại', 'Payment Status': 'Trạng thái',
+  'Total Qty': 'Tổng SL', 'Sub Total': 'Tạm tính', 'Subtotal': 'Tạm tính', 'Discount': 'Chiết khấu',
+  'Tax Details': 'Chi tiết thuế', 'TAX DETAILS': 'CHI TIẾT THUẾ', 'Tax Total': 'Tổng thuế', 'Grand Total': 'Tổng cộng',
+  'SALE NOTES': 'GHI CHÚ', 'Tel': 'ĐT', 'CELL NO': 'ĐT', 'EMAIL': 'Email', 'GSTIN': 'MST',
+});
+
+function translateReceiptTemplate(html) {
+  let changed = 0;
+  const out = String(html || '').replace(/>([^<>]*)</g, (whole, text) => {
+    const core = text.replace(/&nbsp;/g, ' ').trim();
+    const key = core.replace(/:$/, '').trim();
+    const vi = RECEIPT_LABELS[key];
+    if (!vi) return whole;
+    const i = text.indexOf(key);
+    if (i < 0) return whole;
+    changed++;
+    return '>' + text.slice(0, i) + vi + text.slice(i + key.length) + '<';
+  });
+  return { html: out, changed };
+}
+
 function createMongoBranchPatcher({ client }) {
   return {
     async patchReceiptTitles({ tenant, branchId }) {
       const { ObjectId } = require('mongodb');
       const branches = client.db(tenant.tenantDb).collection('branches');
       const filter = branchId && ObjectId.isValid(branchId) ? { _id: new ObjectId(branchId) } : {};
-      const branch = await branches.findOne(filter, { projection: { print_controls: 1 } });
+      const branch = await branches.findOne(filter, { projection: { print_controls: 1, thermal_body_print: 1, regular_body_print: 1 } });
       if (!branch) throw new Error('branch not found');
       const current = branch.print_controls || {};
       const set = {};
       for (const [key, [english, vietnamese]] of Object.entries(RECEIPT_TITLES)) {
         const text = String(current[key] || '').replace(/<[^>]*>/g, '').trim();
         if (text === '' || text === english) set[`print_controls.${key}`] = `<span style="${TITLE_STYLE}">${vietnamese}</span>`;
+      }
+      for (const field of ['thermal_body_print', 'regular_body_print']) {
+        const { html, changed } = translateReceiptTemplate(branch[field]);
+        if (changed) set[field] = html;
       }
       if (!Object.keys(set).length) return { written: 0 };
       set.updated_date = new Date();
@@ -408,4 +444,4 @@ function createMongoBranchPatcher({ client }) {
   };
 }
 
-module.exports = { createOnboarding, createMongoBranchPatcher, taxNameFor, internalBarcode, pickCategory, KCT_TAX_NAME, TENDER_NAMES, RECEIPT_TITLES };
+module.exports = { createOnboarding, createMongoBranchPatcher, taxNameFor, internalBarcode, pickCategory, translateReceiptTemplate, KCT_TAX_NAME, TENDER_NAMES, RECEIPT_TITLES, RECEIPT_LABELS };

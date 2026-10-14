@@ -14,8 +14,9 @@
 - [ ] Đối chiếu hợp đồng Pay2S (trường ký, `resultCode`, phản hồi IPN, webhook biến động số dư) với tài liệu gốc/tài khoản thật; chạy sandbox payOS/Pay2S
 - [ ] Triển khai MongoDB replica set, shard, control plane, TLS wildcard `*.hitechpos.vn`, sao lưu
 - [ ] Bản dịch `upstream/pos/languages/vi.json`: rà soát thuật ngữ bán lẻ VN; mặc định ngôn ngữ vi, tiền tệ VND, múi giờ Asia/Ho_Chi_Minh
-- [ ] Mẫu hoá đơn K80/K58 tiếng Việt (số tiền bằng chữ, MST, VAT theo nhóm thuế suất) – tiêu đề và chân đã Việt hoá, thân mẫu HTML còn nhãn tiếng Anh
-- [ ] Nhãn hiển thị “Card” → “Thẻ” trên màn hình bán hàng (tên phương thức là khoá nội bộ của Posnic, không đổi được trong dữ liệu)
+- [x] Nhãn mẫu hoá đơn K80/A4 tiếng Việt (tiêu đề, chân, nhãn cột và tổng)
+- [ ] Số tiền bằng chữ và nhóm thuế suất VN trên mẫu in
+- [x] Nhãn hiển thị “Cash”/“Card” → “Tiền mặt”/“Thẻ” trên màn hình bán hàng (giữ khoá nội bộ)
 - [ ] Trang quản trị nội bộ (danh sách tenant, khoá/mở, giao dịch cần review)
 - [ ] Email/Zalo OA thông báo dùng thử sắp hết, gia hạn thành công
 
