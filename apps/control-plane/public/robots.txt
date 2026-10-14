@@ -1,0 +1,20 @@
+# HiTechPOS control plane (app.hitechpos.vn). Shops live on their own
+# hostnames (<shop>.hitechpos.vn) and are not covered by this file.
+User-agent: *
+Disallow: /account
+Disallow: /admin
+Disallow: /reset
+Disallow: /api/
+Disallow: /pos/
+Disallow: /pay/
+Disallow: /billing/
+Disallow: /webhooks/
+Disallow: /internal/
+Disallow: /healthz
+Disallow: /readyz
+Disallow: /metrics
+Disallow: /so-sach
+Disallow: /business-signin
+Allow: /
+
+Sitemap: https://app.hitechpos.vn/sitemap.xml
