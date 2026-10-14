@@ -14,6 +14,7 @@
     "test": "node --test"
   },
   "dependencies": {
+    "@hitechpos/einvoice-vn": "0.1.0",
     "@hitechpos/industry-presets": "0.1.0",
     "@hitechpos/payment-core": "0.1.0",
     "@hitechpos/payment-pay2s": "0.1.0",

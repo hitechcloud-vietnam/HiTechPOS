@@ -9,6 +9,7 @@ const { publicCatalogue, quote } = require('./plans');
 const { createTenantService } = require('./tenants');
 const { createBillingService } = require('./billing');
 const { createCounterService } = require('./counter');
+const { createEInvoiceService } = require('./einvoices');
 const { hashPassword, verifyPassword } = require('./passwords');
 const { signToken, verifyToken } = require('./tokens');
 
@@ -32,6 +33,15 @@ const MESSAGES = {
   billing_cycle_invalid: 'Chu kỳ thanh toán không hợp lệ.',
   tenant_install_failed: 'Khởi tạo cửa hàng thất bại, bộ phận kỹ thuật đã được thông báo.',
   bank_invalid: 'Ngân hàng không hợp lệ.',
+  einvoice_provider_invalid: 'Nhà cung cấp hoá đơn điện tử không hợp lệ.',
+  einvoice_connection_incomplete: 'Thông tin kết nối hoá đơn điện tử chưa đầy đủ.',
+  einvoice_seller_incomplete: 'Cần đủ tên và địa chỉ đơn vị bán.',
+  einvoice_not_configured: 'Cửa hàng chưa cấu hình hoá đơn điện tử.',
+  einvoice_not_found: 'Chưa có hoá đơn điện tử cho đơn hàng này.',
+  einvoice_issue_in_progress: 'Hoá đơn của đơn hàng này đang được phát hành.',
+  einvoice_outcome_unknown: 'Lần phát hành trước chưa rõ kết quả, cần đối soát trước khi phát hành lại.',
+  einvoice_credentials_rejected: 'Nhà cung cấp hoá đơn từ chối thông tin đăng nhập.',
+  einvoice_not_supported: 'Nhà cung cấp chưa hỗ trợ thao tác này.',
   bank_feed_token_weak: 'Mã bảo mật webhook ngân hàng cần ít nhất 16 ký tự.',
   bank_account_invalid: 'Số tài khoản không hợp lệ.',
   payment_method_not_configured: 'Phương thức thanh toán này chưa được cấu hình cho cửa hàng.',
@@ -49,8 +59,9 @@ function httpError(code, status) {
   return Object.assign(new Error(code), { code, status });
 }
 
-function createApp({ store, config, providers, installer, onboarding, now = () => new Date(), logger = console, counterOptions = {} }) {
+function createApp({ store, config, providers, installer, onboarding, now = () => new Date(), logger = console, counterOptions = {}, einvoiceOptions = {} }) {
   const tenants = createTenantService({ store, config, installer, onboarding, now });
+  const einvoices = createEInvoiceService({ store, config, now, providerOptions: einvoiceOptions, logger });
   const counter = createCounterService({ store, config, now, providerOptions: counterOptions, shopBridge: store.shopBridge || null, logger });
   const billing = createBillingService({ store, providers, config, now });
   const app = express();
@@ -205,6 +216,22 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   app.post('/pos/v1/payments/:orderCode/confirm', pos, async (req, res) => res.json(await counter.confirmManually(req.tenant, req.params.orderCode, req.body || {})));
   app.post('/pos/v1/payments/:orderCode/cancel', pos, async (req, res) => res.json(await counter.cancel(req.tenant, req.params.orderCode)));
 
+  /* ---- e-invoices (hoá đơn điện tử) ---- */
+  app.get('/api/shop/einvoice-settings', auth, async (req, res) => res.json(await einvoices.getSettings(req.account.tenantId)));
+  app.put('/api/shop/einvoice-settings', auth, async (req, res) => res.json(await einvoices.updateSettings(req.account.tenantId, req.body && req.body.provider ? req.body : null)));
+  app.get('/api/shop/einvoices', auth, async (req, res) => res.json(await einvoices.list(req.account.tenantId)));
+  const ownerTenant = async (req) => store.tenants.findById(req.account.tenantId);
+  app.post('/api/shop/einvoices/:refId/reconcile', auth, async (req, res) => res.json(await einvoices.reconcile(await ownerTenant(req), req.params.refId)));
+  const sendPdf = async (tenant, refId, res) => {
+    const { pdf, fileName } = await einvoices.pdf(tenant, refId);
+    res.type('application/pdf').set('content-disposition', `inline; filename="${String(fileName || refId).replace(/[^A-Za-z0-9_.-]/g, '_')}"`).send(pdf);
+  };
+  app.get('/api/shop/einvoices/:refId/pdf', auth, async (req, res) => sendPdf(await ownerTenant(req), req.params.refId, res));
+  app.post('/pos/v1/einvoices', pos, async (req, res) => res.status(201).json(await einvoices.issue(req.tenant, req.body || {})));
+  app.get('/pos/v1/einvoices/:refId', pos, async (req, res) => res.json(await einvoices.get(req.tenant, req.params.refId)));
+  app.post('/pos/v1/einvoices/:refId/reconcile', pos, async (req, res) => res.json(await einvoices.reconcile(req.tenant, req.params.refId)));
+  app.get('/pos/v1/einvoices/:refId/pdf', pos, async (req, res) => sendPdf(req.tenant, req.params.refId, res));
+
   /* ---- customer-facing display ---- */
   app.get('/api/public/pay/:tenantId/:orderCode', async (req, res) => {
     res.set('cache-control', 'no-store');
@@ -233,7 +260,12 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
     const status = err.status || (err.type === 'entity.parse.failed' ? 400 : 500);
     if (status >= 500) logger.error('[control-plane]', err);
     const code = status >= 500 && !err.code ? 'internal_error' : err.code || 'error';
-    res.status(status).json({ error: code, message: MESSAGES[code] || (status >= 500 ? 'Lỗi hệ thống, vui lòng thử lại.' : code) });
+    const own = err.message && err.message !== code ? err.message : null;
+    const message = MESSAGES[code] || (status >= 500 ? 'Lỗi hệ thống, vui lòng thử lại.' : own || code);
+    /* Validation details (e.g. einvoice_invalid field list) help the POS show
+       what to fix; never sent for server errors. */
+    const details = status < 500 && err.details && err.details.errors ? { errors: err.details.errors } : undefined;
+    res.status(status).json({ error: code, message, ...(details ? { details } : {}) });
   });
 
   return { app, tenants, billing, counter };

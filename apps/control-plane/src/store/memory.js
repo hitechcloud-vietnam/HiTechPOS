@@ -55,6 +55,18 @@ function createMemoryStore() {
       async findById(id) { return clone(accounts.get(String(id)) || null); },
     },
     payments: createPaymentStore(),
+    /* E-invoice idempotency guard rows, keyed "<tenantId>:<refId>". */
+    einvoices: (() => {
+      const rows = new Map();
+      return {
+        async get(key) { return clone(rows.get(key) || null); },
+        async set(key, value) { rows.set(key, clone(value)); },
+        async delete(key) { rows.delete(key); },
+        async list(query = {}) {
+          return [...rows.values()].filter((r) => matches(r, query)).sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1)).map(clone);
+        },
+      };
+    })(),
     async close() {},
   };
 }

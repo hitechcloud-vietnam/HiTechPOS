@@ -16,6 +16,7 @@ async function createMongoStore({ uri, dbName }) {
   const tenants = db.collection('tenants');
   const accounts = db.collection('accounts');
   const payments = db.collection('payments');
+  const einvoices = db.collection('einvoices');
   await Promise.all([
     tenants.createIndex({ subdomain: 1 }, { unique: true }),
     tenants.createIndex({ hosts: 1 }),
@@ -23,6 +24,7 @@ async function createMongoStore({ uri, dbName }) {
     accounts.createIndex({ email: 1 }, { unique: true }),
     payments.createIndex({ orderCode: 1 }, { unique: true }),
     payments.createIndex({ reference: 1, createdAt: -1 }),
+    einvoices.createIndex({ tenantId: 1, updatedAt: -1 }),
     payments.createIndex({ reference: 1, 'metadata.saleRef': 1 }),
   ]);
 
@@ -71,6 +73,31 @@ async function createMongoStore({ uri, dbName }) {
       update: async (orderCode, patch, expectedStatus) =>
         payments.findOneAndUpdate({ orderCode: Number(orderCode), status: expectedStatus }, { $set: patch }, { returnDocument: 'after', projection: { _id: 0 } }),
       list: async (query = {}) => payments.find(query, { projection: { _id: 0 } }).sort({ createdAt: -1 }).limit(200).toArray(),
+    },
+    /* E-invoice idempotency guard rows; _id is "<tenantId>:<refId>". The
+       guard's 'pending' write must not overwrite another process's row, so
+       the first pending insert relies on the unique _id. */
+    einvoices: {
+      get: async (key) => einvoices.findOne({ _id: key }, { projection: { _id: 0 } }),
+      async set(key, value) {
+        if (value.state === 'pending') {
+          try {
+            await einvoices.insertOne({ _id: key, ...value });
+            return;
+          } catch (e) {
+            if (e && e.code === 11000) {
+              const err = new Error('einvoice_issue_in_progress');
+              err.code = 'einvoice_issue_in_progress';
+              err.status = 409;
+              throw err;
+            }
+            throw e;
+          }
+        }
+        await einvoices.replaceOne({ _id: key }, { ...value }, { upsert: true });
+      },
+      delete: async (key) => { await einvoices.deleteOne({ _id: key }); },
+      list: async (query = {}) => einvoices.find(query, { projection: { _id: 0 } }).sort({ updatedAt: -1 }).limit(200).toArray(),
     },
     /*
      * The one place the control plane writes into a shop's own database:
