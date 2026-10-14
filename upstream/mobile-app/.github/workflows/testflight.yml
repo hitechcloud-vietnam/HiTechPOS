@@ -1,0 +1,55 @@
+name: iOS TestFlight
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: false
+jobs:
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - name: Verify native PIN derivation
+        run: |
+          swiftc modules/posnic-security/apple/PosnicPinKey.swift tests/native/PinKeyTest.swift -o "$RUNNER_TEMP/pin-key-test"
+          "$RUNNER_TEMP/pin-key-test"
+      - name: Generate iOS project
+        run: |
+          node -e 'const fs=require("fs"); const p="app.json"; const j=JSON.parse(fs.readFileSync(p)); j.expo.ios.buildNumber=String(100000+Number(process.env.GITHUB_RUN_NUMBER)*100+Number(process.env.GITHUB_RUN_ATTEMPT)); fs.writeFileSync(p,JSON.stringify(j,null,2));'
+          npx expo prebuild --platform ios --no-install
+          cd ios && pod install
+      - name: Sign and archive
+        env:
+          IOS_CERT_P12: ${{ secrets.IOS_CERT_P12 }}
+          IOS_CERT_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
+          IOS_APPSTORE_PROVISIONING_PROFILE: ${{ secrets.IOS_APPSTORE_PROVISIONING_PROFILE }}
+        run: bash scripts/build-ios-testflight.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: posnic-pos-ios
+          path: artifacts/ios-release/*.ipa
+          if-no-files-found: error
+      - name: Upload to TestFlight
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER: ${{ secrets.ASC_API_ISSUER }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          test -n "$ASC_API_KEY_ID" && test -n "$ASC_API_ISSUER" && test -n "$ASC_API_KEY_P8"
+          KEY_DIR="$HOME/.appstoreconnect/private_keys"
+          mkdir -p "$KEY_DIR"
+          KEY_FILE="$KEY_DIR/AuthKey_${ASC_API_KEY_ID}.p8"
+          trap 'rm -f "$KEY_FILE"' EXIT
+          printf '%s' "$ASC_API_KEY_P8" > "$KEY_FILE"
+          chmod 600 "$KEY_FILE"
+          xcrun altool --upload-app --type ios --file artifacts/ios-release/PosnicPOS.ipa --apiKey "$ASC_API_KEY_ID" --apiIssuer "$ASC_API_ISSUER"
