@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thanh toán – HiTechPOS</title>
+<style>
+  :root { --brand: #0b6bcb; --ink: #1d2733; --muted: #5d6b7a; --ok: #12805c; --err: #c0392b; --bg: #f5f8fb; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--ink);
+         font: 18px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 16px; }
+  .card { background: #fff; border-radius: 16px; box-shadow: 0 6px 30px rgba(0,0,0,.08); padding: 28px; width: min(440px, 100%); text-align: center; }
+  .shop { color: var(--muted); font-size: .95rem; }
+  .amount { font-size: 2.4rem; font-weight: 800; margin: 6px 0 2px; }
+  #qr { margin: 16px auto; width: min(300px, 80vw); aspect-ratio: 1; }
+  #qr svg { width: 100%; height: 100%; }
+  .bank { font-size: .95rem; color: var(--muted); }
+  .bank b { color: var(--ink); }
+  .status { margin-top: 16px; font-weight: 700; padding: 10px; border-radius: 10px; background: #eef4fb; }
+  .paid { background: #e5f6ef; color: var(--ok); font-size: 1.4rem; }
+  .bad { background: #fbeaea; color: var(--err); }
+  a.btn { display: inline-block; margin-top: 12px; background: var(--brand); color: #fff; padding: 10px 18px; border-radius: 10px; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="shop" id="shop">&nbsp;</div>
+  <div class="amount" id="amount">…</div>
+  <div class="shop" id="desc"></div>
+  <div id="qr"></div>
+  <div class="bank" id="bank"></div>
+  <div id="link"></div>
+  <div class="status" id="status">Đang tải…</div>
+</div>
+<script src="/vendor/qrcode.js"></script>
+<script>
+const [, , tenantId, orderCode] = location.pathname.split('/');
+const $ = (id) => document.getElementById(id);
+const vnd = (n) => new Intl.NumberFormat('vi-VN').format(n) + ' ₫';
+const LABEL = { pending: 'Đang chờ thanh toán – quét mã bằng ứng dụng ngân hàng', paid: '✓ Đã thanh toán – cảm ơn quý khách!',
+  cancelled: 'Giao dịch đã huỷ', expired: 'Mã thanh toán đã hết hạn', failed: 'Thanh toán không thành công', review: 'Đã nhận tiền – đang đối soát' };
+let rendered = false;
+
+function renderQR(payload) {
+  const qr = qrcode(0, 'M');
+  qr.addData(payload);
+  qr.make();
+  $('qr').innerHTML = qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
+}
+
+async function tick() {
+  try {
+    const res = await fetch(`/api/public/pay/${encodeURIComponent(tenantId)}/${encodeURIComponent(orderCode)}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error((await res.json()).message || 'Không tìm thấy giao dịch');
+    const p = await res.json();
+    if (!rendered) {
+      $('shop').textContent = p.shop;
+      $('amount').textContent = vnd(p.amount);
+      $('desc').textContent = p.description ? `Nội dung: ${p.description}` : '';
+      if (p.qrPayload) renderQR(p.qrPayload);
+      if (p.bank) $('bank').innerHTML = `<b>${p.bank.bankName}</b> · ${p.bank.accountNumber}<br>${p.bank.accountName || ''}`;
+      if (!p.qrPayload && p.checkoutUrl) $('link').innerHTML = `<a class="btn" href="${p.checkoutUrl}">Mở trang thanh toán</a>`;
+      rendered = true;
+    }
+    $('status').textContent = LABEL[p.status] || p.status;
+    $('status').className = 'status' + (p.status === 'paid' ? ' paid' : ['cancelled', 'expired', 'failed'].includes(p.status) ? ' bad' : '');
+    if (p.status === 'paid') $('qr').style.opacity = .25;
+    if (p.status === 'pending' || p.status === 'review') setTimeout(tick, 2000);
+  } catch (e) {
+    $('status').textContent = e.message;
+    $('status').className = 'status bad';
+    setTimeout(tick, 5000);
+  }
+}
+tick();
+</script>
+</body>
+</html>

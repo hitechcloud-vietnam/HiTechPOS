@@ -18,8 +18,10 @@
     "@hitechpos/payment-core": "0.1.0",
     "@hitechpos/payment-pay2s": "0.1.0",
     "@hitechpos/payment-payos": "0.1.0",
+    "@hitechpos/vietqr": "0.1.0",
     "@hitechpos/vn-locale": "0.1.0",
     "express": "^5.3.0",
-    "mongodb": "^6.21.0"
+    "mongodb": "^6.21.0",
+    "qrcode-generator": "^1.4.4"
   }
 }

@@ -35,7 +35,7 @@
 <header>
   <h1>HiTechPOS</h1>
   <div>Phần mềm bán hàng trên nền tảng đám mây cho cửa hàng Việt Nam – tạp hóa, cà phê, nhà hàng, nhà thuốc, thời trang, spa…</div>
-  <div class="muted" style="color:#dbe9f7">Thanh toán VietQR · payOS · Pay2S · Dùng thử miễn phí</div>
+  <div class="muted" style="color:#dbe9f7">Thanh toán VietQR · payOS · Pay2S · Dùng thử miễn phí · <a href="/account" style="color:#fff">Đăng nhập</a></div>
 </header>
 <main>
   <h2>Bảng giá</h2>
@@ -64,6 +64,7 @@
     </form>
   </div>
 </main>
+<footer style="text-align:center;padding:16px;color:#5d6b7a;font-size:.85rem">HiTechPOS · Phần mềm nguồn mở AGPL-3.0, dựa trên Posnic · <a href="/source">Mã nguồn</a></footer>
 <script>
 const vnd = (n) => new Intl.NumberFormat('vi-VN').format(n) + ' ₫';
 const $ = (s) => document.querySelector(s);
@@ -122,7 +123,7 @@ $('#signup').addEventListener('submit', async (e) => {
   try { localStorage.setItem('hitechpos_token', json.token); } catch {}
   const url = json.tenant.urls[0];
   $('#msg').className = 'ok';
-  $('#msg').innerHTML = `Đã tạo cửa hàng! Truy cập <a href="${url}">${url}</a> và đăng nhập bằng email vừa đăng ký.`;
+  $('#msg').innerHTML = `Đã tạo cửa hàng! Bán hàng tại <a href="${url}">${url}</a> (đăng nhập bằng email vừa đăng ký). Quản lý gói cước và thanh toán tại <a href="/account">trang quản lý</a>.`;
 });
 
 init();

@@ -3,10 +3,11 @@
 const path = require('node:path');
 const express = require('express');
 const presets = require('@hitechpos/industry-presets');
-const { isValidVNPhone, normalizeVNPhone, isValidTaxCode } = require('@hitechpos/vn-locale');
+const { isValidVNPhone, normalizeVNPhone, isValidTaxCode, BANKS } = require('@hitechpos/vn-locale');
 const { publicCatalogue, quote } = require('./plans');
 const { createTenantService } = require('./tenants');
 const { createBillingService } = require('./billing');
+const { createCounterService } = require('./counter');
 const { hashPassword, verifyPassword } = require('./passwords');
 const { signToken, verifyToken } = require('./tokens');
 
@@ -29,14 +30,26 @@ const MESSAGES = {
   plan_not_purchasable: 'Gói này không thể thanh toán.',
   billing_cycle_invalid: 'Chu kỳ thanh toán không hợp lệ.',
   tenant_install_failed: 'Khởi tạo cửa hàng thất bại, bộ phận kỹ thuật đã được thông báo.',
+  bank_invalid: 'Ngân hàng không hợp lệ.',
+  bank_account_invalid: 'Số tài khoản không hợp lệ.',
+  payment_method_not_configured: 'Phương thức thanh toán này chưa được cấu hình cho cửa hàng.',
+  payment_method_invalid: 'Phương thức thanh toán không hợp lệ.',
+  payment_amount_invalid: 'Số tiền không hợp lệ.',
+  sale_ref_invalid: 'Mã hoá đơn không hợp lệ.',
+  sale_already_paid: 'Hoá đơn này đã được thanh toán.',
+  payment_not_found: 'Không tìm thấy giao dịch.',
+  manual_confirm_not_allowed: 'Chỉ xác nhận thủ công được với VietQR chuyển khoản trực tiếp.',
+  payos_configuration_invalid: 'Thông tin kết nối payOS chưa đầy đủ.',
+  pay2s_configuration_invalid: 'Thông tin kết nối Pay2S chưa đầy đủ.',
 };
 
 function httpError(code, status) {
   return Object.assign(new Error(code), { code, status });
 }
 
-function createApp({ store, config, providers, installer, now = () => new Date(), logger = console }) {
-  const tenants = createTenantService({ store, config, installer, now });
+function createApp({ store, config, providers, installer, onboarding, now = () => new Date(), logger = console, counterOptions = {} }) {
+  const tenants = createTenantService({ store, config, installer, onboarding, now });
+  const counter = createCounterService({ store, config, now, providerOptions: counterOptions });
   const billing = createBillingService({ store, providers, config, now });
   const app = express();
   app.disable('x-powered-by');
@@ -52,6 +65,18 @@ function createApp({ store, config, providers, installer, now = () => new Date()
       res.json({ success: true, ...result });
     } catch (e) {
       logger.warn(`[webhook:${req.params.provider}] rejected: ${e.code || e.message}`);
+      res.status(e.status && e.status < 500 ? e.status : 400).json({ success: false, code: e.code || 'invalid' });
+    }
+  });
+
+  /* A shop's own payOS/Pay2S account calls back here; verified with that
+     shop's keys, so one shop can never settle another shop's payment. */
+  app.post('/webhooks/shop/:tenantId/:method', express.raw({ type: '*/*', limit: '256kb' }), async (req, res) => {
+    try {
+      const result = await counter.handleCallback(req.params.tenantId, req.params.method, { body: req.body.toString('utf8'), headers: req.headers });
+      res.json({ success: true, ...result });
+    } catch (e) {
+      logger.warn(`[webhook:shop:${req.params.method}] rejected: ${e.code || e.message}`);
       res.status(e.status && e.status < 500 ? e.status : 400).json({ success: false, code: e.code || 'invalid' });
     }
   });
@@ -81,6 +106,9 @@ function createApp({ store, config, providers, installer, now = () => new Date()
   app.get('/api/plans', (_req, res) => res.json({ ...publicCatalogue(), paymentProviders: providers.list() }));
   app.get('/api/plans/:id/quote', (req, res) => res.json(quote(req.params.id, Number(req.query.months || 1), { vatRate: config.saasVatRate })));
   app.get('/api/industries', (_req, res) => res.json(presets.listPresets()));
+  app.get('/api/banks', (_req, res) => res.json(BANKS.map(({ bin, code, shortName, name }) => ({ bin, code, shortName, name }))));
+  /* AGPL-3.0 section 13: every user can reach the source of what is running. */
+  app.get('/source', (_req, res) => res.redirect(302, config.sourceUrl));
   app.get('/api/industries/:id', (req, res) => {
     if (!presets.hasPreset(req.params.id)) throw httpError('industry_not_found', 404);
     res.json(presets.getPreset(req.params.id));
@@ -125,7 +153,7 @@ function createApp({ store, config, providers, installer, now = () => new Date()
 
   app.get('/api/me', auth, async (req, res) => {
     const tenant = req.account.tenantId ? await store.tenants.findById(req.account.tenantId) : null;
-    const payments = tenant ? (await store.payments.list({ reference: String(tenant._id) })).map(({ events, metadata, ...p }) => ({ ...p, quote: metadata && metadata.quote })) : [];
+    const payments = tenant ? (await store.payments.list({ reference: String(tenant._id), purpose: 'subscription' })).map(({ events, metadata, ...p }) => ({ ...p, quote: metadata && metadata.quote })) : [];
     res.json({ tenant: view(tenant), payments });
   });
 
@@ -141,11 +169,45 @@ function createApp({ store, config, providers, installer, now = () => new Date()
     res.json({ orderCode: p.orderCode, status: p.status, amount: p.amount, provider: p.provider, checkoutUrl: p.checkoutUrl, paidAt: p.paidAt || null });
   });
 
+  /* ---- counter payments: owner settings ---- */
+  app.get('/api/shop/payment-settings', auth, async (req, res) => res.json(await counter.getSettings(req.account.tenantId)));
+  app.put('/api/shop/payment-settings', auth, async (req, res) => res.json(await counter.updateSettings(req.account.tenantId, req.body || {})));
+  app.get('/api/shop/api-keys', auth, async (req, res) => res.json(await counter.listApiKeys(req.account.tenantId)));
+  app.post('/api/shop/api-keys', auth, async (req, res) => res.status(201).json(await counter.createApiKey(req.account.tenantId, req.body || {})));
+  app.delete('/api/shop/api-keys/:id', auth, async (req, res) => {
+    await counter.revokeApiKey(req.account.tenantId, req.params.id);
+    res.status(204).end();
+  });
+  app.get('/api/shop/payments', auth, async (req, res) => {
+    const rows = await store.payments.list({ reference: String(req.account.tenantId), purpose: 'sale' });
+    res.json(rows.slice(0, 100).map(({ events, ...p }) => p));
+  });
+
+  /* ---- counter payments: POS devices (shop API key) ---- */
+  const pos = async (req, _res, next) => {
+    const tenant = await counter.authenticate(req.headers.authorization);
+    if (!tenant) return next(httpError('unauthorized', 401));
+    req.tenant = tenant;
+    next();
+  };
+  app.post('/pos/v1/payments', pos, async (req, res) => res.status(201).json(await counter.createPayment(req.tenant, req.body || {})));
+  app.get('/pos/v1/payments/:orderCode', pos, async (req, res) => res.json(await counter.getPayment(req.tenant, req.params.orderCode)));
+  app.post('/pos/v1/payments/:orderCode/confirm', pos, async (req, res) => res.json(await counter.confirmManually(req.tenant, req.params.orderCode, req.body || {})));
+  app.post('/pos/v1/payments/:orderCode/cancel', pos, async (req, res) => res.json(await counter.cancel(req.tenant, req.params.orderCode)));
+
+  /* ---- customer-facing display ---- */
+  app.get('/api/public/pay/:tenantId/:orderCode', async (req, res) => {
+    res.set('cache-control', 'no-store');
+    res.json(await counter.publicView(req.params.tenantId, req.params.orderCode));
+  });
+  app.get('/pay/:tenantId/:orderCode', (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'pay.html')));
+
   app.get('/api/admin/tenants', admin, async (_req, res) => res.json((await store.tenants.list()).map(view)));
   app.post('/api/admin/tenants/:id/suspend', admin, async (req, res) => res.json(view(await tenants.setSuspended(req.params.id, true, (req.body || {}).reason))));
   app.post('/api/admin/tenants/:id/resume', admin, async (req, res) => res.json(view(await tenants.setSuspended(req.params.id, false))));
   app.post('/api/admin/jobs/enforce-expiry', admin, async (_req, res) => res.json({ suspended: await billing.enforceExpiry() }));
 
+  app.get('/vendor/qrcode.js', (_req, res) => res.type('js').sendFile(require.resolve('qrcode-generator/qrcode.js')));
   app.use(express.static(path.join(__dirname, '..', 'public'), { extensions: ['html'] }));
 
   // eslint-disable-next-line no-unused-vars
@@ -156,7 +218,7 @@ function createApp({ store, config, providers, installer, now = () => new Date()
     res.status(status).json({ error: code, message: MESSAGES[code] || (status >= 500 ? 'Lỗi hệ thống, vui lòng thử lại.' : code) });
   });
 
-  return { app, tenants, billing };
+  return { app, tenants, billing, counter };
 }
 
 module.exports = { createApp, MESSAGES };

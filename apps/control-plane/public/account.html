@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quản lý cửa hàng – HiTechPOS</title>
+<style>
+  :root { --brand: #0b6bcb; --ink: #1d2733; --muted: #5d6b7a; --bg: #f5f8fb; --line: #dde5ee; --ok: #12805c; --err: #c0392b; --warn: #a76300; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  header { background: var(--brand); color: #fff; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  header a { color: #fff; }
+  main { max-width: 1000px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  h2 { margin: 0 0 12px; font-size: 1.15rem; }
+  .row { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); align-items: end; }
+  label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); }
+  input, select, button { font: inherit; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--line); color: var(--ink); }
+  button { background: var(--brand); color: #fff; border: 0; cursor: pointer; font-weight: 600; }
+  button.ghost { background: #fff; color: var(--brand); border: 1px solid var(--brand); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); }
+  .wrap { overflow-x: auto; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: .8rem; background: #eef4fb; }
+  .paid, .active { background: #e5f6ef; color: var(--ok); }
+  .pending, .trialing { background: #fff4e0; color: var(--warn); }
+  .cancelled, .expired, .failed, .review { background: #fbeaea; color: var(--err); }
+  .muted { color: var(--muted); font-size: .85rem; }
+  .msg { min-height: 1.2em; font-size: .9rem; }
+  .err { color: var(--err); } .ok { color: var(--ok); }
+  code { background: #f0f3f7; padding: 2px 6px; border-radius: 6px; word-break: break-all; }
+  #login { max-width: 420px; margin: 40px auto; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <strong>HiTechPOS · Quản lý cửa hàng</strong>
+  <span><span id="who"></span> <a href="#" id="logout" hidden>Đăng xuất</a></span>
+</header>
+
+<section class="card" id="login" hidden>
+  <h2>Đăng nhập</h2>
+  <form id="loginForm" class="row">
+    <label>Email <input name="email" type="email" required></label>
+    <label>Mật khẩu <input name="password" type="password" required></label>
+    <button>Đăng nhập</button>
+  </form>
+  <p class="msg" id="loginMsg"></p>
+  <p class="muted">Chưa có cửa hàng? <a href="/">Đăng ký dùng thử</a></p>
+</section>
+
+<main id="app" hidden>
+  <section class="card">
+    <h2>Cửa hàng</h2>
+    <div class="row">
+      <div><div class="muted">Tên</div><b id="shopName"></b></div>
+      <div><div class="muted">Địa chỉ bán hàng</div><span id="shopUrl"></span></div>
+      <div><div class="muted">Gói</div><b id="plan"></b> <span class="pill" id="subStatus"></span></div>
+      <div><div class="muted">Hiệu lực đến</div><b id="periodEnd"></b></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Gia hạn / nâng cấp gói</h2>
+    <form id="renewForm" class="row">
+      <label>Gói <select name="plan" id="planSel"></select></label>
+      <label>Thời hạn <select name="months" id="monthsSel"></select></label>
+      <label>Cổng thanh toán <select name="provider" id="providerSel"></select></label>
+      <button>Thanh toán</button>
+    </form>
+    <p class="msg" id="quote"></p>
+    <p class="msg" id="renewMsg"></p>
+  </section>
+
+  <section class="card">
+    <h2>Thanh toán tại quầy</h2>
+    <p class="muted">Tiền khách trả chuyển thẳng vào tài khoản của cửa hàng. HiTechPOS không giữ tiền.</p>
+    <form id="vietqrForm" class="row">
+      <label>Ngân hàng (VietQR) <input name="bank" list="banks" placeholder="VD: MB, Vietcombank, 970436"></label>
+      <label>Số tài khoản <input name="accountNumber"></label>
+      <label>Tên chủ tài khoản <input name="accountName"></label>
+      <button>Lưu VietQR</button>
+    </form>
+    <datalist id="banks"></datalist>
+    <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+    <form id="payosForm" class="row">
+      <label>payOS Client ID <input name="clientId" autocomplete="off"></label>
+      <label>API Key <input name="apiKey" type="password" autocomplete="new-password"></label>
+      <label>Checksum Key <input name="checksumKey" type="password" autocomplete="new-password"></label>
+      <button>Lưu payOS</button>
+    </form>
+    <p class="muted">Webhook payOS: <code id="payosHook"></code></p>
+    <form id="pay2sForm" class="row">
+      <label>Pay2S Partner Code <input name="partnerCode" autocomplete="off"></label>
+      <label>Access Key <input name="accessKey" autocomplete="off"></label>
+      <label>Secret Key <input name="secretKey" type="password" autocomplete="new-password"></label>
+      <label>Môi trường <select name="environment"><option value="production">Production</option><option value="sandbox">Sandbox</option></select></label>
+      <button>Lưu Pay2S</button>
+    </form>
+    <p class="muted">IPN Pay2S: <code id="pay2sHook"></code></p>
+    <p class="msg" id="settingsMsg"></p>
+    <p class="muted">Đang bật: <b id="methods">–</b></p>
+  </section>
+
+  <section class="card">
+    <h2>Khoá API cho máy bán hàng</h2>
+    <form id="keyForm" class="row">
+      <label>Tên thiết bị <input name="label" placeholder="Quầy 1"></label>
+      <button>Tạo khoá</button>
+    </form>
+    <p class="msg" id="newKey"></p>
+    <div class="wrap"><table><thead><tr><th>Thiết bị</th><th>Đuôi khoá</th><th>Ngày tạo</th><th>Trạng thái</th><th></th></tr></thead><tbody id="keys"></tbody></table></div>
+  </section>
+
+  <section class="card">
+    <h2>Giao dịch tại quầy gần đây</h2>
+    <div class="wrap"><table><thead><tr><th>Thời gian</th><th>Hoá đơn</th><th>Phương thức</th><th>Số tiền</th><th>Trạng thái</th></tr></thead><tbody id="sales"></tbody></table></div>
+  </section>
+
+  <section class="card">
+    <h2>Lịch sử thanh toán gói cước</h2>
+    <div class="wrap"><table><thead><tr><th>Thời gian</th><th>Gói</th><th>Số tiền</th><th>Cổng</th><th>Trạng thái</th></tr></thead><tbody id="subs"></tbody></table></div>
+  </section>
+</main>
+
+<footer style="text-align:center;padding:16px;color:#5d6b7a;font-size:.85rem">HiTechPOS · Phần mềm nguồn mở AGPL-3.0, dựa trên Posnic · <a href="/source">Mã nguồn</a></footer>
+<script>
+const $ = (s) => document.querySelector(s);
+const vnd = (n) => new Intl.NumberFormat('vi-VN').format(n) + ' ₫';
+const dt = (s) => s ? new Date(s).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : '–';
+const STATUS = { paid: 'Đã thanh toán', pending: 'Chờ thanh toán', cancelled: 'Đã huỷ', expired: 'Hết hạn', failed: 'Thất bại', review: 'Cần đối soát', active: 'Đang hoạt động', trialing: 'Dùng thử' };
+const pill = (s) => `<span class="pill ${s}">${STATUS[s] || s}</span>`;
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let token = null;
+try { token = localStorage.getItem('hitechpos_token'); } catch {}
+
+async function api(method, path, body) {
+  const res = await fetch(path, { method, headers: { 'content-type': 'application/json', ...(token ? { authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  if (res.status === 401 && path !== '/api/auth/login') { showLogin(); throw new Error('Phiên đăng nhập đã hết hạn'); }
+  const json = res.status === 204 ? null : await res.json().catch(() => null);
+  if (!res.ok) throw new Error((json && json.message) || 'Có lỗi xảy ra');
+  return json;
+}
+function say(el, text, ok) { el.className = 'msg ' + (ok ? 'ok' : 'err'); el.textContent = text; }
+function showLogin() { $('#login').hidden = false; $('#app').hidden = true; $('#logout').hidden = true; }
+
+$('#loginForm').onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    token = (await api('POST', '/api/auth/login', Object.fromEntries(new FormData(e.target)))).token;
+    try { localStorage.setItem('hitechpos_token', token); } catch {}
+    load();
+  } catch (err) { say($('#loginMsg'), err.message); }
+};
+$('#logout').onclick = (e) => { e.preventDefault(); token = null; try { localStorage.removeItem('hitechpos_token'); } catch {} showLogin(); };
+
+let catalogue;
+async function updateQuote() {
+  const plan = $('#planSel').value, months = $('#monthsSel').value;
+  if (!plan) return;
+  const q = await api('GET', `/api/plans/${plan}/quote?months=${months}`);
+  $('#quote').className = 'msg';
+  $('#quote').textContent = `Tạm tính ${vnd(q.subtotal)}${q.discount ? ` − giảm ${q.discountPercent}% (${vnd(q.discount)})` : ''}${q.vat ? ` + VAT ${vnd(q.vat)}` : ''} = ${vnd(q.total)}`;
+}
+
+$('#renewForm').onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const out = await api('POST', '/api/billing/checkout', Object.fromEntries(new FormData(e.target)));
+    say($('#renewMsg'), 'Đang chuyển sang trang thanh toán…', true);
+    location.href = out.checkoutUrl;
+  } catch (err) { say($('#renewMsg'), err.message); }
+};
+
+async function saveSettings(body, form) {
+  try {
+    const s = await api('PUT', '/api/shop/payment-settings', body);
+    say($('#settingsMsg'), 'Đã lưu cấu hình thanh toán.', true);
+    form.querySelectorAll('input[type=password]').forEach((i) => (i.value = ''));
+    renderSettings(s);
+  } catch (err) { say($('#settingsMsg'), err.message); }
+}
+$('#vietqrForm').onsubmit = (e) => { e.preventDefault(); saveSettings({ vietqr: Object.fromEntries(new FormData(e.target)) }, e.target); };
+$('#payosForm').onsubmit = (e) => { e.preventDefault(); saveSettings({ payos: Object.fromEntries(new FormData(e.target)) }, e.target); };
+$('#pay2sForm').onsubmit = (e) => { e.preventDefault(); saveSettings({ pay2s: Object.fromEntries(new FormData(e.target)) }, e.target); };
+
+function renderSettings(s) {
+  if (s.vietqr) { $('#vietqrForm').bank.value = s.vietqr.bankName; $('#vietqrForm').accountNumber.value = s.vietqr.accountNumber; $('#vietqrForm').accountName.value = s.vietqr.accountName; }
+  if (s.payos) $('#payosForm').clientId.value = s.payos.clientId;
+  if (s.pay2s) { $('#pay2sForm').partnerCode.value = s.pay2s.partnerCode; $('#pay2sForm').environment.value = s.pay2s.environment; }
+  $('#payosHook').textContent = s.webhooks.payos;
+  $('#pay2sHook').textContent = s.webhooks.pay2s;
+  $('#methods').textContent = s.methods.length ? s.methods.map((m) => ({ vietqr: 'VietQR', payos: 'payOS', pay2s: 'Pay2S' }[m])).join(', ') : 'chưa cấu hình';
+}
+
+$('#keyForm').onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const k = await api('POST', '/api/shop/api-keys', Object.fromEntries(new FormData(e.target)));
+    $('#newKey').className = 'msg ok';
+    $('#newKey').innerHTML = `Khoá mới (chỉ hiển thị một lần, hãy dán vào máy bán hàng): <code>${esc(k.key)}</code>`;
+    loadKeys();
+  } catch (err) { say($('#newKey'), err.message); }
+};
+async function loadKeys() {
+  const keys = await api('GET', '/api/shop/api-keys');
+  $('#keys').innerHTML = keys.map((k) => `<tr><td>${esc(k.label)}</td><td>…${esc(k.last4)}</td><td>${dt(k.createdAt)}</td>
+    <td>${k.revokedAt ? pill('cancelled') : pill('active')}</td><td>${k.revokedAt ? '' : `<button class="ghost" data-revoke="${esc(k.id)}">Thu hồi</button>`}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Chưa có khoá</td></tr>';
+  document.querySelectorAll('[data-revoke]').forEach((b) => b.onclick = async () => {
+    if (!confirm('Thu hồi khoá này? Máy bán hàng dùng khoá sẽ không thanh toán QR được nữa.')) return;
+    await api('DELETE', '/api/shop/api-keys/' + b.dataset.revoke); loadKeys();
+  });
+}
+
+async function load() {
+  if (!token) return showLogin();
+  const me = await api('GET', '/api/me');
+  $('#login').hidden = true; $('#app').hidden = false; $('#logout').hidden = false;
+  const t = me.tenant;
+  $('#who').textContent = t ? t.businessName : '';
+  $('#shopName').textContent = t.businessName;
+  $('#shopUrl').innerHTML = t.urls.map((u) => `<a href="${esc(u)}">${esc(u)}</a>`).join('<br>');
+  $('#plan').textContent = t.plan.id === 'trial' ? 'Dùng thử' : (catalogue.plans.find((p) => p.id === t.plan.id) || {}).name || t.plan.id;
+  $('#subStatus').outerHTML = `<span id="subStatus">${pill(t.suspended ? 'expired' : t.subscription.status)}</span>`;
+  $('#periodEnd').textContent = dt(t.subscription.currentPeriodEnd);
+  $('#subs').innerHTML = me.payments.map((p) => `<tr><td>${dt(p.createdAt)}</td><td>${esc(p.quote ? `${p.quote.planName} ${p.quote.months} tháng` : '')}</td>
+    <td>${vnd(p.amount)}</td><td>${esc(p.provider)}</td><td>${pill(p.status)}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Chưa có giao dịch</td></tr>';
+  renderSettings(await api('GET', '/api/shop/payment-settings'));
+  loadKeys();
+  const sales = await api('GET', '/api/shop/payments');
+  $('#sales').innerHTML = sales.map((p) => `<tr><td>${dt(p.createdAt)}</td><td>${esc(p.metadata && p.metadata.saleRef)}</td><td>${esc(p.provider)}</td>
+    <td>${vnd(p.amount)}</td><td>${pill(p.status)}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Chưa có giao dịch</td></tr>';
+}
+
+(async () => {
+  catalogue = await api('GET', '/api/plans');
+  $('#planSel').innerHTML = catalogue.plans.map((p) => `<option value="${p.id}">${p.name} – ${vnd(p.monthlyPrice)}/tháng</option>`).join('');
+  $('#monthsSel').innerHTML = catalogue.cycles.map((c) => `<option value="${c.months}">${c.months} tháng${c.discountPercent ? ` (−${c.discountPercent}%)` : ''}</option>`).join('');
+  $('#providerSel').innerHTML = catalogue.paymentProviders.map((p) => `<option value="${p}">${({ payos: 'payOS', pay2s: 'Pay2S' })[p] || p}</option>`).join('') || '<option value="">Chưa cấu hình cổng</option>';
+  $('#planSel').onchange = $('#monthsSel').onchange = updateQuote;
+  updateQuote();
+  const banks = await api('GET', '/api/banks');
+  $('#banks').innerHTML = banks.map((b) => `<option value="${esc(b.shortName)}">${esc(b.name)} (${b.bin})</option>`).join('');
+  load().catch(() => {});
+})();
+</script>
+</body>
+</html>

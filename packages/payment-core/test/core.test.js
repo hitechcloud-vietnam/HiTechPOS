@@ -94,3 +94,12 @@ test('journal: rejects bad input and cross-provider events', async () => {
   await assert.rejects(j.apply({ provider: 'pay2s', orderCode: 6, status: 'paid', amount: 1 }), { code: 'payment_provider_mismatch' });
   await assert.rejects(j.apply({ provider: 'payos', orderCode: 99, status: 'paid', amount: 1 }), { code: 'payment_not_found' });
 });
+
+test('memory store list filters on dotted fields', async () => {
+  const j = core.createJournal();
+  await j.open({ orderCode: 10, provider: 'payos', amount: 1, reference: 't1', metadata: { saleRef: 'S1' } });
+  await j.open({ orderCode: 11, provider: 'payos', amount: 1, reference: 't2', metadata: { saleRef: 'S1' } });
+  assert.deepEqual((await j.store.list({ reference: 't1' })).map((p) => p.orderCode), [10]);
+  assert.equal((await j.store.list({ 'metadata.saleRef': 'S1' })).length, 2);
+  assert.equal((await j.store.list()).length, 2);
+});

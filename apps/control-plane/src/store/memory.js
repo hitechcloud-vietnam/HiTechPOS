@@ -12,7 +12,8 @@ function createMemoryStore() {
   const accounts = new Map();
   let seq = 0;
   const clone = (v) => (v == null ? v : structuredClone(v));
-  const matches = (doc, query) => Object.entries(query).every(([k, v]) => doc[k] === v);
+  /* Equality, or membership when the stored field is an array (Mongo semantics). */
+  const matches = (doc, query) => Object.entries(query).every(([k, v]) => (Array.isArray(doc[k]) ? doc[k].includes(v) : doc[k] === v));
 
   return {
     kind: 'memory',

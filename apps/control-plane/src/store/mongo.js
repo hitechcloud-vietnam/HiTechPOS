@@ -19,9 +19,11 @@ async function createMongoStore({ uri, dbName }) {
   await Promise.all([
     tenants.createIndex({ subdomain: 1 }, { unique: true }),
     tenants.createIndex({ hosts: 1 }),
+    tenants.createIndex({ apiKeyHashes: 1 }),
     accounts.createIndex({ email: 1 }, { unique: true }),
     payments.createIndex({ orderCode: 1 }, { unique: true }),
-    payments.createIndex({ tenantId: 1, createdAt: -1 }),
+    payments.createIndex({ reference: 1, createdAt: -1 }),
+    payments.createIndex({ reference: 1, 'metadata.saleRef': 1 }),
   ]);
 
   const id = (v) => (v instanceof ObjectId ? v : ObjectId.isValid(String(v)) ? new ObjectId(String(v)) : null);
