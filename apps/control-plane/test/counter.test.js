@@ -162,3 +162,26 @@ test("a shop's own webhook cannot settle its subscription payment", async (t) =>
   assert.equal(row.status, 'pending');
   assert.equal(row.events.length, 0);
 });
+
+test('payOS link of a changed amount is closed at payOS; a failed link creation is retried; oversize amounts refused', async (t) => {
+  const { call, server, store, signup, payosCalls } = await boot();
+  t.after(() => server.close());
+  const shop = await signup('doiso');
+  await call('PUT', '/api/shop/payment-settings', { payos: { clientId: 'c', apiKey: 'k', checksumKey: SHOP_KEY } }, shop.token);
+  const pos = { authorization: `Bearer ${(await call('POST', '/api/shop/api-keys', {}, shop.token)).json.key}` };
+  const first = (await call('POST', '/pos/v1/payments', { saleRef: 'HD-9', amount: 50000, method: 'payos' }, pos)).json;
+  const second = (await call('POST', '/pos/v1/payments', { saleRef: 'HD-9', amount: 60000, method: 'payos' }, pos)).json;
+  assert.notEqual(second.orderCode, first.orderCode);
+  assert.ok(payosCalls.some((c) => c.url.includes(`/v2/payment-requests/${first.orderCode}/cancel`)), 'old link cancelled at payOS');
+  assert.equal((await store.payments.findByOrderCode(first.orderCode)).status, 'cancelled');
+
+  /* A pending row whose checkout never got attached is replaced on retry. */
+  await createJournal({ store: store.payments }).open({ orderCode: 1791966752534111, provider: 'payos', amount: 70000, purpose: 'sale', reference: shop.id, metadata: { saleRef: 'HD-10' } });
+  const retried = (await call('POST', '/pos/v1/payments', { saleRef: 'HD-10', amount: 70000, method: 'payos' }, pos)).json;
+  assert.notEqual(retried.orderCode, 1791966752534111);
+  assert.match(retried.checkoutUrl, /pay\.payos\.vn/);
+
+  const huge = await call('POST', '/pos/v1/payments', { saleRef: 'HD-11', amount: 10000000000000, method: 'vietqr' }, pos);
+  assert.equal(huge.status, 422);
+  assert.equal(huge.json.error, 'payment_amount_invalid');
+});

@@ -266,7 +266,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
     if (!account || !verifyPassword(currentPassword, account.passwordHash)) throw httpError('credentials_invalid', 401);
     if (typeof newPassword !== 'string' || newPassword.length < 8) throw httpError('password_weak', 422);
     const changedAt = now().toISOString();
-    await store.accounts.update(account._id, { passwordHash: hashPassword(newPassword), passwordChangedAt: changedAt });
+    await store.accounts.update(account._id, { passwordHash: hashPassword(newPassword), passwordChangedAt: changedAt, resetTokenHash: null, resetExpiresAt: null });
     const token = signToken({ sub: String(account._id), tenantId: req.account.tenantId }, config.sessionSecret, { now: now().getTime() + 1000 });
     res.json({ ok: true, token });
   });

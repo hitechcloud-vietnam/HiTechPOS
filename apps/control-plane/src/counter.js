@@ -221,13 +221,19 @@ function createCounterService({ store, config, now = () => new Date(), providerO
     method = method || defaultMethodOf(tenant.paymentSettings || {}) || 'vietqr';
     if (!METHODS.includes(method)) fail('payment_method_invalid', 422);
     if (typeof saleRef !== 'string' || !/^[A-Za-z0-9_.:-]{1,64}$/.test(saleRef)) fail('sale_ref_invalid', 422);
-    if (!Number.isSafeInteger(amount) || amount <= 0) fail('payment_amount_invalid', 422);
+    /* VietQR's amount field holds at most 13 digits. */
+    if (!Number.isSafeInteger(amount) || amount <= 0 || amount > 9999999999999) fail('payment_amount_invalid', 422);
     const reference = String(tenant._id);
     const active = (await store.payments.list({ reference, 'metadata.saleRef': saleRef }))
       .find((p) => [S.PENDING, S.PAID, S.REVIEW].includes(p.status));
     if (active) {
-      if (active.amount !== amount || active.provider !== method) {
+      /* A pending row without a checkout is one whose QR/link creation
+         failed: replace it rather than hand back a payment with no QR. */
+      const usable = active.status !== S.PENDING || !!(active.providerRef || active.checkoutUrl || active.qrCode);
+      if (active.amount !== amount || active.provider !== method || !usable) {
         if (active.status !== S.PENDING) fail('sale_already_paid', 409);
+        /* The old payOS link would stay payable at payOS: close it too. */
+        if (active.provider === 'payos') await providerFor(tenant, 'payos').cancel(active.orderCode, 'Doi so tien').catch(() => {});
         await journal.apply({ provider: active.provider, orderCode: active.orderCode, status: S.CANCELLED, eventKey: `superseded:${active.orderCode}` });
       } else return view(active);
     }

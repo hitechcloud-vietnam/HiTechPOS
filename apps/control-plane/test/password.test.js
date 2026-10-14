@@ -43,10 +43,14 @@ test('forgot / reset / change password; old sessions are revoked', async (t) => 
   assert.equal((await call('GET', '/api/me', undefined, session)).status, 200);
 
   clock = new Date('2026-10-14T03:20:00Z');
+  /* A reset link still outstanding when the password is changed dies with it. */
+  await call('POST', '/api/auth/forgot', { email: 'chu@photue.vn' });
+  const pending = decodeURIComponent(/token=([^"&\s]+)/.exec(sent[sent.length - 1].html)[1]);
   assert.equal((await call('POST', '/api/me/password', { currentPassword: 'sai', newPassword: 'abcdefgh1' }, session)).status, 401);
   const changed = (await call('POST', '/api/me/password', { currentPassword: 'matkhaumoi1', newPassword: 'abcdefgh1' }, session)).json;
   assert.equal((await call('GET', '/api/me', undefined, session)).status, 401);
   assert.equal((await call('GET', '/api/me', undefined, { authorization: `Bearer ${changed.token}` })).status, 200);
+  assert.equal((await call('POST', '/api/auth/reset', { token: pending, password: 'chiemquyen1' })).json.error, 'reset_token_invalid');
 
   /* Expired reset link. */
   await call('POST', '/api/auth/forgot', { email: 'chu@photue.vn' });
