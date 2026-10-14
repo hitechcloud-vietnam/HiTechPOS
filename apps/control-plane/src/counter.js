@@ -37,7 +37,7 @@ function mask(value) {
   return s.length <= 4 ? '••••' : `${'•'.repeat(Math.min(8, s.length - 4))}${s.slice(-4)}`;
 }
 
-function createCounterService({ store, config, now = () => new Date(), providerOptions = {} }) {
+function createCounterService({ store, config, now = () => new Date(), providerOptions = {}, shopBridge = null, logger = console }) {
   const journal = createJournal({ store: store.payments, now });
   const providerCache = new Map();
 
@@ -79,9 +79,34 @@ function createCounterService({ store, config, now = () => new Date(), providerO
         next.pay2s = { accessKey: accessKey.trim(), partnerCode: partnerCode.trim(), environment, secretKey: seal(secretKey.trim(), key) };
       } else next.pay2s = null;
     }
+    if (input.defaultMethod !== undefined) {
+      if (input.defaultMethod && !METHODS.includes(input.defaultMethod)) fail('payment_method_invalid', 422);
+      next.defaultMethod = input.defaultMethod || null;
+    }
+    if (next.defaultMethod && !next[next.defaultMethod]) next.defaultMethod = null;
     next.updatedAt = now().toISOString();
     providerCache.delete(String(tenant._id));
-    await store.tenants.update(tenant._id, { paymentSettings: next });
+    const patch = { paymentSettings: next };
+    const enabled = METHODS.some((m) => next[m]);
+    /* The Posnic sales screen reaches this service with a per-shop key the
+       shard reads from the shop's sealed secrets (HITECH_POS_KEY). */
+    const hasInternalKey = (tenant.apiKeys || []).some((k) => k.internal && !k.revokedAt) && tenant.secrets && tenant.secrets.HITECH_POS_KEY;
+    if (enabled && !hasInternalKey) {
+      const internal = newKey('Posnic – màn hình bán hàng', true);
+      patch.secrets = { ...(tenant.secrets || {}), HITECH_POS_KEY: seal(internal.secret, key) };
+      patch.apiKeys = [...(tenant.apiKeys || []), internal.entry];
+      patch.apiKeyHashes = patch.apiKeys.filter((k) => !k.revokedAt).map((k) => k.hash);
+    }
+    await store.tenants.update(tenant._id, patch);
+    if (shopBridge) {
+      /* Turns the QR tile on the Posnic sales screen on or off. A failure is
+         reported but does not undo the saved settings. */
+      try {
+        await shopBridge.setQrGateway(tenant, { enabled, method: defaultMethodOf(next) });
+      } catch (e) {
+        logger.warn(`[counter] could not update the POS QR switch for ${tenant.subdomain}: ${e.message}`);
+      }
+    }
     return describeSettings(next);
   }
 
@@ -92,6 +117,7 @@ function createCounterService({ store, config, now = () => new Date(), providerO
       payos: s.payos ? { clientId: s.payos.clientId, apiKey: '••••••••', checksumKey: '••••••••' } : null,
       pay2s: s.pay2s ? { accessKey: mask(s.pay2s.accessKey), partnerCode: s.pay2s.partnerCode, environment: s.pay2s.environment, secretKey: '••••••••' } : null,
       methods: METHODS.filter((m) => s[m]),
+      defaultMethod: defaultMethodOf(s),
       webhooks: {
         payos: `${config.publicUrl}/webhooks/shop/{tenantId}/payos`,
         pay2s: `${config.publicUrl}/webhooks/shop/{tenantId}/pay2s`,
@@ -106,12 +132,22 @@ function createCounterService({ store, config, now = () => new Date(), providerO
     return out;
   }
 
+  /* payOS and Pay2S confirm by themselves; plain VietQR needs the cashier. */
+  function defaultMethodOf(settings) {
+    return settings.defaultMethod || ['payos', 'pay2s', 'vietqr'].find((m) => settings[m]) || null;
+  }
+
+  function newKey(label, internal = false) {
+    const secret = KEY_PREFIX + crypto.randomBytes(24).toString('base64url');
+    const entry = { id: crypto.randomBytes(6).toString('hex'), label: String(label).slice(0, 60), hash: hashKey(secret), last4: secret.slice(-4), createdAt: now().toISOString(), revokedAt: null, internal };
+    return { secret, entry };
+  }
+
   /* ---- API keys for POS devices ---- */
 
   async function createApiKey(tenantId, { label = 'POS' } = {}) {
     const tenant = await tenantOrFail(tenantId);
-    const secret = KEY_PREFIX + crypto.randomBytes(24).toString('base64url');
-    const entry = { id: crypto.randomBytes(6).toString('hex'), label: String(label).slice(0, 60), hash: hashKey(secret), last4: secret.slice(-4), createdAt: now().toISOString(), revokedAt: null };
+    const { secret, entry } = newKey(label);
     const keys = [...(tenant.apiKeys || []), entry];
     await store.tenants.update(tenant._id, { apiKeys: keys, apiKeyHashes: keys.filter((k) => !k.revokedAt).map((k) => k.hash) });
     return { id: entry.id, label: entry.label, key: secret };
@@ -164,6 +200,8 @@ function createCounterService({ store, config, now = () => new Date(), providerO
       orderCode: p.orderCode, method: p.provider, status: p.status, amount: p.amount, saleRef: p.metadata && p.metadata.saleRef,
       description: p.metadata && p.metadata.description, checkoutUrl: p.checkoutUrl || null, qrPayload: p.qrCode || null,
       bank: (p.metadata && p.metadata.bank) || null, paidAt: p.paidAt || null, createdAt: p.createdAt, expiresAt: p.expiresAt || null,
+      qrImageUrl: p.qrCode ? `${config.publicUrl}/api/public/pay/${p.reference}/${p.orderCode}/qr.svg` : null,
+      displayUrl: `${config.publicUrl}/pay/${p.reference}/${p.orderCode}`,
     };
   }
 
@@ -172,7 +210,8 @@ function createCounterService({ store, config, now = () => new Date(), providerO
    * on flaky Wi-Fi, so the same saleRef and amount must not produce a second
    * QR the customer could also pay.
    */
-  async function createPayment(tenant, { saleRef, amount, method = 'vietqr', description }) {
+  async function createPayment(tenant, { saleRef, amount, method, description }) {
+    method = method || defaultMethodOf(tenant.paymentSettings || {}) || 'vietqr';
     if (!METHODS.includes(method)) fail('payment_method_invalid', 422);
     if (typeof saleRef !== 'string' || !/^[A-Za-z0-9_.:-]{1,64}$/.test(saleRef)) fail('sale_ref_invalid', 422);
     if (!Number.isSafeInteger(amount) || amount <= 0) fail('payment_amount_invalid', 422);

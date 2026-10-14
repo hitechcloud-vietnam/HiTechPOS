@@ -22,4 +22,10 @@ Quy tắc:
 
 ## Bản vá cục bộ
 
-_(chưa có)_
+| Tệp | Thay đổi | Lý do | Gửi ngược Posnic? |
+|---|---|---|---|
+| `pos/api/src/db/model-registry.js` | Proxy model trả về hàm gán ở cấp module (`Sale.xxxModel = …`) khi model theo tenant không có | Ở chế độ shard đa tenant, mọi hàm `Sale.*Model` gán ở cấp module đều lỗi “is not a function” (ví dụ QR) | Có – lỗi chung của Posnic |
+| `pos/api/src/models/sale.model.js` | Nhánh HiTechPOS trong `generateQrCodeModel`, `getQrStatusModel`, `qrCodeCloseModel`; nạp `../config` sau nhánh này | Ô QR của màn hình bán hàng dùng cổng HiTechPOS (VietQR/payOS/Pay2S) thay Razorpay; `config/index.js` đòi biến môi trường đơn shop | Một phần (lazy config) |
+| `pos/api/src/services/hitech-pay.js` | Tệp mới – adapter gọi control plane bằng khoá `HITECH_POS_KEY` của shop | Như trên | Không |
+| `pos/frontend/static/script/js/modules/js/sales.js` | Nhãn ô Qrpay dùng i18n `lang_razorpay` | Hiển thị “QR chuyển khoản” | Có |
+| `pos/languages/vi.json` | `lang_qrpay`, `lang_razorpay` → “QR chuyển khoản” | Việt hoá | Không |

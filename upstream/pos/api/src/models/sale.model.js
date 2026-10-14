@@ -1574,7 +1574,6 @@ Sale.sendDailySalesMail = async function (input, shopTransport = null) {
 Sale.generateQrCodeModel = async function (amount) {
   try {
     const Razorpay = require('razorpay');
-    const config = require('../config');
     const moment = require('moment-timezone');
 
     // Get payment gateway credentials from branch settings
@@ -1639,6 +1638,16 @@ Sale.generateQrCodeModel = async function (amount) {
     }
     /* Stored encrypted; decryptField passes through anything written before
        that change, so a shop configured on an older build still works. */
+    /* HiTechPOS: shops connected to HiTechPOS counter payments (VietQR,
+       payOS, Pay2S) are served by that service instead of Razorpay. */
+    const hitechPay = require('../services/hitech-pay');
+    if (hitechPay.isHitechConfig(paymentGatewayConfig)) {
+      return await hitechPay.generate(amount, { method: paymentGatewayConfig.method });
+    }
+
+    /* Loaded here, after the HiTechPOS branch: config/index.js validates
+       single-shop environment variables a multi-tenant shard does not set. */
+    const config = require('../config');
     const { decryptField } = require('../utils/secret-field');
     const paymentKey = decryptField(paymentGatewayConfig.key) || config.razorpay.keyId;
     const paymentSecret = decryptField(paymentGatewayConfig.secret) || config.razorpay.keySecret;
@@ -1822,6 +1831,10 @@ Sale.razorPayQrCodeCloseModel = async function (data = {}) {
  */
 Sale.qrCodeCloseModel = async function (id) {
   try {
+    /* HiTechPOS QR ids carry their own prefix; see services/hitech-pay.js. */
+    const hitechPay = require('../services/hitech-pay');
+    if (hitechPay.isHitechId(id)) return await hitechPay.close(id);
+
     const Razorpay = require('razorpay');
     const config = require('../config');
 
@@ -1914,6 +1927,10 @@ Sale.qrCodeCloseModel = async function (id) {
  */
 Sale.getQrStatusModel = async function (id) {
   try {
+    /* HiTechPOS QR ids carry their own prefix; see services/hitech-pay.js. */
+    const hitechPay = require('../services/hitech-pay');
+    if (hitechPay.isHitechId(id)) return await hitechPay.status(id);
+
     const RazorpayWebhook = currentConnection(mongoose.connection).collection('razorpay_webhook');
 
     const responseData = await RazorpayWebhook.findOne(

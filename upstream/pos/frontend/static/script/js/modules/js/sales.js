@@ -2859,7 +2859,7 @@ PosnicPro.sales = {
         if (PosnicPro.sales.paymentMethodEnabled('Cash')) addPaymentBlock('Cash', 'Cash', normalizeKey(activePaymentMethod) === normalizeKey('Cash'));
         // --- QR / Razorpay ---
         if (localStorage.getItem("payment_gateway") === 'true') {
-            addPaymentBlock('Qrpay', 'Razorpay', normalizeKey(activePaymentMethod) === normalizeKey('Qrpay') || normalizeKey(activePaymentMethod) === normalizeKey('Razorpay'));
+            addPaymentBlock('Qrpay', PosnicPro.i18n.t('lang_razorpay', 'Razorpay'), normalizeKey(activePaymentMethod) === normalizeKey('Qrpay') || normalizeKey(activePaymentMethod) === normalizeKey('Razorpay'));
         }
 
         // --- Other Configured Payment Modes ---

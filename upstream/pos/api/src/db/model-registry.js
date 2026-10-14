@@ -84,6 +84,14 @@ function proxyFor(name, target) {
   return new Proxy(target, {
     get(t, prop, receiver) {
       const model = modelFor(name) || t;
+      /* Helpers assigned onto the export at module load (Sale.fooModel =
+         async function ...) live on the base model only; a model compiled
+         for a shop's connection has the schema's statics but not those.
+         They resolve the shop through currentConnection() themselves, so the
+         base copy is the right one to hand out. (HiTechPOS fix.) */
+      if (model !== t && !(prop in model) && Object.prototype.hasOwnProperty.call(t, prop)) {
+        return Reflect.get(t, prop, receiver);
+      }
       return Reflect.get(model, prop, model === t ? receiver : model);
     },
     set(t, prop, value) {

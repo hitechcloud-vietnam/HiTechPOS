@@ -72,6 +72,21 @@ async function createMongoStore({ uri, dbName }) {
         payments.findOneAndUpdate({ orderCode: Number(orderCode), status: expectedStatus }, { $set: patch }, { returnDocument: 'after', projection: { _id: 0 } }),
       list: async (query = {}) => payments.find(query, { projection: { _id: 0 } }).sort({ createdAt: -1 }).limit(200).toArray(),
     },
+    /*
+     * The one place the control plane writes into a shop's own database:
+     * the branch payment_gateway switch that shows the QR tile on the Posnic
+     * sales screen (upstream/pos/api/src/services/hitech-pay.js). Razorpay
+     * key/secret already stored on the branch are preserved.
+     */
+    shopBridge: {
+      async setQrGateway(tenant, { enabled, method }) {
+        const branches = client.db(tenant.tenantDb).collection('branches');
+        for (const b of await branches.find({}, { projection: { payment_gateway: 1 } }).toArray()) {
+          const current = b.payment_gateway && !Array.isArray(b.payment_gateway) ? b.payment_gateway : {};
+          await branches.updateOne({ _id: b._id }, { $set: { payment_gateway: { ...current, status: enabled ? 'true' : 'false', provider: 'hitechpos', method: method || null } } });
+        }
+      },
+    },
     close: () => client.close(),
   };
 }

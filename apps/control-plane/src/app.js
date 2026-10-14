@@ -2,6 +2,7 @@
 
 const path = require('node:path');
 const express = require('express');
+const qrcode = require('qrcode-generator');
 const presets = require('@hitechpos/industry-presets');
 const { isValidVNPhone, normalizeVNPhone, isValidTaxCode, BANKS } = require('@hitechpos/vn-locale');
 const { publicCatalogue, quote } = require('./plans');
@@ -49,7 +50,7 @@ function httpError(code, status) {
 
 function createApp({ store, config, providers, installer, onboarding, now = () => new Date(), logger = console, counterOptions = {} }) {
   const tenants = createTenantService({ store, config, installer, onboarding, now });
-  const counter = createCounterService({ store, config, now, providerOptions: counterOptions });
+  const counter = createCounterService({ store, config, now, providerOptions: counterOptions, shopBridge: store.shopBridge || null, logger });
   const billing = createBillingService({ store, providers, config, now });
   const app = express();
   app.disable('x-powered-by');
@@ -199,6 +200,14 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   app.get('/api/public/pay/:tenantId/:orderCode', async (req, res) => {
     res.set('cache-control', 'no-store');
     res.json(await counter.publicView(req.params.tenantId, req.params.orderCode));
+  });
+  app.get('/api/public/pay/:tenantId/:orderCode/qr.svg', async (req, res) => {
+    const view = await counter.publicView(req.params.tenantId, req.params.orderCode);
+    if (!view.qrPayload) throw httpError('payment_not_found', 404);
+    const qr = qrcode(0, 'M');
+    qr.addData(view.qrPayload);
+    qr.make();
+    res.set('cache-control', 'private, max-age=900').type('image/svg+xml').send(qr.createSvgTag({ cellSize: 8, margin: 2, scalable: true }));
   });
   app.get('/pay/:tenantId/:orderCode', (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'pay.html')));
 
