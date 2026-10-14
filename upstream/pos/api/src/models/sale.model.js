@@ -352,6 +352,8 @@ const saleSchema = new mongoose.Schema(
     floor_closed_at: { type: Date },
     floor_closed_transfer_id: { type: String },
     floor_closed_by: { type: String },
+    // HiTechPOS: room/table time billing session (services/table-time-billing.js).
+    time_billing: { type: mongoose.Schema.Types.Mixed },
     sale_process: {
       type: String,
       enum: SALE_PROCESS_VALUES,
@@ -1302,7 +1304,14 @@ Sale.sendDailySalesMail = async function (input, shopTransport = null) {
     const config = require('../config');
 
     // Currency sign (fallback)
-    const currency = '₹'; // You can get this from settings if needed
+    // The shop's currency: symbol, ISO precision and grouping from the branch
+    // the mail was resolved for (utils/money-text) - "₫ 135.000" in Vietnam.
+    // Posnic's rupee and two decimals only when no branch came with it.
+    const moneyBranch = (shopTransport && shopTransport.branch) || null;
+    const MoneyText = require('../utils/money-text');
+    const currency = (moneyBranch && MoneyText.symbol(moneyBranch)) || '₹';
+    const fig = (n) =>
+      moneyBranch ? MoneyText.number(Number(n) || 0, moneyBranch) : (Number(n) || 0).toFixed(2);
 
     // Totals + product rows
     const product_values = [];
@@ -1331,11 +1340,11 @@ Sale.sendDailySalesMail = async function (input, shopTransport = null) {
           product_name: val.product_name || '',
           product_sku: val.product_sku || '',
           product_qty: pQty,
-          product_total: `${currency} ${pTotal.toFixed(2)}`,
-          product_price: `${currency} ${pSubtotal.toFixed(2)}`,
-          product_profit: `${currency} ${pProfit.toFixed(2)}`,
-          product_discount: `-${currency} ${pDiscount.toFixed(2)}`,
-          product_tax: `${currency} ${pTax.toFixed(2)}`,
+          product_total: `${currency} ${fig(pTotal)}`,
+          product_price: `${currency} ${fig(pSubtotal)}`,
+          product_profit: `${currency} ${fig(pProfit)}`,
+          product_discount: `-${currency} ${fig(pDiscount)}`,
+          product_tax: `${currency} ${fig(pTax)}`,
         };
       });
     }
@@ -1351,7 +1360,7 @@ Sale.sendDailySalesMail = async function (input, shopTransport = null) {
 
         payment_values[i] = {
           payment_mode: c.payment_mode || '',
-          sale_payment: `${currency} ${sale_payment.toFixed(2)}`,
+          sale_payment: `${currency} ${fig(sale_payment)}`,
         };
       });
     }
@@ -1365,7 +1374,7 @@ Sale.sendDailySalesMail = async function (input, shopTransport = null) {
 
         taxValues[j] = {
           tax_name: tax_name,
-          amount: `${currency} ${total_tax.toFixed(2)}`,
+          amount: `${currency} ${fig(total_tax)}`,
         };
       });
     }
@@ -1406,7 +1415,7 @@ Sale.sendDailySalesMail = async function (input, shopTransport = null) {
           dine_type: dType,
           dine_count: dCount,
           dine_pax: paxDisplay,
-          dine_amount: `${currency} ${dAmount.toFixed(2)}`,
+          dine_amount: `${currency} ${fig(dAmount)}`,
         };
       });
     }
@@ -1438,7 +1447,7 @@ Sale.sendDailySalesMail = async function (input, shopTransport = null) {
         tableValues[idx] = {
           table_name: tableNumber,
           table_pax: tablePaxDisplay,
-          table_amount: `${currency} ${tAmount.toFixed(2)}`,
+          table_amount: `${currency} ${fig(tAmount)}`,
         };
       });
     }
@@ -1472,11 +1481,11 @@ Sale.sendDailySalesMail = async function (input, shopTransport = null) {
           bodyHtml: kvBlock([
             ['Period', `${from_date || '-'} to ${to_date || '-'}`],
             ['Total quantity', qty_total],
-            ['Subtotal', `${currency} ${price_total.toFixed(2)}`],
-            ['Grand total', `${currency} ${amount_total.toFixed(2)}`],
-            ['Profit', `${currency} ${profit_total.toFixed(2)}`],
-            ['Tax total', `${currency} ${tax_total.toFixed(2)}`],
-            ['Tender total', `${currency} ${tender_total.toFixed(2)}`],
+            ['Subtotal', `${currency} ${fig(price_total)}`],
+            ['Grand total', `${currency} ${fig(amount_total)}`],
+            ['Profit', `${currency} ${fig(profit_total)}`],
+            ['Tax total', `${currency} ${fig(tax_total)}`],
+            ['Tender total', `${currency} ${fig(tender_total)}`],
           ]),
         }),
       });
@@ -1496,15 +1505,15 @@ Sale.sendDailySalesMail = async function (input, shopTransport = null) {
           heading: (sales_type ? sales_type + ' ' : '') + 'sales report',
 
           qty_total: qty_total,
-          price_total: `${currency} ${price_total.toFixed(2)}`,
-          amount_total: `${currency} ${amount_total.toFixed(2)}`,
-          profit_total: `${currency} ${profit_total.toFixed(2)}`,
-          tender_total: `${currency} ${tender_total.toFixed(2)}`,
-          tax_total: `${currency} ${tax_total.toFixed(2)}`,
+          price_total: `${currency} ${fig(price_total)}`,
+          amount_total: `${currency} ${fig(amount_total)}`,
+          profit_total: `${currency} ${fig(profit_total)}`,
+          tender_total: `${currency} ${fig(tender_total)}`,
+          tax_total: `${currency} ${fig(tax_total)}`,
           dine_count_total: dine_count_total,
-          dine_amount_total: `${currency} ${dine_amount_total.toFixed(2)}`,
+          dine_amount_total: `${currency} ${fig(dine_amount_total)}`,
           dine_pax_total: dine_pax_total > 0 ? dine_pax_total : '',
-          table_amount_total: `${currency} ${table_amount_total.toFixed(2)}`,
+          table_amount_total: `${currency} ${fig(table_amount_total)}`,
           table_pax_total: table_pax_total > 0 ? table_pax_total : '',
 
           store: branch,
@@ -1513,9 +1522,9 @@ Sale.sendDailySalesMail = async function (input, shopTransport = null) {
           tender: payment_values,
           dine: dineValues,
           tables: tableValues,
-          extra_discount: `${currency} ${parseFloat(
-            input.data?.extra_discount?.total_sale_extra_discount || 0
-          ).toFixed(2)}`,
+          extra_discount: `${currency} ${fig(
+            parseFloat(input.data?.extra_discount?.total_sale_extra_discount || 0)
+          )}`,
         },
         headers: {
           'X-Mailin-custom': 'custom_header_1:custom_value_1|custom_header_2:custom_value_2',
@@ -1538,11 +1547,11 @@ Sale.sendDailySalesMail = async function (input, shopTransport = null) {
       `Sales report from ${from_date || '-'} to ${to_date || '-'}`,
       '',
       `Total quantity: ${qty_total}`,
-      `Subtotal: ${currency} ${price_total.toFixed(2)}`,
-      `Grand total: ${currency} ${amount_total.toFixed(2)}`,
-      `Profit: ${currency} ${profit_total.toFixed(2)}`,
-      `Tax total: ${currency} ${tax_total.toFixed(2)}`,
-      `Tender total: ${currency} ${tender_total.toFixed(2)}`,
+      `Subtotal: ${currency} ${fig(price_total)}`,
+      `Grand total: ${currency} ${fig(amount_total)}`,
+      `Profit: ${currency} ${fig(profit_total)}`,
+      `Tax total: ${currency} ${fig(tax_total)}`,
+      `Tender total: ${currency} ${fig(tender_total)}`,
     ];
 
     await sendEmail({

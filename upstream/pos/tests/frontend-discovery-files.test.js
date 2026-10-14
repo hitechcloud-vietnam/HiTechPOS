@@ -30,27 +30,31 @@ test('frontend source carries machine-readable discovery files for the app domai
     assert.ok(fs.existsSync(path.join(FRONTEND, file)), `${file} is missing from frontend/`);
   }
 
+  // HiTechPOS: every copy of this frontend is one shop's private till on a
+  // SaaS subdomain (<shop>.hitechpos.vn), so nothing here is for search
+  // engines and nothing points at posnic.com (docs/UPSTREAM.md).
   const robots = read(FRONTEND, 'robots.txt');
   assert.match(robots, /^User-agent: \*/m);
-  assert.match(robots, /^Allow: \/$/m);
-  assert.match(robots, /^Sitemap: https:\/\/www\.posnic\.com\/sitemap\.xml$/m);
+  assert.match(robots, /^Disallow: \/$/m);
+  assert.doesNotMatch(robots, /^Allow: \/$/m);
+  assert.doesNotMatch(robots, /posnic\.(?:com|io|in)/);
 
   const sitemap = read(FRONTEND, 'sitemap.xml');
   assert.match(sitemap, /^<\?xml version="1\.0" encoding="UTF-8"\?>/);
   assert.match(sitemap, /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/);
-  assert.match(sitemap, /<loc>https:\/\/www\.posnic\.com\/<\/loc>/);
-  assert.match(sitemap, /<loc>https:\/\/www\.posnic\.com\/login\.html<\/loc>/);
-  assert.doesNotMatch(sitemap, /<loc>https:\/\/(?:www\.)?posnic\.io\//);
+  assert.doesNotMatch(sitemap, /<loc>/, 'a shop has no public page to list');
+  assert.doesNotMatch(sitemap, /posnic\.(?:com|io|in)/);
 
   const llms = read(FRONTEND, 'llms.txt');
-  assert.match(llms, /^# Posnic POS$/m);
-  assert.match(llms, /^Canonical website: https:\/\/www\.posnic\.com\/$/m);
-  assert.match(llms, /^Preferred backlink target: https:\/\/www\.posnic\.com\/$/m);
-  assert.match(llms, /^Official GitHub source: https:\/\/github\.com\/Posnic\/POS$/m);
+  assert.match(llms, /^# HiTechPOS shop$/m);
+  assert.match(llms, /^Product website: https:\/\/hitechpos\.vn\/$/m);
+  assert.match(llms, /^Based on: Posnic POS, https:\/\/github\.com\/Posnic\/POS \(AGPL-3\.0-only\)$/m,
+    'the AGPL attribution to Posnic must stay');
   assert.match(llms, /POS; Billing Software; Offline POS; Online\/Offline POS; open source POS/);
-  assert.doesNotMatch(llms, /https?:\/\/(?:www\.)?posnic\.io(?:\/|$)/);
+  assert.doesNotMatch(llms, /https?:\/\/(?:www\.)?posnic\.(?:com|io|in)(?:\/|$)/m);
 
   const headers = read(FRONTEND, '_headers');
+  assert.match(headers, /^\/\*\n  X-Robots-Tag: noindex, nofollow$/m);
   assert.match(headers, /\/robots\.txt[\s\S]*Content-Type: text\/plain; charset=utf-8/);
   assert.match(headers, /\/llms\.txt[\s\S]*Content-Type: text\/plain; charset=utf-8/);
   assert.match(headers, /\/sitemap\.xml[\s\S]*Content-Type: application\/xml; charset=utf-8/);
@@ -69,7 +73,7 @@ test('public app entry pages expose canonical POS metadata', () => {
     assert.match(html, new RegExp(`<title>${POSNIC_SEO_TITLE}</title>`));
     assert.match(html, new RegExp(`<meta name="description" content="${POSNIC_SEO_DESCRIPTION}">`));
     assert.match(html, new RegExp(`<meta name="keywords" content="${keywordContent}">`));
-    assert.match(html, /<meta name="robots" content="index, follow">/);
+    assert.match(html, /<meta name="robots" content="noindex, nofollow">/);
     assert.match(html, /<link rel="canonical" href="https:\/\/hitechpos\.vn\/">/);
     assert.doesNotMatch(html, /https?:\/\/(?:www\.)?posnic\.io(?:\/|["'])/);
   }

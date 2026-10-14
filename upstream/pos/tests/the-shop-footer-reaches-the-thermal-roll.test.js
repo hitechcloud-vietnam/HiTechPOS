@@ -307,7 +307,8 @@ test('the brand URL is spelled once, not once per print path', () => {
    * that is how the thermal path came to be missing it.
    */
   const core = read('frontend', 'static', 'script', 'js', 'core', 'PosnicPro.js');
-  assert.match(core, /BRAND_URL: 'https:\/\/www\.posnic\.com'/, 'the one spelling is gone');
+  // HiTechPOS: the default is the HiTechPOS site (docs/UPSTREAM.md).
+  assert.match(core, /BRAND_URL: 'https:\/\/hitechpos\.vn'/, 'the one spelling is gone');
 
   for (const file of [
     ['frontend', 'static', 'script', 'js', 'core', 'PosnicPro.js'],
@@ -316,7 +317,9 @@ test('the brand URL is spelled once, not once per print path', () => {
     ['frontend', 'static', 'script', 'js', 'modules', 'js', 'sales.js'],
   ]) {
     const src = read(...file);
-    const literals = (src.match(/https:\/\/www\.posnic\.com/g) || []).length;
+    assert.strictEqual((src.match(/https:\/\/www\.posnic\.com/g) || []).length, 0,
+      file.join('/') + ' still prints the Posnic site on a HiTechPOS receipt');
+    const literals = (src.match(/https:\/\/hitechpos\.vn/g) || []).length;
     const allowed = file[file.length - 1] === 'PosnicPro.js' ? 1 : 0;
     assert.strictEqual(
       literals,

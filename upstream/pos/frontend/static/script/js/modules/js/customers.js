@@ -1,4 +1,9 @@
 PosnicPro.customers = {
+    /* A figure as the shop writes it (money-format.js): display only. */
+    _num: function (v, places) {
+        var n = Number(v) || 0;
+        return PosnicPro.money ? PosnicPro.money.number(n, places) : n.toFixed(places == null ? 2 : places);
+    },
     customerAction: 'add',
     customer_phone: null,
     setPhone: function (number) {
@@ -243,7 +248,7 @@ PosnicPro.customers = {
         var toolbar = '<div class="p-doc-toolbar">'
             + '<button type="button" class="btn btn-sm btn-light" title="Show or hide the list" data-t-title="lang_show_or_hide_the_list" aria-label="Show or hide the list" data-t-aria-label="lang_show_or_hide_the_list" onclick="PosnicPro.masterDetail.toggleRail(\'#customers_split\');"><i class="feather icon-sidebar"></i></button>'
             + '<span class="p-doc-title">' + esc(d.name) + '</span>'
-            + (Number(d.partial_balance) > 0 ? '<span class="rs-pill unpaid">Dues ' + PosnicPro.local.get('currencySign') + '&nbsp;' + Number(d.partial_balance).toFixed(2) + '</span>' : '')
+            + (Number(d.partial_balance) > 0 ? '<span class="rs-pill unpaid">Dues ' + PosnicPro.local.get('currencySign') + '&nbsp;' + PosnicPro.customers._num(d.partial_balance) + '</span>' : '')
             + '<span class="ml-auto"></span>'
             + (Number(d.partial_balance) > 0
                 ? '<button type="button" class="btn btn-sm btn-primary" data-module="customer" data-access="write" onclick="hasher.setHash(\'customers/' + esc(id) + '/transaction\');"><i class="feather icon-credit-card mr-1"></i>Settle dues</button>'
@@ -312,18 +317,18 @@ PosnicPro.customers = {
         }, function (r) {
             var row = ((r.data || {}).list || [])[0] || {};
             $('#c_doc_stats').html(
-                '<div class="s-stat"><div class="s-stat-value">' + cur + '&nbsp;' + (Number(row.sales_payment) || 0).toFixed(2) + '</div>'
+                '<div class="s-stat"><div class="s-stat-value">' + cur + '&nbsp;' + PosnicPro.customers._num(row.sales_payment) + '</div>'
                 + '<div class="s-stat-label"><lang class="lang_lifetime_sales">Lifetime sales</lang></div></div>'
                 + '<div class="s-stat"><div class="s-stat-value">' + (Number(row.sales_count) || 0) + '</div>'
                 + '<div class="s-stat-label">' + (Number(row.sales_count) === 1 ? PosnicPro.i18n.t('lang_newsale_title', 'Sale') : PosnicPro.i18n.t('lang_rgrp_sales', 'Sales')) + '</div></div>'
-                + '<div class="s-stat"><div class="s-stat-value">' + cur + '&nbsp;' + (Number(row.sales_avg) || 0).toFixed(2) + '</div>'
+                + '<div class="s-stat"><div class="s-stat-value">' + cur + '&nbsp;' + PosnicPro.customers._num(row.sales_avg) + '</div>'
                 + '<div class="s-stat-label"><lang class="lang_average_sale">Average sale</lang></div></div>'
                 + (Number(row.refund_payment) > 0
-                    ? '<div class="s-stat"><div class="s-stat-value">' + cur + '&nbsp;' + Number(row.refund_payment).toFixed(2) + '</div>'
+                    ? '<div class="s-stat"><div class="s-stat-value">' + cur + '&nbsp;' + PosnicPro.customers._num(row.refund_payment) + '</div>'
                         + '<div class="s-stat-label"><lang class="lang_refunded">Refunded</lang></div></div>'
                     : '')
                 + (dues > 0
-                    ? '<div class="s-stat"><div class="s-stat-value" style="color: var(--theme-danger-color, #c0392b);">' + cur + '&nbsp;' + dues.toFixed(2) + '</div>'
+                    ? '<div class="s-stat"><div class="s-stat-value" style="color: var(--theme-danger-color, #c0392b);">' + cur + '&nbsp;' + PosnicPro.customers._num(dues) + '</div>'
                         + '<div class="s-stat-label"><lang class="lang_dues">Dues</lang></div></div>'
                     : '')
             );
@@ -356,7 +361,7 @@ PosnicPro.customers = {
                     + '<td>' + esc(r.sales_id || '') + '</td>'
                     + '<td>' + pill + '</td>'
                     + '<td class="text-right q-muted">' + esc(r.date ? String(r.date).slice(0, 10) : '') + '</td>'
-                    + '<td class="text-right">' + cur + '&nbsp;' + (Number(r.sales_total) || 0).toFixed(2) + '</td>'
+                    + '<td class="text-right">' + cur + '&nbsp;' + PosnicPro.customers._num(r.sales_total) + '</td>'
                     + '</tr>';
             });
             html += '</tbody></table>';
@@ -539,7 +544,7 @@ PosnicPro.customers = {
 
         var data = response.data;
         let customer_view_partialBalance = data.partial_balance === true ? '<span class="text-success">true</span>' : '<span class="text-danger">false</span>';
-        let customer_viewBalance = (data.balance !== null && data.balance !== undefined) ? PosnicPro.local.get('currencySign') + parseFloat(data.balance).toFixed(2) : 0;
+        let customer_viewBalance = (data.balance !== null && data.balance !== undefined) ? PosnicPro.local.get('currencySign') + PosnicPro.customers._num(parseFloat(data.balance)) : 0;
         $("#customer_view_partialBalance").html(customer_view_partialBalance);
         $("#customer_viewBalance").html(customer_viewBalance);
         $('#customer_view_phone_icon').attr('href', 'tel:' + data.phone);
@@ -980,9 +985,9 @@ PosnicPro.customerdetails = {
                         });
                         let row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
                         let updateDate = PosnicPro.convertDate(row.string_date);
-                        let trow = '<tr> <td scope="row" data-label="#">' + row_no + '</td> <td data-label="Sale">' + row.sales_id + '</td> <td class="export-date" data-label="Date">' + updateDate + '</td> <td class="text-center" data-label="Process"><span class="' + process_class + '">' + (row.sale_process || 'Add') + '</span></td> <td class="text-center text-danger" data-label="Return qty">' + returnQty + '</td> <td class="text-right text-danger" data-label="Return total">' + (/^[A-Z]{3}$/.test(row.currencyCode || '') ? row.currencyCode : currency) + '&nbsp;' + (Number(row.items_return_total) || 0).toFixed(Number.isInteger(row.currencyDigits) && row.currencyDigits >= 0 && row.currencyDigits <= 4 ? row.currencyDigits : 2) + '</td><td class="text-center text-success" data-label="Qty">' + salesQty + '</td><td class="text-right text-success" data-label="Total">' + (/^[A-Z]{3}$/.test(row.currencyCode || '') ? row.currencyCode : currency) + '&nbsp;' + (Number(row.items_total) || 0).toFixed(Number.isInteger(row.currencyDigits) && row.currencyDigits >= 0 && row.currencyDigits <= 4 ? row.currencyDigits : 2) + '</td></tr>';
+                        let trow = '<tr> <td scope="row" data-label="#">' + row_no + '</td> <td data-label="Sale">' + row.sales_id + '</td> <td class="export-date" data-label="Date">' + updateDate + '</td> <td class="text-center" data-label="Process"><span class="' + process_class + '">' + (row.sale_process || 'Add') + '</span></td> <td class="text-center text-danger" data-label="Return qty">' + returnQty + '</td> <td class="text-right text-danger" data-label="Return total">' + (/^[A-Z]{3}$/.test(row.currencyCode || '') ? row.currencyCode : currency) + '&nbsp;' + (typeof PosnicPro !== 'undefined' && PosnicPro.money ? PosnicPro.money.number(Number(row.items_return_total) || 0, Number.isInteger(row.currencyDigits) && row.currencyDigits >= 0 && row.currencyDigits <= 4 ? row.currencyDigits : 2) : (Number(row.items_return_total) || 0).toFixed(Number.isInteger(row.currencyDigits) && row.currencyDigits >= 0 && row.currencyDigits <= 4 ? row.currencyDigits : 2)) + '</td><td class="text-center text-success" data-label="Qty">' + salesQty + '</td><td class="text-right text-success" data-label="Total">' + (/^[A-Z]{3}$/.test(row.currencyCode || '') ? row.currencyCode : currency) + '&nbsp;' + (typeof PosnicPro !== 'undefined' && PosnicPro.money ? PosnicPro.money.number(Number(row.items_total) || 0, Number.isInteger(row.currencyDigits) && row.currencyDigits >= 0 && row.currencyDigits <= 4 ? row.currencyDigits : 2) : (Number(row.items_total) || 0).toFixed(Number.isInteger(row.currencyDigits) && row.currencyDigits >= 0 && row.currencyDigits <= 4 ? row.currencyDigits : 2)) + '</td></tr>';
                         $('#view_customerdetails').children('tbody').append(trow);
-                        $('span.number').number(true, 2);
+                        PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                     }
                     $('.customer_details_totalsale').html(salesTotalQty);
                     $('.customer_details_totalreturn').html(returnTotalQty);
@@ -997,14 +1002,14 @@ PosnicPro.customerdetails = {
                         response.data.return_total && response.data.return_total.length
                             ? Number(response.data.return_total[0])
                             : returnTotalValue;
-                    $('.customer_details_saletotalvalue').html(custSaleTotal.toFixed(2));
-                    $('.customer_details_returntotalvalue').html(custReturnTotal.toFixed(2));
+                    $('.customer_details_saletotalvalue').html(PosnicPro.customers._num(custSaleTotal));
+                    $('.customer_details_returntotalvalue').html(PosnicPro.customers._num(custReturnTotal));
                     // Complete totals grouped by saved bill currency.
                     if (Array.isArray(response.data.currency_totals)) {
                         const formatTotals = field => response.data.currency_totals.map(group => {
                             const label = /^[A-Z]{3}$/.test(group.currencyCode || '') ? group.currencyCode : currency;
                             const digits = Number.isInteger(group.currencyDigits) && group.currencyDigits >= 0 && group.currencyDigits <= 4 ? group.currencyDigits : 2;
-                            return label + ' ' + (Number(group[field]) || 0).toFixed(digits);
+                            return label + ' ' + (typeof PosnicPro !== 'undefined' && PosnicPro.money ? PosnicPro.money.number(Number(group[field]) || 0, digits) : (Number(group[field]) || 0).toFixed(digits));
                         }).join(' · ') || currency + ' 0.00';
                         $('.customer_details_saletotalvalue').text(formatTotals('total'));
                         $('.customer_details_returntotalvalue').text(formatTotals('return_total'));
@@ -1125,50 +1130,50 @@ PosnicPro.transactiondetails = {
                         let connect = (row.sale_id !== '') ? '<span class="badge badge-secondary"><lang class="lang_sale_bill">Sale Bill</lang></span>' : '';
                         let trow = '<tr> <td scope="row">' + row_no + '</td><td>' + row.string_date + '<br>' + connect + '</td><td class="text-center">' + (row.description || '') + '</td>\n\
                                     <td class="text-left">' + type + '</td><td class="text-center">' +
-                                (row.type === 'out' ? '-' : '+') + currency + '&nbsp;' + row.amount + '</td>\n\
-                                    <td class="text-center">' + currency + '&nbsp;' + (saleTotal - salesPending) + '</td>\n\
-                                    <td class="text-center">' + currency + '&nbsp;' + salesPending + '</td>\n\
-                                    <td class="text-center">' + currency + '&nbsp;' + saleTotal + '</td>\n\
+                                (row.type === 'out' ? '-' : '+') + currency + '&nbsp;' + PosnicPro.customers._num(row.amount) + '</td>\n\
+                                    <td class="text-center">' + currency + '&nbsp;' + PosnicPro.customers._num(saleTotal - salesPending) + '</td>\n\
+                                    <td class="text-center">' + currency + '&nbsp;' + PosnicPro.customers._num(salesPending) + '</td>\n\
+                                    <td class="text-center">' + currency + '&nbsp;' + PosnicPro.customers._num(saleTotal) + '</td>\n\
                                     <td class="text-center"><img loading="lazy" decoding="async" src=' + image_path + ' width=30 height=20 class="imagezoom" id="' + image_path + '" onclick="PosnicPro.viewImage(this.id,\'customers\');"></td>\n\
                                     <td class="text-center">' + trash + '</td></tr>';
                         $('#view_customer_transaction_details').children('tbody').append(trow);
-                        $('span.number').number(true, 2);
+                        PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         $('#view_transactiondetails').children('tbody').append(trow);
                     }
 
                     let pendingAmount = 0;
-                    $('.transaction_details_pending').html(currency + " " + '0.00');
+                    $('.transaction_details_pending').html(currency + " " + PosnicPro.customers._num(0));
                     if (response.data.pending !== 0) {
                         pendingAmount = response.data.pending;
-                        $('.transaction_details_pending').html(currency + " " + pendingAmount.toFixed(2));
+                        $('.transaction_details_pending').html(currency + " " + PosnicPro.customers._num(pendingAmount));
                     }
 
                     let walletAmount = 0;
-                    $('.transaction_details_wallet').html(currency + " " + '0.00');
+                    $('.transaction_details_wallet').html(currency + " " + PosnicPro.customers._num(0));
                     if (response.data.wallet !== 0) {
                         walletAmount = response.data.wallet;
-                        $('.transaction_details_wallet').html(currency + " " + walletAmount.toFixed(2));
+                        $('.transaction_details_wallet').html(currency + " " + PosnicPro.customers._num(walletAmount));
                     }
 
-                    $('.transaction_details_due').html(currency + " " + '0.00');
+                    $('.transaction_details_due').html(currency + " " + PosnicPro.customers._num(0));
                     if (walletAmount < 0 && pendingAmount >= 0) {
-                        $('.transaction_details_due').html(currency + " " + (pendingAmount + Math.abs(walletAmount)).toFixed(2));
+                        $('.transaction_details_due').html(currency + " " + PosnicPro.customers._num(pendingAmount + Math.abs(walletAmount)));
                     } else {
-                        $('.transaction_details_due').html(currency + " " + pendingAmount.toFixed(2));
+                        $('.transaction_details_due').html(currency + " " + PosnicPro.customers._num(pendingAmount));
                     }
 
                     let inAmount = 0;
-                    $('.transaction_details_in').html(currency + " " + '0.00');
+                    $('.transaction_details_in').html(currency + " " + PosnicPro.customers._num(0));
                     if (response.data.in !== 0) {
                         inAmount = response.data.in;
-                        $('.transaction_details_in').html(currency + " " + inAmount.toFixed(2));
+                        $('.transaction_details_in').html(currency + " " + PosnicPro.customers._num(inAmount));
                     }
 
                     let outAmount = 0;
-                    $('.transaction_details_out').html(currency + " " + '0.00');
+                    $('.transaction_details_out').html(currency + " " + PosnicPro.customers._num(0));
                     if (response.data.out !== 0) {
                         outAmount = response.data.out;
-                        $('.transaction_details_out').html(currency + " " + outAmount.toFixed(2));
+                        $('.transaction_details_out').html(currency + " " + PosnicPro.customers._num(outAmount));
                     }
 
                 } else {
@@ -1253,7 +1258,7 @@ PosnicPro.closesalesdetails = {
                 let currency = PosnicPro.local.get('currencySign');
                 PosnicPro.closesalesdetails.walletbalance = response.data.wallet;
                 PosnicPro.closesalesdetails.fixedwalletbalance = response.data.wallet;
-                $('.closedsale_details_wallet').html(currency + ' ' + response.data.wallet.toFixed(2));
+                $('.closedsale_details_wallet').html(currency + ' ' + PosnicPro.customers._num(response.data.wallet));
                 $('#listpayment').html('');
                 $('.customer-payment-details').hide();
                 $('.customer-payment-details-hide').show();
@@ -1282,8 +1287,8 @@ PosnicPro.closesalesdetails = {
 
                     let trow = '<li class="media">' +
                             '<div class="media-body">' +
-                            '<h5><span>' + row_no + ')&nbsp;&nbsp;</span>' + row.sales_id + '<span class="badge badge-success ml-3 number">' + currency + ' ' + row.payment_pending.toFixed(2) + '</span> ' + checkboxvalue + ' </h5>' +
-                            '<p class="timing ml-3 font-10">Partially Paid :' + currency + ' ' + row.partial_balance.toFixed(2) + '</p>' +
+                            '<h5><span>' + row_no + ')&nbsp;&nbsp;</span>' + row.sales_id + '<span class="badge badge-success ml-3">' + currency + ' ' + PosnicPro.customers._num(row.payment_pending) + '</span> ' + checkboxvalue + ' </h5>' +
+                            '<p class="timing ml-3 font-10">Partially Paid :' + currency + ' ' + PosnicPro.customers._num(row.partial_balance) + '</p>' +
                             '<span class="timing ml-3">' + row.date + '</span>' +
                             '</div>' +
                             '</li>';
@@ -1341,7 +1346,7 @@ PosnicPro.closesalesdetails = {
         PosnicPro.request(params, function (response) {
             if (response.type === 'success') {
                 let currency = PosnicPro.local.get('currencySign');
-                $('.closedsale_details_wallet').html(currency + ' ' + response.data.toFixed(2));
+                $('.closedsale_details_wallet').html(currency + ' ' + PosnicPro.customers._num(response.data));
                 PosnicPro.alert(response.type, response.message);
                 PosnicPro.closesalesdetails.closesalesdetailsTable();
             } else {

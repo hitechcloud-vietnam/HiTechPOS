@@ -851,6 +851,22 @@ function posnicLanguageStyling(code) {
      * in the catch below, and hide the link forever without anyone noticing -
      * which is exactly how a feature ships dead.
      */
+    /*
+     * HiTechPOS: a brand that names an account page (brand.json accountUrl,
+     * e.g. https://app.hitechpos.vn/account) has one for every shop it serves,
+     * so the link points there and needs no further word from the server.
+     */
+    function brandAccount() {
+        var url = window.POSNIC_BRAND_ACCOUNT_URL;
+        if (!url) return false;
+        var link = document.getElementById('posnic_account');
+        if (link) link.setAttribute('href', url);
+        item.style.display = '';
+        return true;
+    }
+    if (brandAccount()) return;
+    document.addEventListener('posnic:brand', brandAccount);
+
     var base = (typeof API_URL === 'string' && API_URL) || '/';
     fetch(base + 'api/runtime-info')
         .then(function (r) { return r.ok ? r.json() : null; })

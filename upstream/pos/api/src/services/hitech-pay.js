@@ -28,9 +28,21 @@ function baseUrl() {
   return url;
 }
 
+/* Shown to the cashier as is (HiTechPOS shops are Vietnamese). The shard
+   reloads shop secrets about once a minute, so a QR tapped right after the
+   owner turns on VietQR finds no key yet: say so instead of the internal
+   "no HITECH_POS_KEY for the shop in context" error. */
+const NOT_READY = 'Cửa hàng vừa bật thanh toán QR, vui lòng thử lại sau ít phút.';
+const NOT_CONNECTED = 'Cửa hàng chưa kết nối thanh toán QR HiTechPOS.';
+
 function apiKey() {
-  const key = currentSecret('HITECH_POS_KEY', process.env.HITECH_POS_KEY || null);
-  if (!key) throw new Error('HiTechPOS payments are not connected for this shop');
+  let key;
+  try {
+    key = currentSecret('HITECH_POS_KEY', process.env.HITECH_POS_KEY || null);
+  } catch {
+    throw new Error(NOT_READY);
+  }
+  if (!key) throw new Error(NOT_CONNECTED);
   return key;
 }
 
@@ -151,4 +163,24 @@ async function close(id) {
   return { status: true, data: { id }, message: 'QR closed' };
 }
 
-module.exports = { isHitechConfig, isHitechId, generate, status, confirm, close, toVnd, PREFIX };
+/*
+ * After the sale is saved the screen calls qrSalePayementUpdate(paymentid,
+ * salesid). A HiTechPOS payment is already settled through the control plane,
+ * so there is nothing to capture: remember which QR paid for which sale (for
+ * reconciliation) and answer success. Scoped to the shop's own sale.
+ */
+async function linkSale(db, scope, id, saleId) {
+  const { ObjectId } = require('mongodb');
+  if (!isHitechId(String(id || ''))) return { status: false, data: null, message: 'Sale not found' };
+  if (typeof saleId !== 'string' || !saleId.trim() || saleId.length > 64)
+    return { status: false, data: null, message: 'Invalid sale id' };
+  // The screen sends the sale's _id; older builds sent the bill number.
+  const which = /^[a-f0-9]{24}$/i.test(saleId) ? { _id: new ObjectId(saleId) } : { sales_id: saleId };
+  const result = await db
+    .collection('sales')
+    .updateOne({ ...which, ...scope }, { $set: { hitech_payment_id: id } });
+  if (!result.matchedCount) return { status: false, data: null, message: 'Sale not found' };
+  return { status: true, data: { id, sale_id: saleId }, message: 'Payment confirmed' };
+}
+
+module.exports = { isHitechConfig, isHitechId, generate, status, confirm, close, linkSale, toVnd, PREFIX, NOT_READY };

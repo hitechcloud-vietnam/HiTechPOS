@@ -100,8 +100,8 @@ PosnicPro.paymentreport = {
                             $("#salePaymentType tbody").append(saleType);
                         });
 
-                        var digits = Number.isInteger(data.currencyDigits) && data.currencyDigits >= 0 && data.currencyDigits <= 4 ? data.currencyDigits : 2;
-                        $('#salePaymentType span.number').number(true, digits);
+                        var digits = Number.isInteger(data.currencyDigits) && data.currencyDigits >= 0 && data.currencyDigits <= 4 ? data.currencyDigits : (PosnicPro.money ? PosnicPro.money.digits() : 2);
+                        PosnicPro.money ? PosnicPro.money.show($('#salePaymentType span.number'), digits) : $('#salePaymentType span.number').number(true, digits);
                     } else {
                         $("#salePaymentType tbody").append('<tr><td colspan="4"><div class="text-center text-dark"><p class="table_cart_content text-primary"><lang class="lang_your_cash_details_are_empty">Your cash details are empty</lang></p></div></td></tr>');
                     }
@@ -192,8 +192,8 @@ PosnicPro.paymentransaction = {
                             let row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
                             let trow = '<tr> <td scope="row">' + row_no + '</td>  <td>' + row.sales_id + '</td> <td>' + updateDate + '</td> <td>' + row.user_name + '</td> <td>' + row.payment_mode + '</td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + (row.report_amount ?? row.items_total) + '</span></td></tr>';
                             $('#view_paymentransaction').children('tbody').append(trow);
-                            var digits = Number.isInteger(row.currencyDigits) && row.currencyDigits >= 0 && row.currencyDigits <= 4 ? row.currencyDigits : 2;
-                            $('#view_paymentransaction tbody tr:last span.number').number(true, digits);
+                            var digits = Number.isInteger(row.currencyDigits) && row.currencyDigits >= 0 && row.currencyDigits <= 4 ? row.currencyDigits : (PosnicPro.money ? PosnicPro.money.digits() : 2);
+                            PosnicPro.money ? PosnicPro.money.show($('#view_paymentransaction tbody tr:last span.number'), digits) : $('#view_paymentransaction tbody tr:last span.number').number(true, digits);
                         }
                     } else {
                         var paymentsalereportexportdata = [];
@@ -302,7 +302,7 @@ PosnicPro.paymentreturntransaction = {
                             let row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
                             let trow = '<tr> <td scope="row">' + row_no + '</td>  <td>' + row.sales_id + '</td> <td>' + updateDate + '</td> <td>' + row.user_name + '</td> <td>' + row.payment_mode + '</td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.items_return_total + '</span></td></tr>';
                             $('#view_paymentreturntransaction').children('tbody').append(trow);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var paymentsalereportexportdata = [];
@@ -419,7 +419,10 @@ PosnicPro.commissionreport = {
         var rows = (data && data.rows) || [];
         var totals = (data && data.totals) || {};
         var sign = PosnicPro.local.get('currencySign') || '';
-        var money = function (amount) { return sign + (Number(amount) || 0).toFixed(2); };
+        var money = function (amount) {
+            var n = Number(amount) || 0;
+            return sign + (PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2));
+        };
         var safe = function (value) { return $('<div>').text(value == null ? '' : value).html(); };
         var t = function (key, fallback) { return PosnicPro.i18n.t(key, fallback); };
 

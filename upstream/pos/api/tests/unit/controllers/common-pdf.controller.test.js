@@ -22,6 +22,9 @@ jest.mock('fs', () => ({
   createWriteStream: jest.fn(),
 }));
 
+// The branch whose currency a document is written in (HiTechPOS).
+jest.mock('../../../src/models/branch.model', () => ({ findOne: jest.fn() }));
+
 jest.mock('../../../src/services/base.service', () => ({
   getReportAutoSuggestions: jest.fn(),
   getAutoSuggestions: jest.fn(),
@@ -35,6 +38,7 @@ jest.mock('../../../src/services/base.service', () => ({
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const ctrl = require('../../../src/controllers/common-pdf.controller');
+const Branch = require('../../../src/models/branch.model');
 
 // =============================================================================
 // Test helpers
@@ -100,6 +104,7 @@ beforeEach(() => {
   jest.spyOn(console, 'log').mockImplementation(() => {});
   mockDoc = createMockDoc();
   PDFDocument.mockImplementation(() => mockDoc);
+  Branch.findOne.mockReturnValue({ lean: () => Promise.resolve(null) });
   fs.createWriteStream.mockReturnValue({
     on: jest.fn().mockReturnThis(),
     once: jest.fn().mockReturnThis(),
@@ -272,10 +277,13 @@ describe('CommonPdfController — generatePdf (PDF flow)', () => {
 // =============================================================================
 
 describe('CommonPdfController — generatePdf (type routing)', () => {
+  // Fonts and the shop-currency formatter travel with the document.
+  const documentStyle = expect.objectContaining({ money: expect.any(Function) });
+
   test('calls generateInvoicePdf for type="invoice" (default)', async () => {
     const spy = jest.spyOn(ctrl, 'generateInvoicePdf').mockResolvedValue();
     await ctrl.generatePdf(mockReq({ body: { content: { invoiceNumber: 'INV-1' } } }), mockRes());
-    expect(spy).toHaveBeenCalledWith(mockDoc, { invoiceNumber: 'INV-1' });
+    expect(spy).toHaveBeenCalledWith(mockDoc, { invoiceNumber: 'INV-1' }, documentStyle);
   });
 
   test('calls generateInvoicePdf when type="invoice" is explicit', async () => {
@@ -290,7 +298,7 @@ describe('CommonPdfController — generatePdf (type routing)', () => {
       mockReq({ body: { content: { receiptNumber: 'REC-1' }, type: 'receipt' } }),
       mockRes()
     );
-    expect(spy).toHaveBeenCalledWith(mockDoc, { receiptNumber: 'REC-1' });
+    expect(spy).toHaveBeenCalledWith(mockDoc, { receiptNumber: 'REC-1' }, documentStyle);
   });
 
   test('calls generateReportPdf when type="report"', async () => {
@@ -299,7 +307,7 @@ describe('CommonPdfController — generatePdf (type routing)', () => {
       mockReq({ body: { content: { title: 'Sales' }, type: 'report' } }),
       mockRes()
     );
-    expect(spy).toHaveBeenCalledWith(mockDoc, { title: 'Sales' });
+    expect(spy).toHaveBeenCalledWith(mockDoc, { title: 'Sales' }, documentStyle);
   });
 
   test('calls generateDefaultPdf for unknown type', async () => {
@@ -308,7 +316,7 @@ describe('CommonPdfController — generatePdf (type routing)', () => {
       mockReq({ body: { content: 'plain text', type: 'unknown' } }),
       mockRes()
     );
-    expect(spy).toHaveBeenCalledWith(mockDoc, 'plain text');
+    expect(spy).toHaveBeenCalledWith(mockDoc, 'plain text', documentStyle);
   });
 
   test('calls generateDefaultPdf when type is omitted (falls to default case)', async () => {
@@ -402,7 +410,7 @@ describe('CommonPdfController — generateInvoicePdf', () => {
     const spy = jest.spyOn(ctrl, 'generateTable');
     await ctrl.generateInvoicePdf(mockDoc, { items: [{}] });
     const tableArg = spy.mock.calls[0][1];
-    expect(tableArg.rows[0]).toEqual(['', '', 0, '$0.00', '$0.00']);
+    expect(tableArg.rows[0]).toEqual(['', '', 0, '0.00', '0.00']);
   });
 });
 
@@ -657,29 +665,113 @@ describe('CommonPdfController — generateTable', () => {
 // =============================================================================
 
 describe('CommonPdfController — formatCurrency', () => {
-  test('formats positive integer as USD currency string', () => {
-    expect(ctrl.formatCurrency(100)).toBe('$100.00');
+  // Posnic hardcoded en-US/USD here; a HiTechPOS shop is in Vietnam.
+  const vnBranch = {
+    country_id: 'VN',
+    currency: '₫',
+    currency_text: 'Vietnam Dong / VND or ₫',
+  };
+  const usBranch = { country_id: 'US', currency: '$', currency_text: 'United States Dollar / USD or $' };
+  const inBranch = { country_id: 'IN', currency: '₹', currency_text: 'India Rupee / INR or ₹' };
+
+  test('without a branch: a bare figure, two decimals, never a dollar sign', () => {
+    expect(ctrl.formatCurrency(100)).toBe('100.00');
+    expect(ctrl.formatCurrency(9.99)).toBe('9.99');
+    expect(ctrl.formatCurrency(0)).toBe('0.00');
+    expect(ctrl.formatCurrency(1000000)).toBe('1,000,000.00');
+    expect(ctrl.formatCurrency(3 * 9.99)).toBe('29.97');
+    expect(ctrl.formatCurrency(-50)).toBe('-50.00');
   });
 
-  test('formats decimal amount correctly', () => {
-    expect(ctrl.formatCurrency(9.99)).toBe('$9.99');
+  test('a Vietnamese branch: whole dong, grouped with dots', () => {
+    expect(ctrl.formatCurrency(1250000, vnBranch)).toBe('₫ 1.250.000');
+    expect(ctrl.formatCurrency(22727.27, vnBranch)).toBe('₫ 22.727');
+    expect(ctrl.formatCurrency(1250000, vnBranch)).not.toMatch(/1,250,000|\.00$|\$|USD/);
   });
 
-  test('formats zero as $0.00', () => {
-    expect(ctrl.formatCurrency(0)).toBe('$0.00');
+  test('a font without ₫ prints the ISO code instead of garbage', () => {
+    expect(ctrl.formatCurrency(1250000, vnBranch, { ascii: true })).toBe('VND 1.250.000');
+    expect(ctrl.formatCurrency(1234.5, inBranch, { ascii: true })).toBe('Rs. 1,234.50');
   });
 
-  test('formats negative amount with minus sign', () => {
-    expect(ctrl.formatCurrency(-50)).toMatch(/-?\$?50\.00|-50/);
+  test('other currencies keep their own precision', () => {
+    expect(ctrl.formatCurrency(1234.5, usBranch)).toBe('$ 1,234.50');
+    expect(ctrl.formatCurrency(1234.5, inBranch)).toBe('₹ 1,234.50');
+    expect(ctrl.formatCurrency(12.3456, { currency_text: 'Kuwaiti Dinar / KWD' })).toBe('KWD 12.346');
+  });
+});
+
+describe('CommonPdfController — the document is written in the shop currency', () => {
+  const vnBranch = {
+    _id: 'b1',
+    country_id: 'VN',
+    currency: '₫',
+    currency_text: 'Vietnam Dong / VND or ₫',
+  };
+
+  test("generatePdf reads the request's branch and prints VND", async () => {
+    Branch.findOne.mockReturnValue({ lean: () => Promise.resolve(vnBranch) });
+    const spy = jest.spyOn(ctrl, 'generateTable');
+    await ctrl.generatePdf(
+      mockReq({
+        tenantContext: { branchId: 'b1', licenseId: 'lic1' },
+        body: { content: { items: [{ name: 'Phở bò', quantity: 2, price: 55000 }], totals: { total: 110000 } } },
+      }),
+      mockRes()
+    );
+    expect(Branch.findOne).toHaveBeenCalledWith({ _id: 'b1', license: 'lic1' });
+    // The mock document has no registerFont, so the ASCII form is used.
+    expect(spy.mock.calls[0][1].rows[0]).toEqual(['Phở bò', '', 2, 'VND 55.000', 'VND 110.000']);
+    const texts = mockDoc.text.mock.calls.map(([t]) => String(t));
+    expect(texts).toContain('VND 110.000');
+    expect(texts.join(' ')).not.toMatch(/\$|USD|110,000\.00/);
   });
 
-  test('formats large amount with comma separator', () => {
-    const result = ctrl.formatCurrency(1000000);
-    expect(result).toContain('1,000,000');
+  test('with a Unicode font the symbol itself is printed', async () => {
+    mockDoc.registerFont = jest.fn();
+    fs.existsSync.mockReturnValue(true); // src/fonts/DejaVuSansCondensed*.ttf
+    Branch.findOne.mockReturnValue({ lean: () => Promise.resolve(vnBranch) });
+    await ctrl.generatePdf(
+      mockReq({
+        tenantContext: { branchId: 'b1' },
+        body: { content: { payment: { type: 'Tiền mặt', amount: 135000 } }, type: 'receipt' },
+      }),
+      mockRes()
+    );
+    const texts = mockDoc.text.mock.calls.map(([t]) => String(t));
+    expect(texts).toContain('Amount: ₫ 135.000');
+    expect(mockDoc.font).toHaveBeenCalledWith('DejaVuSansCondensed');
   });
 
-  test('formats calculated item total (qty × price)', () => {
-    const result = ctrl.formatCurrency(3 * 9.99);
-    expect(result).toBe('$29.97');
+  test('no branch: the currency hint in the content is used', async () => {
+    const spy = jest.spyOn(ctrl, 'generateTable');
+    await ctrl.generatePdf(
+      mockReq({
+        body: {
+          content: {
+            items: [{ description: 'Cà phê', amount: 25000 }],
+            currency: { currency: '₫', currency_text: 'VND', country_id: 'VN' },
+          },
+          type: 'receipt',
+        },
+      }),
+      mockRes()
+    );
+    expect(Branch.findOne).not.toHaveBeenCalled();
+    expect(spy.mock.calls[0][1].rows[0]).toEqual(['Cà phê', 'VND 25.000']);
+  });
+
+  test('a branch lookup that fails does not stop the PDF', async () => {
+    Branch.findOne.mockImplementation(() => {
+      throw new Error('db down');
+    });
+    const res = mockRes();
+    await ctrl.generatePdf(
+      mockReq({ tenantContext: { branchId: 'b1' }, body: { content: { totals: { total: 5 } } } }),
+      res
+    );
+    expect(mockDoc.end).toHaveBeenCalled();
+    const texts = mockDoc.text.mock.calls.map(([t]) => String(t));
+    expect(texts).toContain('5.00');
   });
 });

@@ -2,6 +2,7 @@
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const MoneyText = require('./money-text');
 
 // DejaVuSansCondensed ships WITH the api now (src/fonts, Bitstream Vera
 // licence alongside). It exists for one load-bearing reason: the built-in
@@ -32,6 +33,19 @@ function registerDejaVuSansCondensed(doc) {
     console.log('DejaVuSansCondensed font load failed:', err.message);
     return false;
   }
+}
+
+/*
+ * Money as the shop writes it (utils/money-text): the currency's ISO 4217
+ * precision and the country's digit grouping - "₫ 1.250.000" for a shop in
+ * Vietnam, "₹ 1,250.50" for one in India. `ascii` when the figure is drawn in
+ * the built-in Helvetica, which has neither ₹ nor ₫: the rupee keeps its old
+ * "Rs.", any other symbol becomes its ISO code ("VND").
+ */
+function moneyFor(branch, symbol, ascii) {
+  const sign =
+    ascii && !/^[\x20-\x7E]*$/.test(symbol) ? MoneyText.symbol(branch, { ascii: true }) : symbol;
+  return (n) => `${sign} ${MoneyText.number(Number(n) || 0, branch)}`;
 }
 
 function addWatermark(doc, text, options = {}) {
@@ -172,8 +186,7 @@ function generateInvoicePDF(options) {
     hasDejavu && fs.existsSync(dejavuBoldPath) ? 'DejaVuSansCondensed-Bold' : 'Helvetica-Bold';
   // Helvetica has no rupee glyph - without DejaVu a non-ASCII currency
   // renders as garbage, and "Rs." beats garbage on a customer's bill.
-  const cur = hasDejavu || /^[\x20-\x7E]*$/.test(currency) ? currency : 'Rs.';
-  const money = (n) => `${cur} ${(Number(n) || 0).toFixed(2)}`;
+  const money = moneyFor(branch || {}, currency, !hasDejavu);
 
   const INK = '#1f2328';
   const MUTED = '#57606a';
@@ -509,6 +522,8 @@ function generateReceivingPDF(options) {
 
   // Get data
   const currency = branch?.currency_type || '₹';
+  // The amounts below are drawn in Helvetica: no ₹/₫ glyph, so the ASCII form.
+  const money = moneyFor(branch || {}, currency, true);
   const storeName = branch?.branch_name || 'Store';
   const storeAddress = branch?.store_address || '';
   const storeEmail = branch?.store_email || '';
@@ -783,7 +798,7 @@ function generateReceivingPDF(options) {
     doc
       .fontSize(9)
       .fillColor('#000000')
-      .text(`${currency} ${price.toFixed(2)}`, col4 + 5, y + 4, {
+      .text(money(price), col4 + 5, y + 4, {
         width: col4Width - 10,
         align: 'right',
       });
@@ -797,7 +812,7 @@ function generateReceivingPDF(options) {
     // Reset
     doc.fontSize(9).fillColor('#000000');
 
-    doc.text(`${currency} ${total.toFixed(2)}`, col5 + 5, y + 7, {
+    doc.text(money(total), col5 + 5, y + 7, {
       width: col5Width - 10,
       align: 'right',
     });
@@ -842,7 +857,7 @@ function generateReceivingPDF(options) {
     .lineTo(col5, y + rowHeight)
     .stroke();
   doc.text('Subtotal:', col4 + 5, y + 5, { width: col4Width - 10, align: 'right' });
-  doc.text(`${currency} ${subtotal.toFixed(2)}`, col5 + 5, y + 5, {
+  doc.text(money(subtotal), col5 + 5, y + 5, {
     width: col5Width - 10,
     align: 'right',
   });
@@ -856,7 +871,7 @@ function generateReceivingPDF(options) {
       .lineTo(col5, y + rowHeight)
       .stroke();
     doc.text('Tax:', col4 + 5, y + 5, { width: col4Width - 10, align: 'right' });
-    doc.text(`${currency} ${tax.toFixed(2)}`, col5 + 5, y + 5, {
+    doc.text(money(tax), col5 + 5, y + 5, {
       width: col5Width - 10,
       align: 'right',
     });
@@ -871,7 +886,7 @@ function generateReceivingPDF(options) {
     .stroke();
   doc.fontSize(10).font('Helvetica-Bold');
   doc.text('TOTAL:', col4 + 5, y + 5, { width: col4Width - 10, align: 'right' });
-  doc.text(`${currency} ${grandTotal.toFixed(2)}`, col5 + 5, y + 5, {
+  doc.text(money(grandTotal), col5 + 5, y + 5, {
     width: col5Width - 10,
     align: 'right',
   });
@@ -945,4 +960,5 @@ function generateReceivingPDF(options) {
 module.exports = {
   generateInvoicePDF,
   generateReceivingPDF,
+  registerDejaVuSansCondensed,
 };

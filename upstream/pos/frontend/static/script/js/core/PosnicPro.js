@@ -124,8 +124,12 @@ PosnicPro = {
      * register report - and a receipt extractor that has to decide whether to
      * add it. Four literals is four places to keep in step, and the thermal
      * path had already fallen out of step without anyone noticing.
+     *
+     * HiTechPOS: the HiTechPOS site by default; a brand descriptor with a
+     * `url` (POSNIC_BRAND_DIR/brand.json, via /brand.json) replaces it at load,
+     * see applyBrand below.
      */
-    BRAND_URL: 'https://www.posnic.com',
+    BRAND_URL: 'https://hitechpos.vn',
     config: [],
     modules: ['customers', 'suppliers', 'categories', 'items', 'users', 'branches', 'expenses', 'receivings', 'sales', 'registers'],
     record_url: null,
@@ -2245,6 +2249,8 @@ PosnicPro = {
                 });
             };
             var num = function (n) { return (Number(n) || 0).toFixed(2); };
+            // Money columns in the shop's precision and grouping (money-format.js); hours stay num().
+            var mon = function (n) { var x = Number(n) || 0; return PosnicPro.money ? PosnicPro.money.number(x) : x.toFixed(2); };
             if (!rows.length) {
                 $('#labour_report_body').html('<tr><td colspan="7" class="text-center text-muted"><lang class="lang_no_shifts_in_this_range">No shifts in this range.</lang></td></tr>');
                 $('#labour_report_foot').html('');
@@ -2258,9 +2264,9 @@ PosnicPro = {
                     + '<td class="text-right">' + (r.shifts || 0) + '</td>'
                     + '<td class="text-right">' + (r.scheduled_hours ? num(r.scheduled_hours) : '—') + '</td>'
                     + '<td class="text-right">' + num(r.worked_hours) + '</td>'
-                    + '<td class="text-right">' + (r.tips_total ? cur + num(r.tips_total) : '—') + '</td>'
-                    + '<td class="text-right">' + (r.hourly_rate ? cur + num(r.hourly_rate) : '—') + '</td>'
-                    + '<td class="text-right">' + (r.payout ? cur + num(r.payout) : '—') + '</td>'
+                    + '<td class="text-right">' + (r.tips_total ? cur + mon(r.tips_total) : '—') + '</td>'
+                    + '<td class="text-right">' + (r.hourly_rate ? cur + mon(r.hourly_rate) : '—') + '</td>'
+                    + '<td class="text-right">' + (r.payout ? cur + mon(r.payout) : '—') + '</td>'
                     + '</tr>';
             });
             $('#labour_report_body').html(html);
@@ -2270,9 +2276,9 @@ PosnicPro = {
                 + '<td class="text-right">' + (t.shifts || 0) + '</td>'
                 + '<td class="text-right">' + (t.scheduled_hours ? num(t.scheduled_hours) : '—') + '</td>'
                 + '<td class="text-right">' + num(t.worked_hours) + '</td>'
-                + '<td class="text-right">' + (t.tips_total ? cur + num(t.tips_total) : '—') + '</td>'
+                + '<td class="text-right">' + (t.tips_total ? cur + mon(t.tips_total) : '—') + '</td>'
                 + '<td></td>'
-                + '<td class="text-right">' + (t.payout ? cur + num(t.payout) : '—') + '</td>'
+                + '<td class="text-right">' + (t.payout ? cur + mon(t.payout) : '—') + '</td>'
                 + '</tr>');
         },
         // Payroll / timecard export (Phase 7) --------------------------------
@@ -6078,6 +6084,17 @@ $('.custom_report_search_input').on('keyup', function (event) {
         // Read by the desktop title bar, which is built before this runs on a
         // cold load and must not fall back to our name.
         window.POSNIC_BRAND_NAME = brand.name;
+        // HiTechPOS: the brand's addresses (see brandLinks in api/app.js).
+        var safe = function (u) { return typeof u === 'string' && /^https:\/\/[^\s<>"'`]+$/.test(u) ? u : ''; };
+        if (safe(brand.url)) { PosnicPro.BRAND_URL = safe(brand.url).replace(/\/$/, ''); }
+        window.POSNIC_BRAND_URL = PosnicPro.BRAND_URL;
+        window.POSNIC_BRAND_ACCOUNT_URL = safe(brand.accountUrl);
+        window.POSNIC_BRAND_SUPPORT_URL = safe(brand.supportUrl);
+        window.POSNIC_BRAND_DOWNLOAD_URL = safe(brand.downloadUrl);
+        if (typeof brand.supportEmail === 'string' && /^[^\s@<>"']+@[^\s@<>"']+$/.test(brand.supportEmail)) {
+            window.POSNIC_BRAND_SUPPORT_EMAIL = brand.supportEmail;
+        }
+        try { document.dispatchEvent(new CustomEvent('posnic:brand', { detail: brand })); } catch (e) { /* old browser */ }
         $('h1.title_h2').text(brand.name);
         if (document.title) {
             document.title = document.title.replace(/PosnicPro|POSNIC|Posnic/g, brand.name);
@@ -6699,7 +6716,8 @@ PosnicPro.taxpayable = {
     renderMonths: function () {
         var three = PosnicPro.taxpayable._threeHead;
         var L = PosnicPro.taxpayable._label;
-        var n = function (v) { return (Number(v) || 0).toFixed(2); };
+        // Tax figures in the shop's precision and grouping (money-format.js).
+        var n = function (v) { var x = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.number(x) : x.toFixed(2); };
         var head = three
             ? '<tr><th rowspan="2"><lang class="lang_month">Month</lang></th><th colspan="4" class="text-center">Output (' + L + ' collected)</th>'
               + '<th colspan="4" class="text-center"><lang class="lang_input_credit_purchases">Input credit (purchases)</lang></th>'
@@ -6732,7 +6750,7 @@ PosnicPro.taxpayable = {
     },
     renderRegister: function () {
         var three = PosnicPro.taxpayable._threeHead;
-        var n = function (v) { return (Number(v) || 0).toFixed(2); };
+        var n = function (v) { var x = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.number(x) : x.toFixed(2); };
         var esc = function (t) { return $('<i/>').text(t == null ? '' : t).html(); };
         $('#taxpayable_register_head').html('<tr><th><lang class="lang_newpurchase_title">Purchase</lang></th><th><lang class="lang_date_title">Date</lang></th><th><lang class="lang_newsupplier_title">Supplier</lang></th><th><lang class="lang_tax_id">Tax ID</lang></th>'
             + (three ? '<th class="text-right"><lang class="lang_igst_tax_receiving">IGST</lang></th><th class="text-right"><lang class="lang_cgst_tax_receiving">CGST</lang></th><th class="text-right"><lang class="lang_sgst_tax_receiving">SGST</lang></th>' : '<th class="text-right"><lang class="lang_tax_paid">Tax paid</lang></th>')
@@ -6821,6 +6839,8 @@ PosnicPro.taxsummaryreport = {
             PosnicPro.taxsummaryreport._last = d;
             var rows = (d && d.list) || [];
             var cur = PosnicPro.local.get('currencySign') || '';
+            // The shop's precision and grouping (money-format.js).
+            var fig = function (v) { var x = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.number(x) : x.toFixed(2); };
             /* The GST position renders even for a range with no sales - a
                period of pure purchasing still builds credit. */
             PosnicPro.taxsummaryreport.renderGst(d, cur);
@@ -6838,9 +6858,9 @@ PosnicPro.taxsummaryreport = {
                 html += '<tr>'
                     + '<td>' + (r.rate ? r.rate + '%' : '<span class="text-muted">0% / untaxed</span>') + '</td>'
                     + '<td>' + (esc(r.tax_name) || '&mdash;') + '</td>'
-                    + '<td class="text-right">' + cur + '&nbsp;' + r.net.toFixed(2) + '</td>'
-                    + '<td class="text-right">' + cur + '&nbsp;' + r.tax.toFixed(2) + '</td>'
-                    + '<td class="text-right">' + cur + '&nbsp;' + r.gross.toFixed(2) + '</td>'
+                    + '<td class="text-right">' + cur + '&nbsp;' + fig(r.net) + '</td>'
+                    + '<td class="text-right">' + cur + '&nbsp;' + fig(r.tax) + '</td>'
+                    + '<td class="text-right">' + cur + '&nbsp;' + fig(r.gross) + '</td>'
                     + '<td class="text-right">' + r.lines + '</td>'
                     + '</tr>';
             });
@@ -6848,9 +6868,9 @@ PosnicPro.taxsummaryreport = {
             var t = d.totals || {};
             $('#taxsummary_foot').html('<tr class="font-weight-bold">'
                 + '<td colspan="2"><lang class="lang_total_title">Total</lang></td>'
-                + '<td class="text-right">' + cur + '&nbsp;' + (t.net || 0).toFixed(2) + '</td>'
-                + '<td class="text-right">' + cur + '&nbsp;' + (t.tax || 0).toFixed(2) + '</td>'
-                + '<td class="text-right">' + cur + '&nbsp;' + (t.gross || 0).toFixed(2) + '</td>'
+                + '<td class="text-right">' + cur + '&nbsp;' + fig(t.net) + '</td>'
+                + '<td class="text-right">' + cur + '&nbsp;' + fig(t.tax) + '</td>'
+                + '<td class="text-right">' + cur + '&nbsp;' + fig(t.gross) + '</td>'
                 + '<td></td></tr>');
         }, function () {
             $('#taxsummary_body').html('<tr><td colspan="6" class="text-center text-danger"><lang class="lang_could_not_load_the_summary">Could not load the summary.</lang></td></tr>');
@@ -6866,7 +6886,7 @@ PosnicPro.taxsummaryreport = {
         var gst = d && d.gst;
         var p = (d && d.purchases) || { list: [], totals: {} };
         if (!gst) { $('#taxsummary_gst_card').hide(); return; }
-        var money = function (v) { return cur + '&nbsp;' + (Number(v) || 0).toFixed(2); };
+        var money = function (v) { var x = Number(v) || 0; return cur + '&nbsp;' + (PosnicPro.money ? PosnicPro.money.number(x) : x.toFixed(2)); };
         var cell = function (label, value, tone) {
             return '<div class="col-md-3 col-6 mb-2">'
                 + '<div style="font-size:12px;color:#69758c;">' + label + '</div>'

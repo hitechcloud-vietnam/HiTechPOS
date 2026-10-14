@@ -21,7 +21,7 @@
                 if (data.enabled === false) throw new Error('Billing outlets is switched off. Return to the main billing window. Existing bills remain available there.');
                 if (!ui.current) throw new Error('This outlet is unavailable or your access has changed.');
                 if (previous && previous.updated_at !== ui.current.updated_at && PosnicPro.sales && PosnicPro.sales.addSalesLineTable && PosnicPro.sales.addSalesLineTable.length) { ui.current = previous; throw new Error('Outlet settings changed while this cart was open. Clear this unsaved cart and reload the outlet before using the new prices.'); }
-                document.title = ui.current.name + ' - ' + data.branch.name + ' - Posnic';
+                document.title = ui.current.name + ' - ' + data.branch.name + ' - ' + (window.POSNIC_BRAND_NAME || 'HiTechPOS');
                 $('#billing_outlet_label').text(ui.current.name + ' · ' + data.branch.name);
                 $('#billing_room_wrap').show();
             }

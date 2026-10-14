@@ -1,7 +1,5 @@
+# HiTechPOS: đây là cửa hàng (shop) chạy trên nền tảng SaaS HiTechPOS - trang
+# đăng nhập và quầy bán hàng riêng của cửa hàng, không dành cho công cụ tìm kiếm.
+# Giới thiệu sản phẩm: https://hitechpos.vn/
 User-agent: *
-Allow: /
-Disallow: /api/
-Disallow: /uploads/
-Disallow: /node_modules/
-
-Sitemap: https://www.posnic.com/sitemap.xml
+Disallow: /

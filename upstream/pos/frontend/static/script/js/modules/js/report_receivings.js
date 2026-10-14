@@ -93,6 +93,7 @@ PosnicPro.receivingreport = {
                         var page_totals = (table.data('current_page') - 1) * table.data('per_page');
                         $('#view_receivingreport_page_perpage_total').text(page_totals + response.data.list.length);
                         var currency = PosnicPro.local.get('currencySign');
+                        var moneyText = function (v) { var n = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2); };
                         for (var i = 0; i < response.data.list.length; i++) {
                             var row = response.data.list[i];
                             var row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
@@ -113,15 +114,17 @@ PosnicPro.receivingreport = {
                                 }
 
                                 if (val.tax > 0) {
-                                    tax_value = val.tax + '% (' + ((price * val.item_quantity) * (val.tax / 100)).toFixed(2) + ')';
+                                    tax_value = val.tax + '% (' + moneyText((price * val.item_quantity) * (val.tax / 100)) + ')';
                                 }
                                 lineitem += '<tr style="border: 1px solid wheat;"><td class="export-item-name">' + val.item_name + '</td><td class="export-item-barcode-id text-center">' + val.barcode_id + '</td><td class="export-item-price text-right">' + currency + '&nbsp;<span class="number">' + price + '</span></td><td class="export-item-qty text-right">' + val.item_quantity + '</td><td class="export-item-tax text-right">' + tax_value + '</td><td class="export-item-total text-right">' + currency + '&nbsp;<span class="number">' + val.total_amount + '</span></td></tr></tbody>';
                                 $("#receiving_report_" + row._id).children('tbody').append(lineitem);
                             }
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var receivingreportexportdata = [];
+                        // Export: plain digits at the currency's precision (money-format.js).
+                        var moneyPlain = function (v) { var n = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.fixed(n) : n.toFixed(2); };
                         data = response.data.list;
                         $(data).each(function (key, val) {
                             var id = val.receiving_id;
@@ -145,10 +148,10 @@ PosnicPro.receivingreport = {
                                     price = value.item_price / ((tax / 100) + 1);
                                 }
                                 if (value.tax > 0) {
-                                    tax_value = tax + '% (' + ((price * quantity) * (tax / 100)).toFixed(2) + ')';
+                                    tax_value = tax + '% (' + moneyPlain((price * quantity) * (tax / 100)) + ')';
                                 }
                                 var total = value.total_amount;
-                                receivingreportexportdata.push({ReceivingId: id, Date: date, SupplierName: suppliername, SupplierPhone: supplierphone, NoOfItems: val.items.length, ItemName: name, SKU: sku, ItemPrice: price.toFixed(2), ItemQty: quantity, ItemDiscountAmount: discount_amount, ItemDiscountPercentage: discount_percentage, ItemTax: tax_value, ItemTotal: total});
+                                receivingreportexportdata.push({ReceivingId: id, Date: date, SupplierName: suppliername, SupplierPhone: supplierphone, NoOfItems: val.items.length, ItemName: name, SKU: sku, ItemPrice: moneyPlain(price), ItemQty: quantity, ItemDiscountAmount: discount_amount, ItemDiscountPercentage: discount_percentage, ItemTax: tax_value, ItemTotal: total});
                             });
                         });
 

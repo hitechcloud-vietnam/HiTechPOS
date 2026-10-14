@@ -667,10 +667,32 @@ const BRAND_LOGO_RE = /(?:^|\/)images\/logo\/(posnic-logo|posnic)\.svg$/;
 // the page's own relative request lands on /public/brand.json, which was a 404
 // on every single page load: the app knew the brand, and the page could not
 // ask for it, so a white-label till showed our name everywhere.
+/*
+ * HiTechPOS: the brand's own addresses - its website (printed on receipts as
+ * PosnicPro.BRAND_URL), the owner's account page, support and the desktop
+ * download - travel with the name. Only https URLs and a plain address pass;
+ * anything else is left out and the page keeps its default.
+ */
+const brandLinks = (brand) => {
+  const out = {};
+  for (const key of ['url', 'accountUrl', 'supportUrl', 'downloadUrl']) {
+    try {
+      const u = new URL(String(brand[key] || ''));
+      if (u.protocol === 'https:' && !u.username && !u.password) out[key] = u.href;
+    } catch (_) {
+      /* not a URL: omitted */
+    }
+  }
+  const email = String(brand.supportEmail || '').trim();
+  if (/^[^\s@<>"']+@[^\s@<>"']+\.[a-z]{2,}$/i.test(email)) out.supportEmail = email;
+  return out;
+};
 const serveBrandJson = async (_req, res) => {
   const brand = await loadBrand();
   res.set('cache-control', 'no-store');
-  res.json(brand ? { enabled: true, name: brand.name || '' } : { enabled: false });
+  res.json(
+    brand ? { enabled: true, name: brand.name || '', ...brandLinks(brand) } : { enabled: false }
+  );
 };
 // Registered separately rather than as an array: path matching changed in
 // Express 5, and this route being silently unmatched is the whole bug.

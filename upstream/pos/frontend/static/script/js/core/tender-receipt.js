@@ -273,6 +273,14 @@
                 if (current !== revision) { return; }
                 if (!response || response.type !== 'success' || !response.data) { failed(); return; }
                 var branch = response.data;
+                // HiTechPOS: a Vietnamese shop's sale prints through the
+                // designer's default layout (receiptDesigner.printSale), so its
+                // preview must too - the legacy template would show a
+                // different bill from the one that comes out of the printer.
+                if (!branch.receipt_designs && PosnicPro.receiptDesigner && window.PosnicVnBill &&
+                    window.PosnicVnBill.isVietnamese(branch, { country: PosnicPro.local.get('countryid'), currency: PosnicPro.money && PosnicPro.money.code() })) {
+                    branch = $.extend({}, branch, { receipt_designs: PosnicPro.receiptDesigner.defaults(branch) });
+                }
                 var layout = branch.print_type === 'a4' ? 'a4' : (['58', '80', '112'].indexOf(branch.print_width) !== -1 ? branch.print_width : '80');
                 if (branch.receipt_designs) layout = branch.receipt_designs.defaultFormat;
                 var printer = window.electronAPI && window.electronAPI.printer;

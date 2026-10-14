@@ -334,7 +334,7 @@ PosnicPro.gstrTwo = {
                 $('.hsn_total_cgst').html(currency + '&nbsp;<span class="number">' + hsn_footer_cgsttotal + '</span>');
                 $('.hsn_total_sgst').html(currency + '&nbsp;<span class="number">' + hsn_footer_sgsttotal + '</span>');
 
-                $('span.number').number(true, 2);
+                PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
             } else {
                 PosnicPro.alert(response.type, response.message);
             }

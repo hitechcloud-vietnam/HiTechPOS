@@ -118,10 +118,14 @@ const CATALOG = {
   hourlyBilling: {
     label: 'Tính tiền theo giờ (block giờ)',
     support: 'partial',
-    posnic: "items.item_kind='service' + service_unit='hour'",
+    posnic: "tableorder.time_billing + sale.time_billing (HiTechPOS patch)",
     posnicSetting: null,
-    ref: ['api/src/repositories/item.repository.js (service_unit fixed|hour|day)'],
-    note: 'Upstream can price a service per hour, but has no running timer per room/table nor block rounding.',
+    ref: [
+      'api/src/utils/time-billing.js',
+      'api/src/services/table-time-billing.js (POST /api/sales/tableTime)',
+      'frontend/static/script/js/modules/js/kot_v2.js',
+    ],
+    note: 'Running clock per room/table, block rounding, minimum and time-of-day rates are a local patch on Posnic (docs/UPSTREAM.md), not upstream.',
   },
   services: {
     label: 'Bán dịch vụ (không tồn kho)',

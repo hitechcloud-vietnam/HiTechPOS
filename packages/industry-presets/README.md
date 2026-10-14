@@ -36,6 +36,7 @@ presets.featureMatrix();               // ma trận tính năng x ngành cho tà
 | `categories` | Danh mục mặc định |
 | `sampleItems` | 5–10 hàng mẫu `{ name, unit, price, vatRate, barcode? }`, giá là số nguyên VND |
 | `settings` | Tham số riêng của ngành (size ly, block giờ, % phí phục vụ, % hoa hồng...) |
+| `sampleTables` | Phòng/bàn mẫu `{ label, area?, capacity?, item?, timeBilling? }`; `timeBilling = { blockMinutes, minBlocks, graceMinutes, bands: [{ start, end, rate, label }] }`, giá theo giờ là giá của `item` (số nguyên VND). `sampleTablePayloads(id, itemIds)` tạo body cho `POST /api/setting/addTableOrderData` của Posnic (xem `docs/UPSTREAM.md`, tính tiền theo giờ) |
 | `receipt` | `{ template: 'k80' \| 'k58', showVatBreakdown, footer }` |
 | `payments` | Tập con của cash, vietqr, payos, pay2s, card, momo, zalopay, debt |
 | `vatDefault` | 0, 5, 8, 10 hoặc `'KCT'` (không chịu thuế) |
@@ -70,7 +71,7 @@ Chi tiết tham chiếu mã nguồn upstream nằm trong `src/features.js` (trư
 | Ứng dụng gọi món Captain | `captainApp` | `module_captain_enable` | Có sẵn |  |  | ✓ |  |  |  |  |  |  |  |  |  |  |  |  |
 | Phí phục vụ / phụ thu | `serviceCharge` | `custom_charges_enable` | Có sẵn |  |  | ✓ | ✓ |  |  |  |  |  |  |  |  |  |  |  |
 | In tem ly / tem nhãn | `cupLabels` | — | Mở rộng |  | ✓ |  |  |  |  |  |  |  |  |  | ✓ |  |  |  |
-| Tính tiền theo giờ (block giờ) | `hourlyBilling` | `items.item_kind='service' + service_unit='hour'` | Một phần |  |  |  | ✓ |  |  |  |  |  |  |  |  |  |  |  |
+| Tính tiền theo giờ (block giờ) | `hourlyBilling` | `tableorder.time_billing + sale.time_billing` (bản vá HiTechPOS) | Một phần |  |  |  | ✓ |  |  |  |  |  |  |  |  |  |  |  |
 | Bán dịch vụ (không tồn kho) | `services` | `items.item_kind='service'` | Có sẵn |  |  |  | ✓ |  |  |  | ✓ |  |  |  |  |  |  |  |
 | Lịch hẹn | `appointments` | — | Mở rộng |  |  |  |  |  |  |  | ✓ |  |  |  |  |  |  |  |
 | Hoa hồng nhân viên kỹ thuật | `commissions` | — | Mở rộng |  |  |  |  |  |  |  | ✓ |  |  |  |  |  |  |  |

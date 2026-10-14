@@ -168,7 +168,7 @@ class InstallService {
       );
 
       // Load print templates
-      const { regularBodyPrint, thermalBodyPrint } = this._loadPrintTemplates();
+      const { regularBodyPrint, thermalBodyPrint } = this._loadPrintTemplates(data);
 
       // Create branch
       const branchId = await this._createBranch(
@@ -411,13 +411,15 @@ class InstallService {
     return await this.repository.insertUser(userData);
   }
 
-  _loadPrintTemplates() {
+  _loadPrintTemplates(data) {
     const regularBodyPrint = fs.readFileSync(
       path.join(__dirname, '../json/print_a4html.txt'),
       'utf8'
     );
+    // HiTechPOS: a Vietnamese shop starts on the Vietnamese thermal bill
+    // (helpers/print-templates.js); every other shop on the stock one.
     const thermalBodyPrint = fs.readFileSync(
-      path.join(__dirname, '../json/print_standard_html.txt'),
+      path.join(__dirname, '../json', require('../helpers/print-templates').thermalFileFor(data)),
       'utf8'
     );
     return { regularBodyPrint, thermalBodyPrint };

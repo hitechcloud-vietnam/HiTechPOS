@@ -46,18 +46,18 @@ PosnicPro.customerview = {
 
         db.customerDisplay.get('3').then(function (data) {
             $(data.tender).each(function (key, val) {
-                $(".sales_subtotal").number(val.subtotal, 2);
-                $(".sales_total").number(val.total, 2);
-                $(".tax_value").number(val.tax, 2);
-                $(".discount_value").number(val.discount, 2);
+                PosnicPro.money ? PosnicPro.money.put($(".sales_subtotal"), val.subtotal) : $(".sales_subtotal").number(val.subtotal, 2);
+                PosnicPro.money ? PosnicPro.money.put($(".sales_total"), val.total) : $(".sales_total").number(val.total, 2);
+                PosnicPro.money ? PosnicPro.money.put($(".tax_value"), val.tax) : $(".tax_value").number(val.tax, 2);
+                PosnicPro.money ? PosnicPro.money.put($(".discount_value"), val.discount) : $(".discount_value").number(val.discount, 2);
                 // Extra discount display
                 var extraDisc = parseFloat(val.extra_discount) || 0;
                 if (extraDisc > 0) {
                     $(".extra_discount_row").show();
-                    $(".extra_discount_value").number(extraDisc, 2);
+                    PosnicPro.money ? PosnicPro.money.put($(".extra_discount_value"), extraDisc) : $(".extra_discount_value").number(extraDisc, 2);
                     $(".extra_discount_sign").html('');
                     if (val.grand_total) {
-                        $(".sales_total").number(val.grand_total, 2);
+                        PosnicPro.money ? PosnicPro.money.put($(".sales_total"), val.grand_total) : $(".sales_total").number(val.grand_total, 2);
                     }
                 } else {
                     $(".extra_discount_row").hide();
@@ -71,12 +71,12 @@ PosnicPro.customerview = {
                 $('.sales-cart-image').height(imgHeight);
                 PosnicPro.customerview.isEmptyStateShown = true;
             }
-            $(".sales_subtotal").number(0.00);
-            $(".sales_total").number(0.00);
-            $(".tax_value").number(0.00);
-            $(".discount_value").number(0.00);
+            PosnicPro.money ? PosnicPro.money.put($(".sales_subtotal"), 0) : $(".sales_subtotal").number(0.00);
+            PosnicPro.money ? PosnicPro.money.put($(".sales_total"), 0) : $(".sales_total").number(0.00);
+            PosnicPro.money ? PosnicPro.money.put($(".tax_value"), 0) : $(".tax_value").number(0.00);
+            PosnicPro.money ? PosnicPro.money.put($(".discount_value"), 0) : $(".discount_value").number(0.00);
             $(".extra_discount_row").hide();
-            $(".extra_discount_value").number(0.00);
+            PosnicPro.money ? PosnicPro.money.put($(".extra_discount_value"), 0) : $(".extra_discount_value").number(0.00);
         });
 
 
@@ -163,7 +163,7 @@ PosnicPro.customerview = {
                 });
                 container.appendChild(fragment);
             }
-            $('span.number').number(true, 2);
+            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
         });
     }
 

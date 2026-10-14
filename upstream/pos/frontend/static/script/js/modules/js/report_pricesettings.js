@@ -165,7 +165,7 @@ PosnicPro.pricesettings = {
                     return (run.op === 'markup' ? PosnicPro.i18n.t('lang_markup', 'Markup') : PosnicPro.i18n.t('lang_margin', 'Margin')) + ' ' + run.value + '% &rarr; ' + f + ', ' + scope;
                 }
                 var arrow = run.direction === 'decrease' ? '<span class="text-danger">&darr;</span>' : '<span class="text-success">&uarr;</span>';
-                var by = run.op === 'percent' ? run.value + '%' : currency + ' ' + run.value;
+                var by = run.op === 'percent' ? run.value + '%' : currency + ' ' + (PosnicPro.money ? PosnicPro.money.number(run.value) : run.value);
                 return arrow + ' ' + f + ' ' + (run.direction === 'decrease' ? '&minus;' : '+') + by + ', ' + scope;
             };
             var html = '';

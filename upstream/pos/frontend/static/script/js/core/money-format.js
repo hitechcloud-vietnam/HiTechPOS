@@ -248,6 +248,49 @@
         });
     }
 
+    /*
+     * Figures on a report, a view panel or a printout that nothing reads back
+     * - the places that used to call `$('span.number').number(true, 2)`.
+     * Those selectors reach the whole page, so a cell the till keeps data in
+     * (PAINTED below, or anything inside one) is left alone: the painter
+     * shows it, and its text stays machine text.
+     */
+    function show($elements, places) {
+        if (!$elements || !$elements.filter) return $elements;
+        renumber($elements.filter(function () {
+            return !(this.closest && this.closest(PAINTED));
+        }), places);
+        return $elements;
+    }
+
+    /* One display-only element: write the figure, remember the value. */
+    function put($element, value, places) {
+        if (!$element || !$element.each) return $element;
+        // Callers hand over what .number(value, 2) took: a number or its text.
+        var n = typeof value === 'number' ? value : parse(value);
+        if (n === null || !isFinite(n)) n = 0;
+        $element.each(function () {
+            this.removeAttribute('data-pp-shown');
+            this.textContent = String(n);
+        });
+        renumber($element, places);
+        return $element;
+    }
+
+    /*
+     * A printout's total tells the ESC/POS reader (receipt-data.js) how its
+     * figures are written, so "135.000" is read back as 135000, not 135.
+     */
+    function markPrint($total, places) {
+        if (!$total || !$total.attr) return $total;
+        var seps = separators();
+        return $total.attr({
+            'data-currency-digits': places == null ? digits() : places,
+            'data-currency-group': seps.group,
+            'data-currency-decimal': seps.decimal
+        });
+    }
+
     /* ------------------------------------------- 3. figures kept in the page */
 
     /*
@@ -363,6 +406,9 @@
         parse: parse,
         group: group,
         renumber: renumber,
+        show: show,
+        put: put,
+        markPrint: markPrint,
         repaint: repaintAll,
         PAINTED: PAINTED
     };

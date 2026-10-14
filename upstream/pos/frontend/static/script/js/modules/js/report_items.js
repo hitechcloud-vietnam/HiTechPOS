@@ -109,15 +109,16 @@ PosnicPro.itemreport = {
                         var page_totals = (table.data('current_page') - 1) * table.data('per_page');
                         $('#view_itemreport_page_perpage_total').text(page_totals + response.data.list.length);
                         var currency = PosnicPro.local.get('currencySign');
+                        var moneyText = function (v) { var n = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2); };
                         for (var i = 0; i < response.data.list.length; i++) {
                             var row = response.data.list[i];
                             var row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
                             var familyNote = (row.family_members > 1)
                                 ? ' <small class="text-muted">(' + row.family_members + ' variants)</small>' : '';
-                            let trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.name + familyNote + '</td> <td class="text-center">' + row.item_quantity + '</td> <td class="text-center">' + row.sales_count + '</td> <td class="text-right">' + currency + '&nbsp;<span>' + row.sales_profit.toFixed(2) + '</span></td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.sales_avg + '</span></td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.total_amount + '</span></td></tr>';
+                            let trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.name + familyNote + '</td> <td class="text-center">' + row.item_quantity + '</td> <td class="text-center">' + row.sales_count + '</td> <td class="text-right">' + currency + '&nbsp;<span>' + moneyText(row.sales_profit) + '</span></td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.sales_avg + '</span></td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.total_amount + '</span></td></tr>';
                             $('#view_itemreport').children('tbody').append(trow);
                         }
-                        $('span.number').number(true, 2);
+                        PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                     } else {
                         var itemreport = [];
                         data = response.data.list;
@@ -340,14 +341,15 @@ PosnicPro.itemstock = {
                         var page_totals = (table.data('current_page') - 1) * table.data('per_page');
                         $('#view_itemstock_page_perpage_total').text(page_totals + response.data.list.length);
                         var currency = PosnicPro.local.get('currencySign');
+                        var moneyText = function (v) { var n = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2); };
                         for (var i = 0; i < response.data.list.length; i++) {
                             var row = response.data.list[i];
                             var row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
-                            let trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.name + '</td> <td class="text-center">' + row.available_quantity + '</td> <td class="text-right">' + currency + '&nbsp;' + row.company_price.toFixed(2) + '</td> <td class="text-right">' + currency + '&nbsp;' + row.company_total.toFixed(2) + '</td><td class="text-right">' + currency + '&nbsp;' + row.selling_price.toFixed(2) + '</td><td class="text-right">' + currency + '&nbsp;' + row.selling_total.toFixed(2) + '</td></tr>';
+                            let trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.name + '</td> <td class="text-center">' + row.available_quantity + '</td> <td class="text-right">' + currency + '&nbsp;' + moneyText(row.company_price) + '</td> <td class="text-right">' + currency + '&nbsp;' + moneyText(row.company_total) + '</td><td class="text-right">' + currency + '&nbsp;' + moneyText(row.selling_price) + '</td><td class="text-right">' + currency + '&nbsp;' + moneyText(row.selling_total) + '</td></tr>';
                             $('#view_itemstock').children('tbody').append(trow);
                         }
-                        $('.item_stock_company').text(response.data.company_total.toFixed(2));
-                        $('.item_stock_selling').text(response.data.selling_total.toFixed(2));
+                        $('.item_stock_company').text(moneyText(response.data.company_total));
+                        $('.item_stock_selling').text(moneyText(response.data.selling_total));
                     } else {
                         PosnicPro.JSONToCSVConvertor(response.data.list, 'item-stock-reports', true);
                         PosnicPro.itemstock.itemstockTable();

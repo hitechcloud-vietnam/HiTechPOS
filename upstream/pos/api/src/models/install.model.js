@@ -107,8 +107,9 @@ class InstallModel extends BaseModel {
         path.join(__dirname, '../json/print_a4html.txt'),
         'utf8'
       );
+      // HiTechPOS: Vietnamese shops start on the Vietnamese thermal bill.
       const thermalBodyPrint = fs.readFileSync(
-        path.join(__dirname, '../json/print_standard_html.txt'),
+        path.join(__dirname, '../json', require('../helpers/print-templates').thermalFileFor(data)),
         'utf8'
       );
 

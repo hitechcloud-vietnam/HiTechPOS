@@ -354,3 +354,17 @@
     #kot_v2 .kv2-category-chips,.kv2-templates{gap:10px}
     .kv2-actions-menu section{gap:6px}
 }
+/* HiTechPOS: hourly billing for rooms/tables (karaoke, billiards, courts). */
+#kot_v2 .kv2-time{display:inline-flex;align-items:center;gap:4px;font-weight:600;font-variant-numeric:tabular-nums}
+#kot_v2 .kv2-time svg,#kot_v2 .kv2-timebill svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#kot_v2 .kv2-time.running{color:var(--theme-success-color, #287c64)}
+#kot_v2 .kv2-time.stopped{color:var(--theme-warning-color, #78501d)}
+#kot_v2 .kv2-time.idle{font-weight:400;opacity:.75}
+#kot_v2 .kv2-timebill{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 18px 12px;padding:10px 12px;border:1px solid var(--theme-border-color, #e0e7ef);border-left:3px solid var(--theme-success-color, #287c64);border-radius:8px;font-size:12px}
+#kot_v2 .kv2-timebill.stopped{border-left-color:var(--theme-warning-color, #78501d)}
+#kot_v2 .kv2-timebill.idle{border-left-color:var(--theme-border-color, #e0e7ef)}
+#kot_v2 .kv2-timebill>div:first-child{display:flex;flex-direction:column;gap:2px;flex:1 1 220px;min-width:0}
+#kot_v2 .kv2-timebill>div:last-child{display:flex;flex-wrap:wrap;gap:8px}
+#kot_v2 .kv2-timebill strong{font-size:16px;font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:6px}
+#kot_v2 .kv2-time-line{display:flex;justify-content:space-between;gap:8px}
+#kot_v2 .kv2-time-line b{font-variant-numeric:tabular-nums;white-space:nowrap}

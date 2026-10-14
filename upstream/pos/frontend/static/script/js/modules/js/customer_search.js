@@ -129,7 +129,7 @@ PosnicPro.customersearch = {
                     app = "<div class='row'></div><div class='row'></div><div class='col-lg-12 col-xl-12 text-center text-dark'><p><lang class='lang_there_are_no_items_available'>There are no items available ...!!!</lang></p></div>";
                     $('#list-item').html(app);
                 }
-                $('span.number').number(true, 2);
+                PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
             } else {
                 PosnicPro.alert(response.type, response.message);
             }
@@ -201,8 +201,8 @@ PosnicPro.customersearch = {
                 }
                 var currency = PosnicPro.local.get('currencySign');
                 $('.current-currency').html(currency);
-                $('#item_view_sellingprice').number(sellingPrice, 2);
-                $('#item_view_sellingprice_discount').number(price, 2);
+                PosnicPro.money ? PosnicPro.money.put($('#item_view_sellingprice'), sellingPrice) : $('#item_view_sellingprice').number(sellingPrice, 2);
+                PosnicPro.money ? PosnicPro.money.put($('#item_view_sellingprice_discount'), price) : $('#item_view_sellingprice_discount').number(price, 2);
                 if (data.available_quantity !== 0) {
                     $('#available_stock_display').show();
                     $('#no_stock_display').hide();
@@ -459,7 +459,7 @@ $(function () {
                     '</div>';
             $('#list-item').html(listItem);
             $('#sales_new_item_name').val('').focus();
-            $('span.number').number(true, 2);
+            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
         },
         autoSelectFirst: true,
         transformResult: function (response) {
@@ -521,8 +521,8 @@ $(function () {
             } else {
                 price = suggestion.data.selling_price;
             }
-            var final_price = '<span class="suggestion-price pull-right">' + currency + '&nbsp;' + price.toFixed(2) + '</span>';
-            var del_price = '<div class="pull-right font-12" style="margin-top:-20px;"><del>' + currency + '&nbsp;' + sellingPrice.toFixed(2) + '</del></div>';
+            var final_price = '<span class="suggestion-price pull-right">' + currency + '&nbsp;' + (PosnicPro.money ? PosnicPro.money.number(price) : price.toFixed(2)) + '</span>';
+            var del_price = '<div class="pull-right font-12" style="margin-top:-20px;"><del>' + currency + '&nbsp;' + (PosnicPro.money ? PosnicPro.money.number(sellingPrice) : sellingPrice.toFixed(2)) + '</del></div>';
 
             if (sellingPrice.toFixed(2) === price.toFixed(2)) {
                 del_price = '<span style="display:none;"></span>';

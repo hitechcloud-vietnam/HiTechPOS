@@ -253,6 +253,18 @@ function taxRows(sale, branch, allocation = null) {
       }));
   const tax = num(sale && sale.tax);
   if (tax <= 0) return [];
+  /*
+   * HiTechPOS: a Vietnamese bill states VAT per rate - "Thuế GTGT 8%",
+   * "Thuế GTGT 10%", with 0% and KCT goods listed - adding up to the tax the
+   * sale recorded. Same helper the till uses (helpers/vn-bill.js).
+   */
+  const vnBill = require('./vn-bill');
+  if (vnBill.isVietnamese(branch || {})) {
+    const policy = require('../utils/currency').policy(branch || {});
+    return vnBill
+      .vatGroups(sale && sale.items, tax, { digits: policy.currencyDigits })
+      .map((row) => ({ label: row.label, amount: row.amount }));
+  }
   const indian = String((branch && branch.indian_gst) || '').toLowerCase();
   if (indian && indian !== 'disable' && indian !== 'false' && indian !== '0') {
     const money = require('../utils/currency');

@@ -112,7 +112,7 @@ PosnicPro.pendingreport = {
                             var trow = '<tr> <td scope="row">' + row_no + '</td> <td><a href="#/pendingreport/' + row.id + '/sales"><i data-toggle="tooltip" class="table_model_item">' + row.sale_id + '</i></a></td> <td>' + row.date + '</td> <td class="text-center">' + row.number_of_items + '</td>\n\
                                              <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.pending_amount + '</td><td class="text-right">' + currency + '&nbsp;<span class="number">' + row.partial_amount + '</td><td class="text-right">' + currency + '&nbsp;<span class="number">' + row.due_amount + '</td></tr>';
                             $('#view_pendingreport').children('tbody').append(trow);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var pendingreport = [];
@@ -194,7 +194,7 @@ PosnicPro.pendingproductdetails = {
                     var row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
                     var trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.name + '</td> <td class="export-date">' + row.item_quantity + '</td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.total_amount + '</span></td></tr>';
                     $('#view_pendingproductdetails').children('tbody').append(trow);
-                    $('span.number').number(true, 2);
+                    PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                 }
 
                 $('.pending_product_view_name').html(response.data.custom_details.sales_id);
@@ -280,7 +280,7 @@ PosnicPro.pendingreceivingreport = {
                             var row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
                             var trow = '<tr> <td scope="row">' + row_no + '</td> <td><a href="#/pendingreport/' + row.id + '/receivings"><i data-toggle="tooltip" class="table_model_item">' + row.receiving_id + '</i></a></td> <td>' + row.date + '</td> <td>' + row.supplier_name + '</td> <td>' + row.supplier_phone + '</td><td class="text-center">' + row.number_of_items + '</td><td class="text-right">' + currency + '&nbsp;<span class="number">' + row.pending_amount + '</span></td></tr>';
                             $('#view_pendingreceivingreport').children('tbody').append(trow);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var pendingreceivingreport = [];
@@ -360,7 +360,7 @@ PosnicPro.pendingreceivingproductdetails = {
                     var row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
                     var trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.name + '</td> <td class="export-date">' + row.item_quantity + '</td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.total_amount + '</span></td></tr>';
                     $('#view_pendingreceivingproductdetails').children('tbody').append(trow);
-                    $('span.number').number(true, 2);
+                    PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                 }
 
                 $('.pending_product_view_name').html(response.data.custom_details.receiving_id);
@@ -456,7 +456,7 @@ PosnicPro.pendingcustomerreport = {
                                              <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.partial_balance + '</span></td>\n\
                                              <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.due_balance + '</span></td></tr>';
                             $('#view_pendingcustomerreport').children('tbody').append(trow);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var pendingcustomerreport = [];
@@ -558,7 +558,7 @@ PosnicPro.pendingsupplierreport = {
                             let row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
                             let trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.date + '</td> <td>' + row.supplier_name + '</td> <td>' + row.supplier_phone + '</td><td class="text-center">' + row.receiving_count + '</td><td class="text-right">' + currency + '&nbsp;<span class="number">' + row.receiving_payment + '</span></td></tr>';
                             $('#view_pendingsupplierreport').children('tbody').append(trow);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var pendingsupplierreport = [];
@@ -663,7 +663,7 @@ PosnicPro.pendingcustomercategoryreport = {
                                         <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.partial_balance + '</span></td>\n\
                                         <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.due_balance + '</span></td></tr>';
                             $('#view_pendingcustomercategoryreport').children('tbody').append(trow);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var pendingcustomercategoryreport = [];

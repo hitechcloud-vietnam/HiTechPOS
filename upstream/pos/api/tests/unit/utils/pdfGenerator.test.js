@@ -150,4 +150,34 @@ describe('pdfGenerator', () => {
     expect(doc.text).toHaveBeenCalledWith('Main Store', 50, 40);
     expect(doc.end).toHaveBeenCalled();
   });
+
+  test('a Vietnamese shop: amounts in whole dong, grouped with dots, no $ or .00', () => {
+    const res = { setHeader: jest.fn() };
+    const branch = {
+      branch_name: 'Quán Phở',
+      country_id: 'VN',
+      currency: '₫',
+      currency_type: '₫',
+      currency_text: 'Vietnam Dong / VND or ₫',
+    };
+    const item = { item_name: 'Phở bò', item_quantity: 2, item_price: 55000, total_amount: 110000 };
+    generateInvoicePDF({
+      data: { sales_id: 'SID9', items: [item], items_subtotal: 110000, items_total: 110000 },
+      branch,
+      res,
+    });
+    generateReceivingPDF({
+      data: { receiving_id: 'RID9', items: [item], subtotal: 110000, items_total: 110000 },
+      branch,
+      res,
+    });
+    const texts = PDFDocument.mock.results
+      .flatMap((r) => r.value.text.mock.calls)
+      .map(([t]) => String(t));
+    // fs is mocked (no DejaVu), so the ASCII form: the ISO code, not a garbled ₫.
+    expect(texts).toContain('VND 110.000');
+    expect(texts).toContain('VND 55.000');
+    expect(texts.join(' ')).not.toMatch(/110000\.00|110,000\.00|Rs\./);
+  });
 });
+

@@ -122,7 +122,7 @@ PosnicPro.registerreport = {
                             }
                             let trow = '<tr> <td scope="row">' + row_no + '</td> <td><a href="#/registerreport/' + row.id + '/details"><i data-toggle="tooltip" class="table_model_item">' + row.register_name + '</i></a></td> <td>' + openDate + '</td> <td>' + closeDate + '</td><td class="text-right">' + currency + '&nbsp;<span class="number">' + row.opening_float + '</span></td><td class="text-right">' + currency + '&nbsp;<span class="number">' + row.register_amount + '</span></td></tr>';
                             $('#view_registerreport').children('tbody').append(trow);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var registerreport = [];
@@ -185,6 +185,7 @@ PosnicPro.registerreport = {
                 var page_totals = (table.data('current_page') - 1) * table.data('per_page');
                 $('#view_registerdetails_page_perpage_total').text(page_totals + response.data.list.length);
                 var currency = PosnicPro.local.get('currencySign');
+                var moneyText = function (v) { var n = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2); };
                 $('.register_view_user').html(response.data.details.current_user);
                 $('.register_view_name').html(response.data.details.register_name);
                 $('.register_view_branch').html(response.data.details.branch_name);
@@ -225,9 +226,9 @@ PosnicPro.registerreport = {
                         
                         var trow = '<tr>' +
                             '<td>' + displayName + '</td>' +
-                            '<td>' + currency + '' + expectedAmount.toFixed(2) + '</td>' +
-                            '<td>' + currency + '' + countedAmount.toFixed(2) + '</td>' +
-                            '<td>' + currency + '' + difference.toFixed(2) + '</td>' +
+                            '<td>' + currency + '' + moneyText(expectedAmount) + '</td>' +
+                            '<td>' + currency + '' + moneyText(countedAmount) + '</td>' +
+                            '<td>' + currency + '' + moneyText(difference) + '</td>' +
                             '</tr>';
                         
                         $('#view_payment_tally_tbody').append(trow);
@@ -238,7 +239,7 @@ PosnicPro.registerreport = {
                 for (var i = 0; i < response.data.list.length; i++) {
                     var row = response.data.list[i];
                     var row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
-                    var trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.sale_id + '</td> <td>' + row.date + '</td> <td>' + row.register_paymentmode + '</td> <td class="text-right">' + currency + '' + row.register_return_total.toFixed(2) + '</td><td class="text-right">' + currency + '' + row.register_amount.toFixed(2) + '</td></tr>';
+                    var trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.sale_id + '</td> <td>' + row.date + '</td> <td>' + row.register_paymentmode + '</td> <td class="text-right">' + currency + '' + moneyText(row.register_return_total) + '</td><td class="text-right">' + currency + '' + moneyText(row.register_amount) + '</td></tr>';
                     $('#view_registerdetails').children('tbody').append(trow);
                 }
             }
@@ -341,14 +342,14 @@ PosnicPro.registerproductreport = {
                     let difference = counted_amount - expectedval_data;
                     $("#register_report_expected").html(currency + '&nbsp;<span class="number">' + expectedval_data + '</span>');
                     $("#register_report_actual").html(currency + '&nbsp;<span class="number">' + counted_amount + '</span>');
-                    $("#register_report_difference").html(currency + '&nbsp;' + parseFloat(difference) + '');
+                    $("#register_report_difference").html(currency + '&nbsp;' + (PosnicPro.money ? PosnicPro.money.number(parseFloat(difference) || 0) : parseFloat(difference)) + '');
                     $("#register_report_transaction").html(count);
                     $("#register_report_totalamount").html(currency + '&nbsp;<span class="number">' + total + '</span>');
                     $("#register_report_recived").html(currency + '&nbsp;<span class="number">' + recive_payement + '</span>');
                     $("#register_report_refunds").html(currency + '&nbsp;<span class="number">' + refund + '</span>');
                     let netsale = parseFloat(recive_payement) - parseFloat(refund);
                     $("#register_report_netsale").html(currency + '&nbsp;<span class="number">' + netsale + '</span>');
-                    $('span.number').number(true, 2);
+                    PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
 
                     if (type === 'CSV') {
                         let csv = [];

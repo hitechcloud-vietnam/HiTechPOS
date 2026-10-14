@@ -108,7 +108,7 @@ PosnicPro.taxreport = {
                                         '</tr>';
                             }
                             $('#view_taxreport tbody').append(rowHTMLTaxLine);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         });
                         if (Array.isArray(datas) && datas.length) {
                             $('.reporttax_norecord').empty();
@@ -137,11 +137,12 @@ PosnicPro.taxreport = {
                         var taxItemData = PosnicPro.nestedTaxCalculation(itemTaxDetails);
                         $('#view_taxreport tbody').children("tr").remove();
                         var currency = PosnicPro.local.get('currencySign');
+                        var moneyPlain = function (v) { var n = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.fixed(n) : n.toFixed(2); };
                         $(taxItemData).each(function (key, val) {
                             if ((val.amount).toFixed(2) > 0.00) {
                                 let name = val.tax_name;
                                 let amount = val.amount;
-                                salestaxreport.push({TaxName: name, Amount: amount.toFixed(2)});
+                                salestaxreport.push({TaxName: name, Amount: moneyPlain(amount)});
                             }
                         });
                         PosnicPro.JSONToCSVConvertor(salestaxreport, 'sales-tax-discount-reports', true);

@@ -23,6 +23,8 @@
     )
       return 'VAT No.';
     if (['in', 'ind', 'india'].includes(country)) return 'GSTIN';
+    // HiTechPOS: a Vietnamese bill names the seller's tax code "MST" (mã số thuế).
+    if (['vn', 'vnm', 'vietnam', 'viet nam', 'việt nam'].includes(country)) return 'MST';
     if (country) return 'Tax ID';
     // Preserve existing Indian documents which predate saved country details.
     return 'GSTIN';

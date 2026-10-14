@@ -1065,6 +1065,11 @@ PosnicPro.receivings = {
                     (result.items_return.length !== 0) ? $('#show-already-return-table').show() : $('#show-already-return-table').hide();
                     var app = "<div><div class='table-responsive'><table class='table' style='background:#f3f5fd;'>";
                     var currency = PosnicPro.local.get('currencySign');
+                    // Display-only figures: the shop's precision and grouping (money-format.js).
+                    var moneyText = function (value) {
+                        var n = Number(value) || 0;
+                        return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2);
+                    };
                     for (var i = 0; i < result.items_return.length; i++) {
                         var date = result.items_return[i].returnArray['returnDate'];
                         var timeStamp_value = parseInt(date.$date.$numberLong);
@@ -1110,15 +1115,15 @@ PosnicPro.receivings = {
                             app = app + '' + body + '';
                         });
                         var foot = '<tbody><tr>' +
-                                '<td colspan="4"><span class="pull-right"><b><lang class="lang_sub_total">Sub Total</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + priceValue.toFixed(2) + '</b></span></td></tr>' +
-                                '<tr><td colspan="4"><span class="pull-right"><b><lang class="lang_tax_amount">Tax Amount</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + (total - priceValue).toFixed(2) + '</b></span></td>' +
-                                '<tr><td colspan="4"><span class="pull-right"><b><lang class="lang_grand_total">Grand Total</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + total.toFixed(2) + '</b></span></td>' +
+                                '<td colspan="4"><span class="pull-right"><b><lang class="lang_sub_total">Sub Total</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + moneyText(priceValue) + '</b></span></td></tr>' +
+                                '<tr><td colspan="4"><span class="pull-right"><b><lang class="lang_tax_amount">Tax Amount</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + moneyText(total - priceValue) + '</b></span></td>' +
+                                '<tr><td colspan="4"><span class="pull-right"><b><lang class="lang_grand_total">Grand Total</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + moneyText(total) + '</b></span></td>' +
                                 '</tr><tr><td colspan="6"></td></tr></tbody>';
                         app = app + '' + foot + '';
                     }
                     app = app + '</table></div></div>';
                     $('#receiving_return_view_list').append(app);
-                    $('span.number').number(true, 2);
+                    PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                 }
                 PosnicPro.receivings.showPaymentMode(result.payment_mode);
             }
@@ -1813,6 +1818,11 @@ $('#exclusive_tax').click(function () {
  */
 PosnicPro.purchaseorders = {
     _lines: {},
+    /* A figure as the shop writes it (money-format.js): display only. */
+    _num: function (v) {
+        var n = Number(v) || 0;
+        return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2);
+    },
     _detail: null,
     /* The page chrome, shared by list entry and deep links: pane, title,
        and the LEFT MENU highlight - which must also survive a refresh
@@ -2016,7 +2026,7 @@ PosnicPro.purchaseorders = {
                     + '<td class="p-col-date">' + d(r.date) + '</td>'
                     + '<td class="p-col-created">' + d(r.created) + '</td>'
                     + '<td class="p-col-expected">' + (r.expected ? d(r.expected) : '-') + '</td>'
-                    + '<td class="text-right">' + PosnicPro.local.get('currencySign') + '&nbsp;' + (Number(r.total) || 0).toFixed(2) + '</td>'
+                    + '<td class="text-right">' + PosnicPro.local.get('currencySign') + '&nbsp;' + PosnicPro.purchaseorders._num(r.total) + '</td>'
                     + '<td class="text-center">' + pill + '</td>'
                     + '</tr>';
             });
@@ -2168,7 +2178,7 @@ PosnicPro.purchaseorders = {
      */
     buildPurchaseSheet: function (d) {
         var esc = function (t) { return $('<span>').text(t == null ? '' : t).html(); };
-        var money = function (v) { return PosnicPro.local.get('currencySign') + '&nbsp;' + (Number(v) || 0).toFixed(2); };
+        var money = function (v) { return PosnicPro.local.get('currencySign') + '&nbsp;' + PosnicPro.purchaseorders._num(v); };
         var dt = function (v) { return v ? new Date(v).toLocaleDateString('en-IN') : '-'; };
         var real = function (v) { return v && v !== 'null' && v !== 'undefined' ? v : ''; };
         var open = d.receiving_status === 'Open';
@@ -2267,7 +2277,7 @@ PosnicPro.purchaseorders = {
     renderPurchaseDoc: function (d) {
         PosnicPro.purchaseorders._doc = d;
         var esc = function (t) { return $('<span>').text(t == null ? '' : t).html(); };
-        var money = function (v) { return PosnicPro.local.get('currencySign') + '&nbsp;' + (Number(v) || 0).toFixed(2); };
+        var money = function (v) { return PosnicPro.local.get('currencySign') + '&nbsp;' + PosnicPro.purchaseorders._num(v); };
         var dt = function (v) { return v ? new Date(v).toLocaleDateString('en-IN') : '-'; };
         var real = function (v) { return v && v !== 'null' && v !== 'undefined' ? v : ''; };
         var open = d.receiving_status === 'Open';
@@ -2461,7 +2471,7 @@ PosnicPro.purchaseorders = {
         var keys = Object.keys(PosnicPro.purchaseorders._lines);
         if (!keys.length) {
             $('#po_form_rows').html('<tr><td colspan="7" class="text-center text-muted"><lang class="lang_search_or_fill_from_the_supplier">Search or fill from the supplier.</lang></td></tr>');
-            $('#po_form_total').text('0.00');
+            $('#po_form_total').text(PosnicPro.purchaseorders._num(0));
             return;
         }
         var html = keys.map(function (id) {
@@ -2473,7 +2483,7 @@ PosnicPro.purchaseorders = {
                 '<td class="text-right">' + (l.incoming === '' ? '-' : l.incoming) + '</td>' +
                 '<td class="text-right"><input type="number" min="0.001" step="any" class="form-control form-control-sm text-right po-line-qty" data-id="' + id + '" value="' + l.qty + '"></td>' +
                 '<td class="text-right"><input type="number" min="0" step="any" class="form-control form-control-sm text-right po-line-cost" data-id="' + id + '" value="' + l.cost + '"></td>' +
-                '<td class="text-right">' + amount.toFixed(2) + '</td>' +
+                '<td class="text-right">' + PosnicPro.purchaseorders._num(amount) + '</td>' +
                 '<td><a href="javascript:void(0)" class="text-danger po-line-remove" data-id="' + id + '">&times;</a></td>' +
                 '</tr>';
         }).join('');
@@ -2487,7 +2497,7 @@ PosnicPro.purchaseorders = {
             total += (Number(l.qty) || 0) * (Number(l.cost) || 0);
         });
         $('#po_cost_rows .po-cost-amount').each(function () { total += Number($(this).val()) || 0; });
-        $('#po_form_total').text(total.toFixed(2));
+        $('#po_form_total').text(PosnicPro.purchaseorders._num(total));
     },
     addCostRow: function (label, amount) {
         $('#po_cost_rows').append(
@@ -2559,18 +2569,18 @@ PosnicPro.purchaseorders = {
                 rows += '<tr><td>' + $('<span>').text(line.item_name).html() + '</td>' +
                     '<td class="text-right">' + line.qty_ordered + '</td>' +
                     '<td class="text-right">' + line.qty_received + '</td>' +
-                    '<td class="text-right">' + (Number(line.unit_cost) || 0).toFixed(2) + '</td>' +
-                    '<td class="text-right">' + (Number(line.line_total) || 0).toFixed(2) + '</td></tr>';
+                    '<td class="text-right">' + PosnicPro.purchaseorders._num(line.unit_cost) + '</td>' +
+                    '<td class="text-right">' + PosnicPro.purchaseorders._num(line.line_total) + '</td></tr>';
             });
             $('#po_view_rows').html(rows);
             var pct = ordered > 0 ? Math.min(100, Math.round(received * 100 / ordered)) : 0;
             $('#po_view_progress').html('<div class="progress" style="height:8px;"><div class="progress-bar" style="width:' + pct + '%;"></div></div><small class="text-muted">Received ' + received + ' of ' + ordered + '</small>');
             var costs = '';
             (po.additional_costs || []).forEach(function (c) {
-                costs += '<div><small class="text-muted">' + $('<span>').text(c.label).html() + '</small> ' + currency + '&nbsp;' + (Number(c.amount) || 0).toFixed(2) + '</div>';
+                costs += '<div><small class="text-muted">' + $('<span>').text(c.label).html() + '</small> ' + currency + '&nbsp;' + PosnicPro.purchaseorders._num(c.amount) + '</div>';
             });
             $('#po_view_costs').html(costs);
-            $('#po_view_total').text(currency + ' ' + (Number(po.grand_total) || 0).toFixed(2));
+            $('#po_view_total').text(currency + ' ' + PosnicPro.purchaseorders._num(po.grand_total));
             $('#po_view_notes').text(po.notes || '');
             var actions = '<button type="button" class="btn btn-sm btn-outline-secondary mr-1" onclick="PosnicPro.purchaseorders.backToList();"><lang class="lang_back_title">Back</lang></button>';
             if (po.status === 'draft') {
@@ -2755,12 +2765,12 @@ PosnicPro.purchaseorders = {
                 '<td class="text-right" data-label="Outstanding">' + line.outstanding + ' ' + esc(line.item_unit) + '</td>' +
                 '<td class="text-right" data-label="Receive qty"><input type="number" min="0" max="' + line.outstanding + '" step="any" class="form-control form-control-sm text-right po-receive-qty" data-idx="' + idx + '" value="' + line.qty + '" aria-label="Receive quantity" data-t-aria-label="lang_receive_quantity"></td>' +
                 '<td class="text-right" data-label="Purchase cost"><input type="number" min="0" step="any" class="form-control form-control-sm text-right po-receive-cost" data-idx="' + idx + '" value="' + line.cost + '" aria-label="Unit cost" data-t-aria-label="lang_unit_cost"></td>' +
-                '<td class="text-right po-receive-taxcol" data-label="Tax">' + (c.rate > 0 ? c.rate + '% = ' + c.tax.toFixed(2) : '-') + '</td>' +
-                '<td class="text-right" data-label="Amount">' + c.total.toFixed(2) + '</td>' +
+                '<td class="text-right po-receive-taxcol" data-label="Tax">' + (c.rate > 0 ? c.rate + '% = ' + PosnicPro.purchaseorders._num(c.tax) : '-') + '</td>' +
+                '<td class="text-right" data-label="Amount">' + PosnicPro.purchaseorders._num(c.total) + '</td>' +
                 '</tr>';
         });
         $('#po_receive_rows').html(rows);
-        $('#po_receive_total').text(grand.toFixed(2));
+        $('#po_receive_total').text(PosnicPro.purchaseorders._num(grand));
         $('.po-receive-taxcol').toggle(excl);
     },
     saveReceive: function () {
@@ -2837,11 +2847,11 @@ $(document).on('input', '.po-receive-qty, .po-receive-cost', function () {
     var excl = $('#po_receive_excl').is(':checked');
     var row = $(this).closest('tr');
     var c = PosnicPro.purchaseorders._receiveLineCalc(line, excl);
-    row.find('.po-receive-taxcol').text(c.rate > 0 ? c.rate + '% = ' + c.tax.toFixed(2) : '-');
-    row.find('td').last().text(c.total.toFixed(2));
+    row.find('.po-receive-taxcol').text(c.rate > 0 ? c.rate + '% = ' + PosnicPro.purchaseorders._num(c.tax) : '-');
+    row.find('td').last().text(PosnicPro.purchaseorders._num(c.total));
     var grand = 0;
     st.lines.forEach(function (l) { grand += PosnicPro.purchaseorders._receiveLineCalc(l, excl).total; });
-    $('#po_receive_total').text(grand.toFixed(2));
+    $('#po_receive_total').text(PosnicPro.purchaseorders._num(grand));
 });
 $(document).on('click', '.po-list-row', function () {
     PosnicPro.purchaseorders.openView($(this).data('id'));
@@ -2861,7 +2871,7 @@ $(document).on('input', '.po-line-qty, .po-line-cost', function () {
     if (!l) { return; }
     if ($(this).hasClass('po-line-qty')) { l.qty = Number($(this).val()) || 0; }
     else { l.cost = Number($(this).val()) || 0; }
-    var amount = (l.qty * l.cost).toFixed(2);
+    var amount = PosnicPro.purchaseorders._num(l.qty * l.cost);
     $(this).closest('tr').find('td').eq(5).text(amount);
     PosnicPro.purchaseorders.renderTotal();
 });

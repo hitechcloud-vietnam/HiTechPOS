@@ -26,6 +26,14 @@
 const fs = require('fs');
 const path = require('path');
 
+function thermalFileFor(branch) {
+  try {
+    return require('../api/src/helpers/print-templates').thermalFileFor(branch || {});
+  } catch (e) {
+    return 'print_standard_html.txt';
+  }
+}
+
 /*
  * What a correctly provisioned branch has.
  *
@@ -49,7 +57,8 @@ function branchExpectations() {
       field: 'thermal_body_print',
       severity: 'breaks',
       why: 'the receipt body; without it a sale prints an empty slip',
-      value: () => read('print_standard_html.txt'),
+      // HiTechPOS: a Vietnamese branch is given the Vietnamese bill.
+      value: (branch) => read(thermalFileFor(branch)),
     },
     {
       field: 'print_controls',
@@ -257,7 +266,7 @@ async function main() {
       const $set = {};
       for (const g of breaks) {
         const rule = expectations.find((e) => e.field === g.field);
-        const value = typeof rule.value === 'function' ? rule.value() : rule.value;
+        const value = typeof rule.value === 'function' ? rule.value(branch) : rule.value;
         if (value === null || value === undefined) {
           console.log('    could not source a value for ' + g.field + ', left alone');
           continue;

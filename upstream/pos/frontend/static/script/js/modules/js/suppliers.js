@@ -1,4 +1,9 @@
 PosnicPro.suppliers = {
+    /* A figure as the shop writes it (money-format.js): display only. */
+    _num: function (v) {
+        var n = Number(v) || 0;
+        return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2);
+    },
     supplierAction: 'add',
     supplier_phone: null,
     showAdd: function () {
@@ -288,7 +293,7 @@ PosnicPro.suppliers = {
             var last = list.length ? (list[0].date || list[0].created_date || '') : '';
             var cur = PosnicPro.local.get('currencySign');
             $('#s_doc_stats').html(
-                '<div class="s-stat"><div class="s-stat-value">' + cur + '&nbsp;' + spend.toFixed(2) + '</div>'
+                '<div class="s-stat"><div class="s-stat-value">' + cur + '&nbsp;' + PosnicPro.suppliers._num(spend) + '</div>'
                 + '<div class="s-stat-label">Purchased' + (total > list.length ? ' (last ' + list.length + ')' : '') + '</div></div>'
                 + '<div class="s-stat"><div class="s-stat-value">' + total + '</div>'
                 + '<div class="s-stat-label">' + (total === 1 ? PosnicPro.i18n.t('lang_newpurchase_title', 'Purchase') : PosnicPro.i18n.t('lang_po_title', 'Purchases')) + '</div></div>'
@@ -318,7 +323,7 @@ PosnicPro.suppliers = {
                     + '<td>' + esc(no) + '</td>'
                     + '<td>' + pill + '</td>'
                     + '<td class="text-right q-muted">' + esc(when ? String(when).slice(0, 10) : '') + '</td>'
-                    + '<td class="text-right">' + cur + '&nbsp;' + (Number(rowTotal) || 0).toFixed(2) + '</td>'
+                    + '<td class="text-right">' + cur + '&nbsp;' + PosnicPro.suppliers._num(rowTotal) + '</td>'
                     + '</tr>';
             });
             html += '</tbody></table>';
@@ -764,9 +769,9 @@ PosnicPro.supplierdetails = {
                         });
                         let row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
                         let updateDate = PosnicPro.convertDate(row.string_date);
-                        let trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.receiving_id + '</td> <td class="export-date">' + updateDate + '</td> <td class="text-center"><span class="' + process_class + '">' + row.receiving_status + '</span></td> <td class="text-center text-danger">' + returnQty + '</td> <td class="text-right text-danger">' + currency + '&nbsp;' + (Number(row.items_return_total) || 0).toFixed(2) + '</td><td class="text-center text-success">' + purchaseQty + '</td><td class="text-right">' + currency + '&nbsp;<span class="number">' + (Number(row.items_total) || 0).toFixed(2) + '</span></td></tr>';
+                        let trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.receiving_id + '</td> <td class="export-date">' + updateDate + '</td> <td class="text-center"><span class="' + process_class + '">' + row.receiving_status + '</span></td> <td class="text-center text-danger">' + returnQty + '</td> <td class="text-right text-danger">' + currency + '&nbsp;' + PosnicPro.suppliers._num(row.items_return_total) + '</td><td class="text-center text-success">' + purchaseQty + '</td><td class="text-right">' + currency + '&nbsp;<span class="number">' + (Number(row.items_total) || 0).toFixed(2) + '</span></td></tr>';
                         $('#view_supplierdetails').children('tbody').append(trow);
-                        $('span.number').number(true, 2);
+                        PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                     }
                     $('.supplier_details_totalpurchase').html(purchaseTotalQty);
                     $('.supplier_details_totalreturn').html(returnTotalQty);
@@ -780,8 +785,8 @@ PosnicPro.supplierdetails = {
                         response.data.return_amount !== undefined && response.data.return_amount !== null
                             ? Number(response.data.return_amount)
                             : returnTotalValue;
-                    $('.supplier_details_purchasetotalvalue').html(supPurchaseTotal.toFixed(2));
-                    $('.supplier_details_returntotalvalue').html(supReturnTotal.toFixed(2));
+                    $('.supplier_details_purchasetotalvalue').html(PosnicPro.suppliers._num(supPurchaseTotal));
+                    $('.supplier_details_returntotalvalue').html(PosnicPro.suppliers._num(supReturnTotal));
                 } else {
                     var supplierreceivingreport = [];
                     data = response.data.table.data.list;
