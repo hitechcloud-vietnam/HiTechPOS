@@ -19,14 +19,16 @@ function addMonths(date, months) {
  * verified callback -> extend the paid period. The journal is the source of
  * truth for money; the tenant document only mirrors the resulting period.
  */
-function createBillingService({ store, providers, config, now = () => new Date(), notifier = null }) {
+function createBillingService({ store, providers, config, now = () => new Date(), notifier = null, adjustQuote = null, onPaid = null }) {
   const journal = createJournal({ store: store.payments, now });
 
   async function checkout({ tenantId, planId, months, provider: providerId }) {
     const tenant = await store.tenants.findById(tenantId);
     if (!tenant) fail('tenant_not_found', 404);
     const provider = providers.get(providerId);
-    const q = quote(planId, Number(months), { vatRate: config.saasVatRate });
+    /* adjustQuote (partners.js): partner discount; returns the quote unchanged otherwise */
+    const listed = quote(planId, Number(months), { vatRate: config.saasVatRate });
+    const q = adjustQuote ? await adjustQuote({ tenant, quote: listed }) : listed;
     const orderCode = generateOrderCode(now().getTime());
     await journal.open({
       orderCode, provider: provider.id, amount: q.total, purpose: 'subscription', reference: String(tenant._id),
@@ -74,6 +76,8 @@ function createBillingService({ store, providers, config, now = () => new Date()
       await store.shopBridge.setLimits(updated, plan.limits).catch((e) => console.warn(`[billing] limits for ${updated.subdomain}: ${e.message}`));
     }
     if (notifier && updated) await notifier.send(updated, 'paymentReceived', `payment:${payment.orderCode}`, { payment }).catch(() => {});
+    /* onPaid (partners.js): idempotent commission entry; a failure is caught up by its reconcile job */
+    if (onPaid && updated) await onPaid(payment).catch(() => console.warn('[billing] onPaid hook failed'));
     return updated;
   }
 

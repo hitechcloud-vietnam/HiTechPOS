@@ -8,6 +8,7 @@ const { isValidVNPhone, normalizeVNPhone, isValidTaxCode, BANKS } = require('@hi
 const { publicCatalogue, quote } = require('./plans');
 const { createTenantService } = require('./tenants');
 const { createBillingService } = require('./billing');
+const { createPartnerService, createPartnersRouter, referralCodeFromRequest } = require('./partners');
 const { createCounterService } = require('./counter');
 const { createEInvoiceService } = require('./einvoices');
 const { createNotifier } = require('./notify');
@@ -85,12 +86,13 @@ function httpError(code, status) {
 }
 
 function createApp({ store, config, providers, installer, onboarding, now = () => new Date(), logger = console, counterOptions = {}, einvoiceOptions = {}, mailTransport, resolveTxt, ops: opsOptions = {}, tenantDb = null }) {
-  const tenants = createTenantService({ store, config, installer, onboarding, now });
+  const partners = createPartnerService({ store, config, now });
+  const tenants = createTenantService({ store, config, installer, onboarding, now, attribute: partners.attribute });
   const domains = createDomainService({ store, config, now, ...(resolveTxt ? { resolveTxt } : {}) });
   const einvoices = createEInvoiceService({ store, config, now, providerOptions: einvoiceOptions, logger });
   const counter = createCounterService({ store, config, now, providerOptions: counterOptions, shopBridge: store.shopBridge || null, logger });
   const notifier = createNotifier({ store, config, now, logger, transport: mailTransport, hostsOf: (t) => tenants.hostsOf(t) });
-  const billing = createBillingService({ store, providers, config, now, notifier });
+  const billing = createBillingService({ store, providers, config, now, notifier, adjustQuote: partners.adjustQuote, onPaid: partners.onPaid });
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
@@ -210,7 +212,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
     let tenant;
     try {
       tenant = await tenants.signup(
-        { subdomain: b.subdomain, businessName: b.businessName, industry: b.industry, taxCode: b.taxCode, province: b.province,
+        { subdomain: b.subdomain, businessName: b.businessName, industry: b.industry, taxCode: b.taxCode, province: b.province, referralCode: referralCodeFromRequest(req),
           owner: { email, name: account.name, phone: account.phone, password: b.password } },
         { ownerAccountId: String(account._id) }
       );
@@ -437,6 +439,9 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   app.post('/api/admin/tenants/:id/resume', admin, async (req, res) => res.json(adminView(await tenants.setSuspended(req.params.id, false))));
   app.post('/api/admin/jobs/reminders', admin, async (_req, res) => res.json({ sent: await ops.trackJob('reminders', () => notifier.runReminders()) }));
   app.post('/api/admin/jobs/enforce-expiry', admin, async (_req, res) => res.json({ suspended: await ops.trackJob('expiry', () => billing.enforceExpiry()) }));
+  /* partner / referral program: /r/:code, /api/partners/*, /api/admin/partners/* (src/partners.js) */
+  app.use(createPartnersRouter({ partners, admin, config, logger }));
+
   /* Operator console API (src/admin-console.js): search, detail, audited actions, revenue. */
   app.use('/api/admin', admin, createAdminConsoleRouter({ store, config, billing, notifier, tenants, shopBridge: store.shopBridge || null, now, logger }));
 
@@ -456,7 +461,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
     res.status(status).json({ error: code, message, ...(details ? { details } : {}) });
   });
 
-  return { app, tenants, billing, counter, notifier, einvoices, ops };
+  return { app, tenants, billing, counter, notifier, einvoices, ops, partners };
 }
 
 module.exports = { createApp, MESSAGES };

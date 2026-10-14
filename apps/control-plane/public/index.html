@@ -116,6 +116,7 @@ $('input[name=subdomain]').addEventListener('input', (e) => {
 $('#signup').addEventListener('submit', async (e) => {
   e.preventDefault();
   const body = Object.fromEntries(new FormData(e.target));
+  body.referralCode = new URLSearchParams(location.search).get('ref') || undefined;
   $('#msg').className = ''; $('#msg').textContent = 'Đang khởi tạo cửa hàng…';
   const res = await fetch('/api/signup', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
   const json = await res.json();

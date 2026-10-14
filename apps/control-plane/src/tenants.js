@@ -52,7 +52,7 @@ function tenantDbName(subdomain, prefix = 'hitech_t_') {
  * The installer is injected so tests (and a future queue worker) can replace
  * the HTTP call.
  */
-function createTenantService({ store, config, installer, onboarding = null, now = () => new Date(), logger = console }) {
+function createTenantService({ store, config, installer, onboarding = null, now = () => new Date(), logger = console, attribute = null }) {
   async function availability(subdomain) {
     const n = normalizeSubdomain(subdomain);
     if (!n.ok) return { available: false, reason: n.reason };
@@ -105,6 +105,8 @@ function createTenantService({ store, config, installer, onboarding = null, now 
       if (e.code === 'duplicate') fail('subdomain_taken', 409);
       throw e;
     }
+    /* Partner referral (src/partners.js): set once; never fails a signup. */
+    if (attribute && input.referralCode) await attribute(tenant, input).catch(() => logger.warn?.('[tenants] referral attribution failed'));
 
     /* The shard refuses suspended shops outright, so the row must be live
        for the installer to reach it. Until the installer has created the
