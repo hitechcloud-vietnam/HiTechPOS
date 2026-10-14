@@ -11,6 +11,7 @@ const { createBillingService } = require('./billing');
 const { createCounterService } = require('./counter');
 const { createEInvoiceService } = require('./einvoices');
 const { createNotifier } = require('./notify');
+const { rateLimit, securityHeaders } = require('./security');
 const { hashPassword, verifyPassword } = require('./passwords');
 const { signToken, verifyToken } = require('./tokens');
 
@@ -51,6 +52,7 @@ const MESSAGES = {
   sale_ref_invalid: 'Mã hoá đơn không hợp lệ.',
   sale_already_paid: 'Hoá đơn này đã được thanh toán.',
   payment_not_in_review: 'Giao dịch không ở trạng thái cần đối soát.',
+  rate_limited: 'Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút.',
   payment_not_found: 'Không tìm thấy giao dịch.',
   manual_confirm_not_allowed: 'Chỉ xác nhận thủ công được với VietQR chuyển khoản trực tiếp.',
   payos_configuration_invalid: 'Thông tin kết nối payOS chưa đầy đủ.',
@@ -70,6 +72,12 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
+  app.use(securityHeaders);
+  const limits = config.rateLimits || {};
+  const loginLimit = rateLimit({ windowMs: 15 * 60000, max: limits.login ?? 20, now: () => now().getTime() });
+  const signupLimit = rateLimit({ windowMs: 60 * 60000, max: limits.signup ?? 10, now: () => now().getTime() });
+  const posLimit = rateLimit({ windowMs: 60000, max: limits.pos ?? 300, key: (req) => String(req.headers.authorization || req.ip).slice(-24), now: () => now().getTime() });
+  const adminLimit = rateLimit({ windowMs: 15 * 60000, max: limits.admin ?? 300, now: () => now().getTime() });
 
   /* Webhooks need the exact bytes the provider signed; mounted before the
      JSON parser. A verified callback is always acknowledged with 200 so the
@@ -114,7 +122,8 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
     req.account = claims;
     next();
   };
-  const admin = (req, _res, next) => {
+  const admin = (req, res, next) => adminLimit(req, res, (e) => (e ? next(e) : adminKey(req, res, next)));
+  const adminKey = (req, _res, next) => {
     const key = req.headers['x-admin-key'];
     if (!config.adminKey || typeof key !== 'string' || key.length !== config.adminKey.length ||
         !require('node:crypto').timingSafeEqual(Buffer.from(key), Buffer.from(config.adminKey))) return next(httpError('unauthorized', 401));
@@ -142,7 +151,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   /* Owner signup creates the control-plane account and the shop together.
      The password is hashed here for the control plane and handed once, over
      the internal channel, to the Posnic installer for the shop's admin user. */
-  app.post('/api/signup', async (req, res) => {
+  app.post('/api/signup', signupLimit, async (req, res) => {
     const b = req.body || {};
     const email = String(b.email || '').trim().toLowerCase();
     if (!EMAIL.test(email)) throw httpError('email_invalid', 422);
@@ -168,7 +177,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
     res.status(201).json({ token, tenant: view(tenant) });
   });
 
-  app.post('/api/auth/login', async (req, res) => {
+  app.post('/api/auth/login', loginLimit, async (req, res) => {
     const email = String((req.body || {}).email || '').trim().toLowerCase();
     const account = await store.accounts.findByEmail(email);
     if (!account || !verifyPassword((req.body || {}).password, account.passwordHash)) throw httpError('credentials_invalid', 401);
@@ -209,6 +218,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   });
 
   /* ---- counter payments: POS devices (shop API key) ---- */
+  app.use('/pos/v1', posLimit);
   const pos = async (req, _res, next) => {
     const tenant = await counter.authenticate(req.headers.authorization);
     if (!tenant) return next(httpError('unauthorized', 401));
