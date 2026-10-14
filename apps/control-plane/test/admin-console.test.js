@@ -142,7 +142,7 @@ test('admin console: detail has payments, domains, e-invoice presence, notices, 
   assert.deepEqual(d.customDomains, [{ domain: 'pos.photue.vn', verified: true, verifiedAt: '2026-10-02T01:00:00.000Z', addedAt: '2026-10-02T00:00:00.000Z' }]);
   assert.deepEqual(d.notices, [{ key: 'welcome', at: '2026-10-01T03:00:01.000Z' }]);
   assert.equal(d.owner.email, 'tue@photue.vn');
-  assert.ok(d.tenant.urls.includes('https://photue.hitechpos.vn'));
+  assert.ok(d.tenant.urls.some((u) => new URL(u).host === 'photue.hitechpos.vn'));
   assert.equal(d.payments.length, 0, 'sale payments are not subscription payments');
 
   const c = (await call('GET', `/api/admin/tenants/${ids.cafe}`)).json;

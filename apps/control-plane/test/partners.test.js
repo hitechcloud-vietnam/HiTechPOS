@@ -247,13 +247,24 @@ test('ledger: pending -> approved -> paid, reversals for refunds', async () => {
   assert.equal(await store.partnerCommissions.get(`C${d}`), null, 'not recurring');
 });
 
+/* Same check as app.js's X-Admin-Key middleware. */
+function adminKeyGuard(config) {
+  return (req, _res, next) => {
+    const key = req.headers['x-admin-key'];
+    if (typeof key !== 'string' || key.length !== config.adminKey.length || !crypto.timingSafeEqual(Buffer.from(key), Buffer.from(config.adminKey))) {
+      return next(Object.assign(new Error('unauthorized'), { code: 'unauthorized', status: 401 }));
+    }
+    next();
+  };
+}
+
 async function http() {
   const env = setup();
   const { store, config, partners } = env;
   const providers = createProviderRegistry([createPayOSProvider({ clientId: 'c', apiKey: 'a', checksumKey: 'k' }, { transport: async () => new Response('{}') })]);
   const { app } = createApp({ store, config, providers, logger: silent, installer: { async install() {} } });
   const outer = express();
-  outer.use(createPartnersRouter({ partners, config, logger: silent }));
+  outer.use(createPartnersRouter({ partners, admin: adminKeyGuard(config), config, logger: silent }));
   outer.use(app);
   const server = outer.listen(0);
   await new Promise((r) => server.once('listening', r));

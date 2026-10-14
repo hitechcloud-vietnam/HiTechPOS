@@ -77,9 +77,8 @@ function normalizeCode(value) {
 }
 
 function generateCode(length = 8) {
-  const bytes = crypto.randomBytes(length);
   let out = '';
-  for (let i = 0; i < length; i++) out += CODE_ALPHABET[bytes[i] % CODE_ALPHABET.length];
+  for (let i = 0; i < length; i++) out += CODE_ALPHABET[crypto.randomInt(CODE_ALPHABET.length)];
   return out;
 }
 
@@ -617,16 +616,10 @@ function createPartnersRouter({ partners, admin = null, config = {}, logger = co
   const router = express.Router();
   const limits = config.rateLimits || {};
   const loginLimit = rateLimit({ windowMs: 15 * 60000, max: limits.login ?? 20 });
-  const adminGuard = admin || (() => {
-    const adminLimit = rateLimit({ windowMs: 15 * 60000, max: limits.admin ?? 300 });
-    const h = (s) => crypto.createHash('sha256').update(String(s)).digest();
-    const keyOk = (req, _res, next) => {
-      const key = req.headers['x-admin-key'];
-      if (!config.adminKey || typeof key !== 'string' || !crypto.timingSafeEqual(h(key), h(config.adminKey))) return next(httpError('unauthorized', 401));
-      next();
-    };
-    return (req, res, next) => adminLimit(req, res, (e) => (e ? next(e) : keyOk(req, res, next)));
-  })();
+  /* The admin check (X-Admin-Key, rate limited) is the app's own; this
+     router never mounts its admin routes without it. */
+  if (typeof admin !== 'function') throw new Error('createPartnersRouter: admin middleware is required');
+  const adminGuard = admin;
 
   const noStore = (_req, res, next) => {
     res.set('cache-control', 'no-store');

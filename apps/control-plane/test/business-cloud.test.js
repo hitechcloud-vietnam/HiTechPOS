@@ -574,7 +574,7 @@ test('memory store: conditional update and expiry sweep', async () => {
 
 test('the sign-in page has no inline script and keeps its template markers', () => {
   const html = fs.readFileSync(path.join(__dirname, '../public/business-signin.html'), 'utf8');
-  const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
+  const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)];
   for (const [, attrs, body] of scripts) {
     if (/type="application\/json"/.test(attrs)) continue;
     assert.match(attrs, /\bsrc="\/api\/business\/v1\/assets\//);

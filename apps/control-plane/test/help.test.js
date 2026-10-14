@@ -48,7 +48,12 @@ async function boot(t) {
 
 const ids = (html) => new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
 const hrefs = (html) => [...html.matchAll(/\shref="([^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'));
-const decode = (s) => s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').trim();
+/* Heading text for comparison: tags dropped until none are left. */
+const decode = (s) => {
+  let prev;
+  do { prev = s; s = s.replace(/<[^>]*>/g, ''); } while (s !== prev);
+  return s.replace(/&amp;/g, '&').trim();
+};
 
 test('every help page is served with its heading, assets and no inline script', async (t) => {
   const { get } = await boot(t);
@@ -65,7 +70,7 @@ test('every help page is served with its heading, assets and no inline script', 
     assert.equal(decode(h1[1]), heading, route);
     assert.equal((res.body.match(/<h1[\s>]/g) || []).length, 1, `${route} has one h1`);
     /* CSP-friendly: scripts only from files, no inline handlers. */
-    for (const tag of res.body.match(/<script\b[^>]*>/g) || []) assert.match(tag, /\ssrc="\/help\/help\.js"/, `${route}: ${tag}`);
+    for (const tag of res.body.match(/<script\b[^>]*>/gi) || []) assert.match(tag, /\ssrc="\/help\/help\.js"/, `${route}: ${tag}`);
     assert.doesNotMatch(res.body, /\son[a-z]+="/, `${route} has no inline event handlers`);
     assert.match(res.body, /href="\/help\/help\.css"/, route);
     assert.match(res.csp, /script-src 'self'/, route);
