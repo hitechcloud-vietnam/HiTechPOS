@@ -19,7 +19,7 @@ function addMonths(date, months) {
  * verified callback -> extend the paid period. The journal is the source of
  * truth for money; the tenant document only mirrors the resulting period.
  */
-function createBillingService({ store, providers, config, now = () => new Date() }) {
+function createBillingService({ store, providers, config, now = () => new Date(), notifier = null }) {
   const journal = createJournal({ store: store.payments, now });
 
   async function checkout({ tenantId, planId, months, provider: providerId }) {
@@ -64,12 +64,14 @@ function createBillingService({ store, providers, config, now = () => new Date()
     const currentEnd = tenant.subscription && tenant.subscription.status === 'active' ? new Date(tenant.subscription.currentPeriodEnd) : now();
     const from = currentEnd > now() ? currentEnd : now();
     const end = addMonths(from, q.months);
-    return store.tenants.update(tenantId, {
+    const updated = await store.tenants.update(tenantId, {
       plan: { id: plan.id, limits: plan.limits, features: plan.features },
       subscription: { status: 'active', currentPeriodEnd: end.toISOString(), lastPaymentOrderCode: payment.orderCode },
       suspended: tenant.suspendedReason === 'subscription_expired' ? false : tenant.suspended,
       suspendedReason: tenant.suspendedReason === 'subscription_expired' ? null : tenant.suspendedReason ?? null,
     });
+    if (notifier && updated) await notifier.send(updated, 'paymentReceived', `payment:${payment.orderCode}`, { payment }).catch(() => {});
+    return updated;
   }
 
   async function handleCallback(providerId, request) {
@@ -94,8 +96,9 @@ function createBillingService({ store, providers, config, now = () => new Date()
     for (const t of await store.tenants.list({ suspended: false })) {
       const end = t.subscription && t.subscription.currentPeriodEnd;
       if (!end || new Date(end).getTime() + graceMs > now().getTime()) continue;
-      await store.tenants.update(t._id, { suspended: true, suspendedReason: 'subscription_expired', subscription: { ...t.subscription, status: 'expired' } });
+      const updated = await store.tenants.update(t._id, { suspended: true, suspendedReason: 'subscription_expired', subscription: { ...t.subscription, status: 'expired' } });
       suspended.push(t.subdomain);
+      if (notifier && updated) await notifier.send(updated, 'suspended', `suspended:${end}`).catch(() => {});
     }
     return suspended;
   }

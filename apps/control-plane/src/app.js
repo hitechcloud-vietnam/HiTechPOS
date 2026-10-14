@@ -10,6 +10,7 @@ const { createTenantService } = require('./tenants');
 const { createBillingService } = require('./billing');
 const { createCounterService } = require('./counter');
 const { createEInvoiceService } = require('./einvoices');
+const { createNotifier } = require('./notify');
 const { hashPassword, verifyPassword } = require('./passwords');
 const { signToken, verifyToken } = require('./tokens');
 
@@ -60,11 +61,12 @@ function httpError(code, status) {
   return Object.assign(new Error(code), { code, status });
 }
 
-function createApp({ store, config, providers, installer, onboarding, now = () => new Date(), logger = console, counterOptions = {}, einvoiceOptions = {} }) {
+function createApp({ store, config, providers, installer, onboarding, now = () => new Date(), logger = console, counterOptions = {}, einvoiceOptions = {}, mailTransport }) {
   const tenants = createTenantService({ store, config, installer, onboarding, now });
   const einvoices = createEInvoiceService({ store, config, now, providerOptions: einvoiceOptions, logger });
   const counter = createCounterService({ store, config, now, providerOptions: counterOptions, shopBridge: store.shopBridge || null, logger });
-  const billing = createBillingService({ store, providers, config, now });
+  const notifier = createNotifier({ store, config, now, logger, transport: mailTransport, hostsOf: (t) => tenants.hostsOf(t) });
+  const billing = createBillingService({ store, providers, config, now, notifier });
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
@@ -162,6 +164,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
       { ownerAccountId: String(account._id) }
     );
     const token = signToken({ sub: String(account._id), tenantId: String(tenant._id) }, config.sessionSecret, { now: now().getTime() });
+    await notifier.send(tenant, 'welcome', 'welcome').catch((e) => logger.warn(`[notify] welcome: ${e.message}`));
     res.status(201).json({ token, tenant: view(tenant) });
   });
 
@@ -298,6 +301,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   });
   app.post('/api/admin/tenants/:id/suspend', admin, async (req, res) => res.json(adminView(await tenants.setSuspended(req.params.id, true, (req.body || {}).reason))));
   app.post('/api/admin/tenants/:id/resume', admin, async (req, res) => res.json(adminView(await tenants.setSuspended(req.params.id, false))));
+  app.post('/api/admin/jobs/reminders', admin, async (_req, res) => res.json({ sent: await notifier.runReminders() }));
   app.post('/api/admin/jobs/enforce-expiry', admin, async (_req, res) => res.json({ suspended: await billing.enforceExpiry() }));
 
   app.get('/vendor/qrcode.js', (_req, res) => res.type('js').sendFile(require.resolve('qrcode-generator/qrcode.js')));
@@ -316,7 +320,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
     res.status(status).json({ error: code, message, ...(details ? { details } : {}) });
   });
 
-  return { app, tenants, billing, counter };
+  return { app, tenants, billing, counter, notifier, einvoices };
 }
 
 module.exports = { createApp, MESSAGES };

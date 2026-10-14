@@ -30,6 +30,8 @@ function loadConfig(env = process.env) {
     adminKey: env.ADMIN_API_KEY || null,
     saasVatRate: env.SAAS_VAT_RATE === undefined || env.SAAS_VAT_RATE === 'KCT' ? 'KCT' : Number(env.SAAS_VAT_RATE),
     graceDays: Number(env.GRACE_DAYS || 7),
+    smtpUrl: env.SMTP_URL || null,
+    mailFrom: env.MAIL_FROM || null,
     sourceUrl: env.SOURCE_URL || 'https://github.com/hitechcloud-vietnam/HiTechPOS',
     payos: env.PAYOS_CLIENT_ID ? { clientId: env.PAYOS_CLIENT_ID, apiKey: env.PAYOS_API_KEY, checksumKey: env.PAYOS_CHECKSUM_KEY, partnerCode: env.PAYOS_PARTNER_CODE } : null,
     pay2s: env.PAY2S_ACCESS_KEY ? { environment: env.PAY2S_ENV || 'sandbox', accessKey: env.PAY2S_ACCESS_KEY, partnerCode: env.PAY2S_PARTNER_CODE, secretKey: env.PAY2S_SECRET_KEY, partnerName: env.PAY2S_PARTNER_NAME } : null,
