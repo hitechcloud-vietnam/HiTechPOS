@@ -1,5 +1,6 @@
 'use strict';
 
+const { trimTrailingSlashes, stripTags } = require('@hitechpos/payment-core');
 const presets = require('@hitechpos/industry-presets');
 const { searchNormalize, CURRENCY_SYMBOL, CURRENCY_CODE, DEFAULT_TIME_ZONE } = require('@hitechpos/vn-locale');
 const { nodeHttpTransport } = require('./http-transport');
@@ -84,7 +85,7 @@ const STEPS = ['locale', 'taxes', 'payments', 'units', 'categories', 'items', 'r
 
 function createOnboarding({ transport = nodeHttpTransport, shardUrl, shopHeader = 'x-hitech-shop', baseDomain = 'hitechpos.vn', timeoutMs = 30000, branchPatcher = null, logger = console } = {}) {
   if (!shardUrl) throw new Error('createOnboarding: shardUrl is required');
-  const base = shardUrl.replace(/\/+$/, '');
+  const base = trimTrailingSlashes(shardUrl);
 
   async function run({ tenant, owner, preset }) {
     const p = typeof preset === 'object' && preset ? preset : presets.getPreset(preset || tenant.industry || presets.DEFAULT_PRESET_ID);
@@ -433,7 +434,7 @@ function createMongoBranchPatcher({ client }) {
       const current = branch.print_controls || {};
       const set = {};
       for (const [key, [english, vietnamese]] of Object.entries(RECEIPT_TITLES)) {
-        const text = String(current[key] || '').replace(/<[^>]*>/g, '').trim();
+        const text = stripTags(current[key]).trim();
         if (text === '' || text === english) set[`print_controls.${key}`] = `<span style="${TITLE_STYLE}">${vietnamese}</span>`;
       }
       for (const field of ['thermal_body_print', 'regular_body_print']) {

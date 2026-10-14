@@ -1,6 +1,7 @@
 'use strict';
 
 const { formatVND, formatDateVN } = require('@hitechpos/vn-locale');
+const { stripTags } = require('@hitechpos/payment-core');
 
 /*
  * Owner notifications by email. Every message is keyed (`notices.<key>` on the
@@ -72,7 +73,7 @@ const TEMPLATES = {
 
 function render(name, ctx) {
   const t = TEMPLATES[name](ctx);
-  const text = t.paragraphs.map((p) => p.replace(/<[^>]+>/g, '')).join('\n\n') + (t.cta ? `\n\n${t.cta.label}: ${t.cta.href}` : '');
+  const text = t.paragraphs.map((p) => stripTags(p)).join('\n\n') + (t.cta ? `\n\n${t.cta.label}: ${t.cta.href}` : '');
   return { subject: t.subject, html: layout(t.subject, t.paragraphs, t.cta), text };
 }
 

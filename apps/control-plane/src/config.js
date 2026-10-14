@@ -1,6 +1,7 @@
 'use strict';
 
 const { masterKey } = require('./secrets');
+const { trimTrailingSlashes } = require('@hitechpos/payment-core');
 
 /* Read inside a function, never at module scope (see upstream ARCHITECTURE.md
    "Module-scope process.env reads"). */
@@ -14,7 +15,7 @@ function loadConfig(env = process.env) {
   return {
     port: Number(env.PORT || 4100),
     host: env.HOST || '127.0.0.1',
-    publicUrl: String(env.PUBLIC_URL || 'http://localhost:4100').replace(/\/+$/, ''),
+    publicUrl: trimTrailingSlashes(env.PUBLIC_URL || 'http://localhost:4100'),
     store: memory ? 'memory' : 'mongo',
     mongoUri: memory ? null : required('CONTROL_URI'),
     controlDb: env.CONTROL_DB || 'hitechpos_control',

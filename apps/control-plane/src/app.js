@@ -13,10 +13,10 @@ const { createEInvoiceService } = require('./einvoices');
 const { createNotifier } = require('./notify');
 const { createDomainService } = require('./domains');
 const { rateLimit, securityHeaders } = require('./security');
+const { isEmail, forLog } = require('@hitechpos/payment-core');
 const { hashPassword, verifyPassword } = require('./passwords');
 const { signToken, verifyToken } = require('./tokens');
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /* Error codes map to Vietnamese messages for the signup/billing UI. */
 const MESSAGES = {
@@ -85,10 +85,13 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   app.set('trust proxy', 1);
   app.use(securityHeaders);
   const limits = config.rateLimits || {};
-  const loginLimit = rateLimit({ windowMs: 15 * 60000, max: limits.login ?? 20, now: () => now().getTime() });
-  const signupLimit = rateLimit({ windowMs: 60 * 60000, max: limits.signup ?? 10, now: () => now().getTime() });
-  const posLimit = rateLimit({ windowMs: 60000, max: limits.pos ?? 300, key: (req) => String(req.headers.authorization || req.ip).slice(-24), now: () => now().getTime() });
-  const adminLimit = rateLimit({ windowMs: 15 * 60000, max: limits.admin ?? 300, now: () => now().getTime() });
+  /* Every route has a ceiling per client; sign-in, signup, admin and the
+     POS API have their own, tighter or keyed, limits on top. */
+  app.use(rateLimit({ windowMs: 60000, max: limits.global ?? 600 }));
+  const loginLimit = rateLimit({ windowMs: 15 * 60000, max: limits.login ?? 20 });
+  const signupLimit = rateLimit({ windowMs: 60 * 60000, max: limits.signup ?? 10 });
+  const posLimit = rateLimit({ windowMs: 60000, max: limits.pos ?? 300, key: (req) => String(req.headers.authorization || req.ip).slice(-24) });
+  const adminLimit = rateLimit({ windowMs: 15 * 60000, max: limits.admin ?? 300 });
 
   /* Webhooks need the exact bytes the provider signed; mounted before the
      JSON parser. A verified callback is always acknowledged with 200 so the
@@ -99,7 +102,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
       const result = await billing.handleCallback(req.params.provider, { body: req.body.toString('utf8'), headers: req.headers });
       res.json({ success: true, ...result });
     } catch (e) {
-      logger.warn(`[webhook:${req.params.provider}] rejected: ${e.code || e.message}`);
+      logger.warn(`[webhook:${forLog(req.params.provider, 20)}] rejected: ${forLog(e.code || 'invalid', 60)}`);
       res.status(e.status && e.status < 500 ? e.status : 400).json({ success: false, code: e.code || 'invalid' });
     }
   });
@@ -110,7 +113,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
     try {
       res.json({ success: true, ...(await counter.handleBankFeed(req.params.tenantId, { body: req.body.toString('utf8'), headers: req.headers })) });
     } catch (e) {
-      logger.warn(`[webhook:shop:bank-feed] rejected: ${e.code || e.message}`);
+      logger.warn(`[webhook:shop:bank-feed] rejected: ${forLog(e.code || 'invalid', 60)}`);
       res.status(e.status && e.status < 500 ? e.status : 400).json({ success: false, code: e.code || 'invalid' });
     }
   });
@@ -119,7 +122,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
       const result = await counter.handleCallback(req.params.tenantId, req.params.method, { body: req.body.toString('utf8'), headers: req.headers });
       res.json({ success: true, ...result });
     } catch (e) {
-      logger.warn(`[webhook:shop:${req.params.method}] rejected: ${e.code || e.message}`);
+      logger.warn(`[webhook:shop:${forLog(req.params.method, 20)}] rejected: ${forLog(e.code || 'invalid', 60)}`);
       res.status(e.status && e.status < 500 ? e.status : 400).json({ success: false, code: e.code || 'invalid' });
     }
   });
@@ -169,7 +172,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   app.post('/api/signup', signupLimit, async (req, res) => {
     const b = req.body || {};
     const email = String(b.email || '').trim().toLowerCase();
-    if (!EMAIL.test(email)) throw httpError('email_invalid', 422);
+    if (!isEmail(email)) throw httpError('email_invalid', 422);
     if (!isValidVNPhone(b.phone)) throw httpError('phone_invalid', 422);
     if (b.taxCode && !isValidTaxCode(b.taxCode, { allowBranch: true, allowPersonal12: true })) throw httpError('tax_code_invalid', 422);
     if (typeof b.password !== 'string' || b.password.length < 8) throw httpError('password_weak', 422);
@@ -209,7 +212,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   const sha256 = (v) => crypto.createHash('sha256').update(String(v)).digest('hex');
   app.post('/api/auth/forgot', loginLimit, async (req, res) => {
     const email = String((req.body || {}).email || '').trim().toLowerCase();
-    const account = EMAIL.test(email) ? await store.accounts.findByEmail(email) : null;
+    const account = isEmail(email) ? await store.accounts.findByEmail(email) : null;
     if (account) {
       const token = crypto.randomBytes(32).toString('base64url');
       await store.accounts.update(account._id, { resetTokenHash: sha256(token), resetExpiresAt: new Date(now().getTime() + 3600000).toISOString() });
@@ -284,7 +287,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
       for await (const row of store.shopBridge.exportShop(tenant)) yield JSON.stringify(row) + '\n';
     })());
     await pipeline(lines, zlib.createGzip(), res);
-    logger.info?.(`[export] ${tenant.subdomain} by ${req.account.sub}`);
+    logger.info?.(`[export] ${forLog(tenant.subdomain, 40)} by ${forLog(req.account.sub, 40)}`);
   });
   app.get('/api/shop/payment-settings', auth, async (req, res) => res.json(await counter.getSettings(req.account.tenantId)));
   app.put('/api/shop/payment-settings', auth, async (req, res) => res.json(await counter.updateSettings(req.account.tenantId, req.body || {})));

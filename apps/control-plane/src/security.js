@@ -1,36 +1,25 @@
 'use strict';
 
+const { rateLimit: expressRateLimit } = require('express-rate-limit');
+
 /*
- * Small, dependency-free protections for the public control plane.
- *
- * rateLimit: fixed window per key (client IP by default). In-memory, so each
- * process limits on its own - enough to stop password guessing and signup
- * floods from one address; a shared store can replace `hits` later.
+ * Rate limits for the public control plane (express-rate-limit, in-memory
+ * per process). Exceeding a limit becomes a 429 error carrying the Vietnamese
+ * message of the error handler, with standard RateLimit-* and Retry-After
+ * headers.
  */
-function rateLimit({ windowMs, max, key = (req) => req.ip, now = () => Date.now(), code = 'rate_limited' }) {
-  const hits = new Map();
-  let lastSweep = now();
-  return (req, res, next) => {
-    const t = now();
-    if (t - lastSweep > windowMs) {
-      for (const [k, v] of hits) if (v.reset <= t) hits.delete(k);
-      lastSweep = t;
-    }
-    const k = key(req);
-    let entry = hits.get(k);
-    if (!entry || entry.reset <= t) {
-      entry = { count: 0, reset: t + windowMs };
-      hits.set(k, entry);
-    }
-    entry.count += 1;
-    res.set('ratelimit-limit', String(max));
-    res.set('ratelimit-remaining', String(Math.max(0, max - entry.count)));
-    if (entry.count > max) {
-      res.set('retry-after', String(Math.ceil((entry.reset - t) / 1000)));
-      return next(Object.assign(new Error(code), { code, status: 429 }));
-    }
-    next();
-  };
+function rateLimit({ windowMs, max, key, code = 'rate_limited' }) {
+  return expressRateLimit({
+    windowMs,
+    limit: max,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    ...(key ? { keyGenerator: key } : {}),
+    /* the key may be an API key or IP; validations about IPv6 subnets do
+       not apply to the former */
+    validate: { keyGeneratorIpFallback: false },
+    handler: (req, res, next) => next(Object.assign(new Error(code), { code, status: 429 })),
+  });
 }
 
 /* Baseline headers. The pages are self-contained (inline script/style, the

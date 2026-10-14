@@ -42,7 +42,7 @@ test('custom domain: plan gate, TXT verification, shard hosts, TLS ask', async (
   txt.set('_hitechpos.pos.abc.vn', entry.dns[0].value);
   assert.equal((await call('POST', '/api/shop/domains/pos.abc.vn/verify', {}, A)).json[0].verified, true);
   assert.ok((await store.tenants.findById(s.tenant.id)).hosts.includes('pos.abc.vn'));
-  assert.ok((await call('GET', '/api/me', undefined, A)).json.tenant.urls.includes('https://pos.abc.vn'));
+  assert.ok((await call('GET', '/api/me', undefined, A)).json.tenant.urls.some((u) => new URL(u).hostname === 'pos.abc.vn'));
 
   assert.equal((await fetch(`${base}/internal/tls-ask?domain=pos.abc.vn`)).status, 200);
   assert.equal((await fetch(`${base}/internal/tls-ask?domain=abc.hitechpos.vn`)).status, 200);

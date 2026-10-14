@@ -1,7 +1,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
-const { requestJson } = require('@hitechpos/payment-core');
+const { requestJson, trimTrailingSlashes } = require('@hitechpos/payment-core');
 const { EInvoiceError, fail } = require('./errors');
 
 /*
@@ -171,7 +171,7 @@ function baseUrlFrom(config, defaults, provider) {
   } catch {
     fail('einvoice_configuration_invalid', 422, { message: `${provider}: baseUrl không hợp lệ` });
   }
-  return String(url).replace(/\/+$/, '');
+  return trimTrailingSlashes(url);
 }
 
 function requireString(value, name, provider) {

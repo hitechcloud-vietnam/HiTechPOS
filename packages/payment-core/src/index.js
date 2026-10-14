@@ -8,4 +8,5 @@ module.exports = {
   ...require('./http'),
   ...require('./provider'),
   ...require('./journal'),
+  ...require('./strings'),
 };

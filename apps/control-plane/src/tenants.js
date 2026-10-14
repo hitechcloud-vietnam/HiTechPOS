@@ -1,7 +1,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
-const { fail } = require('@hitechpos/payment-core');
+const { fail, trimTrailingSlashes } = require('@hitechpos/payment-core');
 const presets = require('@hitechpos/industry-presets');
 const { generateTenantSecrets, sealAll } = require('./secrets');
 const { getPlan } = require('./plans');
@@ -163,7 +163,7 @@ function createHttpInstaller({ shardUrl, shopHeader, posnicKey, posnicSecret, ba
       }
 
       function post() {
-        return transport(`${shardUrl.replace(/\/+$/, '')}/api/install/add`, {
+        return transport(`${trimTrailingSlashes(shardUrl)}/api/install/add`, {
         method: 'POST',
         redirect: 'error',
         signal: AbortSignal.timeout(timeoutMs),

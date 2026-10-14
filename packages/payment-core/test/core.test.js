@@ -103,3 +103,13 @@ test('memory store list filters on dotted fields', async () => {
   assert.equal((await j.store.list({ 'metadata.saleRef': 'S1' })).length, 2);
   assert.equal((await j.store.list()).length, 2);
 });
+
+test('string helpers are linear and strict', () => {
+  assert.equal(core.trimTrailingSlashes('https://a.vn///'), 'https://a.vn');
+  assert.equal(core.trimTrailingSlashes('/'.repeat(100000) + 'x'), '/'.repeat(100000) + 'x');
+  for (const ok of ['a@b.vn', 'ke.toan@cong-ty.com.vn']) assert.ok(core.isEmail(ok), ok);
+  for (const bad of ['a@b', '@b.vn', 'a@@b.vn', 'a@.vn', 'a@b.', 'a b@c.vn', 'a@b..vn', 'x'.repeat(250) + '@b.vn', 'a.'.repeat(5000)]) assert.ok(!core.isEmail(bad), bad);
+  assert.equal(core.forLog('a\nb\r\nc'), 'a b  c');
+  assert.equal(core.stripTags('<<b>b>x</b>'), 'x');
+  assert.equal(core.stripTags('<span style="x">PHIẾU</span>'), 'PHIẾU');
+});

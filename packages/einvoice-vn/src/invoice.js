@@ -1,5 +1,7 @@
 'use strict';
 
+const { isEmail } = require('@hitechpos/payment-core');
+
 const {
   computeInvoiceTotals, isValidVATRate, VAT_RATE_LABELS, numberToVietnameseWords,
   isValidTaxCode, isValidCCCD, normalizeVNPhone,
@@ -35,7 +37,7 @@ const LINE_KINDS = Object.freeze(['goods', 'promotion', 'discount', 'note']);
 const ANONYMOUS_BUYER_NAME = 'Khách lẻ không lấy hoá đơn';
 const SERIES_RE = /^([CK])(\d{2})([A-Z])([A-Z]{2})$/;
 const REF_ID_RE = /^[A-Za-z0-9._:-]{1,64}$/;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const FUTURE_TOLERANCE_MS = 5 * 60 * 1000;
 
 function divRound(a, b) {
@@ -152,7 +154,7 @@ function buildInvoice(input, { now = Date.now } = {}) {
     if (!buyer.companyName && !buyer.name) err('buyer.companyName', 'Có MST người mua thì phải ghi tên đơn vị/người mua');
     if (!buyer.address) err('buyer.address', 'Có MST người mua thì phải ghi địa chỉ');
   }
-  if (buyer.email !== undefined && !EMAIL_RE.test(buyer.email)) err('buyer.email', 'Email người mua không hợp lệ');
+  if (buyer.email !== undefined && !isEmail(buyer.email)) err('buyer.email', 'Email người mua không hợp lệ');
   if (buyer.phone !== undefined) {
     const p = normalizeVNPhone(buyer.phone);
     if (!p) err('buyer.phone', 'Số điện thoại người mua không hợp lệ');

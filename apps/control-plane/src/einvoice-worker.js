@@ -152,8 +152,8 @@ function vatRateOf({ taxId, taxName, rate }, taxes, where) {
   const byName = !byId && taxName ? taxes.find((t) => fold(t.name) === fold(taxName)) : null;
   const tax = byId || byName;
   const name = fold((tax && tax.name) || taxName);
-  if (/^kct\b|khong chiu thue/.test(name)) return 'KCT';
-  if (/^kkknt\b|khong (phai )?ke khai/.test(name)) return 'KKKNT';
+  if (/^kct\b/.test(name) || /khong chiu thue/.test(name)) return 'KCT';
+  if (/^kkknt\b/.test(name) || /khong (phai )?ke khai/.test(name)) return 'KKKNT';
   const fields = tax && Array.isArray(tax.tax_fields) ? tax.tax_fields : [];
   const value = tax ? num(tax.rate !== undefined ? tax.rate : fields.reduce((a, f) => a + num(f.tax_value), 0)) : num(rate);
   if ([0, 5, 8, 10].includes(value)) return value;
@@ -187,7 +187,7 @@ function paymentMethodOf(sale) {
   return 'TM/CK';
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const { isEmail } = require('@hitechpos/payment-core');
 
 function buyerOf(sale, customer) {
   const taxCode = text(sale.customer_gst_number) || text(customer && customer.gst_number);
@@ -200,7 +200,7 @@ function buyerOf(sale, customer) {
     companyName: text(customer && customer.company_name),
     taxCode,
     address: text(sale.customer_address) || text(customer && customer.address),
-    email: email && EMAIL_RE.test(email) ? email : undefined,
+    email: email && isEmail(email) ? email : undefined,
     phone: phone || undefined,
   };
   for (const k of Object.keys(buyer)) if (buyer[k] === undefined) delete buyer[k];
