@@ -167,6 +167,17 @@ class UsersController extends BaseController {
         license: req.user.license,
       };
 
+      /* Plan limit on staff logins (helpers/limits.js), new users only. */
+      if (!id) {
+        const max = await require('../helpers/limits').userLimit();
+        if (max) {
+          const count = await require('../models/user.model').countDocuments({ license: req.user.license });
+          if (count >= max) {
+            return this.error(res, `Your plan covers ${max} staff login${max > 1 ? 's' : ''}. Upgrade it from your account to add more.`, 402);
+          }
+        }
+      }
+
       const response = await this.userModel.userInsertUpdate(data, id, context);
 
       // PHP lines 187-193: Handle response

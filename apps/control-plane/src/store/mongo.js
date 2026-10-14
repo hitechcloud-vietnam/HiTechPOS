@@ -136,6 +136,13 @@ async function createMongoStore({ uri, dbName }) {
           }
         }
       },
+      /* Plan limits read by Posnic (upstream/pos/api/src/helpers/limits.js):
+         branches, users, products; null means unlimited and is left out. */
+      async setLimits(tenant, limits) {
+        const doc = { _id: 'limits', updated_at: new Date() };
+        for (const k of ['branches', 'users', 'products']) if (Number.isInteger(limits[k]) && limits[k] > 0) doc[k] = limits[k];
+        await client.db(tenant.tenantDb).collection('app_limits').replaceOne({ _id: 'limits' }, doc, { upsert: true });
+      },
       async setQrGateway(tenant, { enabled, method }) {
         const branches = client.db(tenant.tenantDb).collection('branches');
         for (const b of await branches.find({}, { projection: { payment_gateway: 1 } }).toArray()) {

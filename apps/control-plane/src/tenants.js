@@ -99,6 +99,9 @@ function createTenantService({ store, config, installer, onboarding = null, now 
       await store.tenants.update(tenant._id, { status: 'install_failed', suspended: true, suspendedReason: 'install_failed', installError: String(e.code || e.message).slice(0, 200) });
       throw Object.assign(new Error('tenant_install_failed'), { code: 'tenant_install_failed', status: 502, cause: e });
     }
+    if (store.shopBridge && store.shopBridge.setLimits) {
+      await store.shopBridge.setLimits(active || tenant, trial.limits).catch((e) => logger.warn?.(`[tenants] limits for ${tenant.subdomain}: ${e.message}`));
+    }
     return onboard(active || tenant, input.owner, industry.id);
   }
 

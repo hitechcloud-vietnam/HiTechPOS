@@ -70,6 +70,9 @@ function createBillingService({ store, providers, config, now = () => new Date()
       suspended: tenant.suspendedReason === 'subscription_expired' ? false : tenant.suspended,
       suspendedReason: tenant.suspendedReason === 'subscription_expired' ? null : tenant.suspendedReason ?? null,
     });
+    if (updated && store.shopBridge && store.shopBridge.setLimits) {
+      await store.shopBridge.setLimits(updated, plan.limits).catch((e) => console.warn(`[billing] limits for ${updated.subdomain}: ${e.message}`));
+    }
     if (notifier && updated) await notifier.send(updated, 'paymentReceived', `payment:${payment.orderCode}`, { payment }).catch(() => {});
     return updated;
   }

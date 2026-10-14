@@ -471,6 +471,16 @@ class ItemsController extends BaseController {
       const licenseId = this.model?.licenseId || null;
       const user = req.user || {};
 
+      /* Plan limit on catalogue size (helpers/limits.js); deleted items
+         (del_status, as in repositories/item.repository.js) do not count. */
+      const maxItems = await require('../helpers/limits').itemLimit();
+      if (maxItems) {
+        const count = await require('../models/item.model').countDocuments({ del_status: { $nin: [1, '1', true] } });
+        if (count >= maxItems) {
+          return this.error(res, `Your plan covers ${maxItems} products. Upgrade it from your account to add more.`, 402);
+        }
+      }
+
       const result = await this.service.addItem({
         data: req.body || {},
         branchId,
