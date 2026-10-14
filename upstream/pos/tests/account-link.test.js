@@ -105,7 +105,9 @@ test('the menu item ships hidden and links out safely', () => {
 
   assert.match(item[0], /style="display:none;"/,
     'the item ships visible, so a community shop would see it before any check runs');
-  assert.match(item[0], /href="https:\/\/www\.posnic\.com\/account"/,
+  // HiTechPOS: the shop's account lives on the HiTechPOS control panel; brand.json
+  // accountUrl overrides it at runtime (dashboard.js showAccountLink).
+  assert.match(item[0], /href="https:\/\/app\.hitechpos\.vn\/account"/,
     'it does not link to the canonical account page');
   assert.match(item[0], /target="_blank"/, 'it should open in a new tab, not replace the till');
   assert.match(item[0], /rel="noopener noreferrer"/,
@@ -135,4 +137,22 @@ test('only a super_admin is shown it, and only when the server agrees', () => {
    */
   assert.match(fn[0], /base \+ 'api\/runtime-info'/,
     'the fetch does not use API_URL, so it will 404 from /public and fail silently');
+});
+
+test('HiTechPOS: a brand with an account page shows its own link, to the owner', () => {
+  const dash = fs.readFileSync(
+    path.join(ROOT, 'frontend', 'static', 'script', 'js', 'modules', 'js', 'dashboard.js'), 'utf8');
+  const fn = /\(function showAccountLink\(\)[\s\S]*?\}\(\)\);/.exec(dash)[0];
+  const ownerCheck = fn.indexOf("usertype') !== 'super_admin'");
+  const brandCheck = fn.indexOf('POSNIC_BRAND_ACCOUNT_URL');
+  assert.ok(ownerCheck > 0 && brandCheck > ownerCheck, 'the brand link must still be for the owner only');
+  assert.match(fn, /setAttribute\('href', url\)/, 'the configured account URL is not used');
+  assert.match(fn, /addEventListener\('posnic:brand'/, 'a first visit (no cached brand) never shows it');
+
+  const core = fs.readFileSync(
+    path.join(ROOT, 'frontend', 'static', 'script', 'js', 'core', 'PosnicPro.js'), 'utf8');
+  assert.match(core, /window\.POSNIC_BRAND_ACCOUNT_URL = safe\(brand\.accountUrl\)/);
+  const brand = JSON.parse(fs.readFileSync(path.join(ROOT, '..', '..', 'deploy', 'brand', 'brand.json'), 'utf8'));
+  assert.equal(brand.accountUrl, 'https://app.hitechpos.vn/account');
+  assert.equal(brand.url, 'https://hitechpos.vn');
 });

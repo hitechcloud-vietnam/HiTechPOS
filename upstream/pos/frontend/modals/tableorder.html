@@ -36,6 +36,56 @@
                             <legend class="h6"><lang class="lang_table_combine_with">Can combine with</lang></legend>
                             <div id="table_neighbours"></div>
                         </fieldset>
+                        <!-- HiTechPOS: hourly billing for rooms/tables (karaoke, billiards, courts). -->
+                        <fieldset class="mt-3" id="table_time_billing_field">
+                            <legend class="h6"><lang class="lang_time_billing">Time billing</lang></legend>
+                            <label class="d-flex align-items-center" style="min-height:44px">
+                                <input type="checkbox" id="table_time_enabled" style="margin-inline-end:12px">
+                                <lang class="lang_time_billing_enable">Charge this table by the hour (karaoke room, billiard table, court)</lang>
+                            </label>
+                            <div id="table_time_settings" hidden>
+                                <label for="table_time_item" class="mt-2"><lang class="lang_time_item">Item the time is sold as</lang></label>
+                                <select class="form-control border-control" id="table_time_item"></select>
+                                <small class="form-text text-muted"><lang class="lang_time_item_hint">For example Karaoke hour or Billiards hour. The item gives the time line its tax, category and report name; the rates below set the price.</lang></small>
+                                <label for="table_time_rate" class="mt-3"><lang class="lang_time_rate">Rate per hour</lang></label>
+                                <input class="form-control border-control" id="table_time_rate" type="number" min="1" max="1000000" step="1">
+                                <div class="form-row mt-3">
+                                    <div class="col-4">
+                                        <label for="table_time_block"><lang class="lang_time_block">Block (minutes)</lang></label>
+                                        <input class="form-control border-control" id="table_time_block" type="number" min="1" max="240" step="1" value="15">
+                                    </div>
+                                    <div class="col-4">
+                                        <label for="table_time_min_blocks"><lang class="lang_time_min_blocks">Minimum blocks</lang></label>
+                                        <input class="form-control border-control" id="table_time_min_blocks" type="number" min="1" max="96" step="1" value="1">
+                                    </div>
+                                    <div class="col-4">
+                                        <label for="table_time_grace"><lang class="lang_time_grace">Grace (minutes)</lang></label>
+                                        <input class="form-control border-control" id="table_time_grace" type="number" min="0" max="239" step="1" value="0">
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted"><lang class="lang_time_block_hint">Time is rounded up to whole blocks. A last part-block no longer than the grace minutes is not charged.</lang></small>
+                                <p class="mt-3 mb-1"><strong><lang class="lang_time_bands">Time-of-day rates (optional)</lang></strong></p>
+                                <small class="form-text text-muted mb-2"><lang class="lang_time_bands_hint">From, to, rate per hour and a name. Outside these hours the rate above applies. Times are Vietnam time.</lang></small>
+                                <div class="form-row table-time-band" data-band="0">
+                                    <div class="col-3"><input class="form-control border-control" type="time" data-band-field="start" aria-label="From" data-t-aria-label="lang_time_band_from"></div>
+                                    <div class="col-3"><input class="form-control border-control" type="time" data-band-field="end" aria-label="To" data-t-aria-label="lang_time_band_to"></div>
+                                    <div class="col-3"><input class="form-control border-control" type="number" data-band-field="rate" min="1" max="1000000" step="1" aria-label="Rate per hour" data-t-aria-label="lang_time_rate"></div>
+                                    <div class="col-3"><input class="form-control border-control" type="text" data-band-field="label" maxlength="30" placeholder="Evening" data-t-placeholder="lang_time_band_label"></div>
+                                </div>
+                                <div class="form-row table-time-band" data-band="1">
+                                    <div class="col-3"><input class="form-control border-control" type="time" data-band-field="start" aria-label="From" data-t-aria-label="lang_time_band_from"></div>
+                                    <div class="col-3"><input class="form-control border-control" type="time" data-band-field="end" aria-label="To" data-t-aria-label="lang_time_band_to"></div>
+                                    <div class="col-3"><input class="form-control border-control" type="number" data-band-field="rate" min="1" max="1000000" step="1" aria-label="Rate per hour" data-t-aria-label="lang_time_rate"></div>
+                                    <div class="col-3"><input class="form-control border-control" type="text" data-band-field="label" maxlength="30" placeholder="Evening" data-t-placeholder="lang_time_band_label"></div>
+                                </div>
+                                <div class="form-row table-time-band" data-band="2">
+                                    <div class="col-3"><input class="form-control border-control" type="time" data-band-field="start" aria-label="From" data-t-aria-label="lang_time_band_from"></div>
+                                    <div class="col-3"><input class="form-control border-control" type="time" data-band-field="end" aria-label="To" data-t-aria-label="lang_time_band_to"></div>
+                                    <div class="col-3"><input class="form-control border-control" type="number" data-band-field="rate" min="1" max="1000000" step="1" aria-label="Rate per hour" data-t-aria-label="lang_time_rate"></div>
+                                    <div class="col-3"><input class="form-control border-control" type="text" data-band-field="label" maxlength="30" placeholder="Evening" data-t-placeholder="lang_time_band_label"></div>
+                                </div>
+                            </div>
+                        </fieldset>
 
 
                     </div>

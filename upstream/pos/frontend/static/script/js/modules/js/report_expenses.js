@@ -100,7 +100,7 @@ PosnicPro.expensesreport = {
 
                             var trow = '<tr> <th scope="row">' + row_no + '</th> <td class="export-amount">' + currency + '&nbsp;<span class="number">' + row.amount + '</span></td> <td class="export-expenses-type">' + row.type + '</td> <td class="export-expenses-category"><i>' + row.category + '</i></td> <td class="export-recipient">' + row.recipientname + '</td> <td class="export-approved">' + row.approvedby + '</td> <td class="export-note">' + (row.description || '') + '</td> </tr>';
                             $('#view_expensesreport').children('tbody').append(trow);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
 
                     } else {

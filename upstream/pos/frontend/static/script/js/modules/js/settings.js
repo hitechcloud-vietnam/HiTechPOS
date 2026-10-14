@@ -3338,6 +3338,7 @@ PosnicPro.tableOrders = {
         $('#tableorder_add_form').trigger('reset');
         $('#tableorder_id').val('');
         PosnicPro.tableOrders.renderNeighbours({});
+        PosnicPro.tableOrders.renderTimeBilling({});
             $('#tableorder-heading').text(PosnicPro.i18n.t('lang_new_title', 'Add'));
             $('#tableorder_text_change').text(PosnicPro.i18n.t('lang_save_title', 'Save'));
         var loader = $(".loader-tax");
@@ -3356,6 +3357,7 @@ PosnicPro.tableOrders = {
         $('#table_area').val(row.area || '');
         $('#table_shape').val(row.shape || 'square');
         PosnicPro.tableOrders.renderNeighbours(row);
+        PosnicPro.tableOrders.renderTimeBilling(row);
 
             $('#tableorder-heading').text(PosnicPro.i18n.t('lang_action_edit', 'Edit'));
             $('#tableorder_text_change').text(PosnicPro.i18n.t('lang_updatebtn_title', 'Update'));
@@ -3378,9 +3380,70 @@ PosnicPro.tableOrders = {
         });
         $('#table_neighbours_field').prop('hidden', !container.children().length);
     },
+    /* HiTechPOS: hourly billing settings for a room/table (api/src/utils/time-billing.js). */
+    renderTimeBilling: function (row) {
+        var config = row.time_billing || null;
+        $('#table_time_enabled').prop('checked', !!config);
+        $('#table_time_settings').prop('hidden', !config);
+        $('#table_time_rate').val(config ? config.rate : '');
+        $('#table_time_block').val(config ? config.block_minutes : 15);
+        $('#table_time_min_blocks').val(config ? config.min_blocks : 1);
+        $('#table_time_grace').val(config ? config.grace_minutes : 0);
+        $('#table_time_billing_field .table-time-band').each(function (i) {
+            var band = (config && config.bands && config.bands[i]) || {};
+            $(this).find('[data-band-field=start]').val(band.start || '');
+            $(this).find('[data-band-field=end]').val(band.end === '24:00' ? '00:00' : (band.end || ''));
+            $(this).find('[data-band-field=rate]').val(band.rate || '');
+            $(this).find('[data-band-field=label]').val(band.label || '');
+        });
+        PosnicPro.tableOrders.loadTimeItems(config ? config.item_id : '');
+    },
+    loadTimeItems: function (selected) {
+        var select = $('#table_time_item');
+        select.empty().append($('<option>').val(selected || '').text(selected ? '…' : PosnicPro.i18n.t('lang_time_item_choose', 'Choose an item')));
+        if (typeof PosnicPro.get !== 'function') return;
+        PosnicPro.get({ url: 'items/getOnlineItemsAjaxList', data: { query: '', limit: 500 } }, function (r) {
+            var all = ((r && r.suggestions) || []).map(function (v) { return v.data || v; });
+            // Services first (time is a service); every item when the shop has none.
+            var services = all.filter(function (item) {
+                return item.item_kind === 'service' || item.open_price === true || String(item.item_id) === String(selected);
+            });
+            var items = services.length ? services : all;
+            select.empty().append($('<option>').val('').text(PosnicPro.i18n.t('lang_time_item_choose', 'Choose an item')));
+            items.forEach(function (item) {
+                select.append($('<option>').val(item.item_id).text(item.item_name || item.name || ''));
+            });
+            select.val(selected || '');
+        });
+    },
+    timeBillingData: function () {
+        if (!$('#table_time_enabled').is(':checked')) return '';
+        var bands = [];
+        $('#table_time_billing_field .table-time-band').each(function () {
+            var start = $(this).find('[data-band-field=start]').val();
+            var end = $(this).find('[data-band-field=end]').val();
+            var rate = $(this).find('[data-band-field=rate]').val();
+            if (!start && !end && !rate) return;
+            bands.push({
+                start: start,
+                end: end === '00:00' ? '24:00' : end,
+                rate: Number(rate),
+                label: $(this).find('[data-band-field=label]').val()
+            });
+        });
+        return JSON.stringify({
+            item_id: $('#table_time_item').val(),
+            rate: Number($('#table_time_rate').val()),
+            block_minutes: Number($('#table_time_block').val()),
+            min_blocks: Number($('#table_time_min_blocks').val()),
+            grace_minutes: Number($('#table_time_grace').val() || 0),
+            bands: bands
+        });
+    },
     formData: function () {
         var data = PosnicPro.getFormData($('#tableorder_add_form'));
         data.adjacent_table_ids = $('#table_neighbours input:checked').map(function () { return this.value; }).get();
+        data.time_billing = PosnicPro.tableOrders.timeBillingData();
         return data;
     },
     triggerTaxDelete: function (id) {
@@ -4555,9 +4618,17 @@ $("#tableorder_add_form").validate({
         }
     }
 });
+// HiTechPOS: show the hourly billing fields only when the table uses them.
+$(document).on('change', '#table_time_enabled', function () {
+    $('#table_time_settings').prop('hidden', !this.checked);
+});
 $("#tableorder_add_form").submit(function (event) {
     event.preventDefault();
     if ($('#tableorder_add_form').valid()) {            // checks form for validity
+        if ($('#table_time_enabled').is(':checked') && (!$('#table_time_item').val() || !(Number($('#table_time_rate').val()) > 0))) {
+            PosnicPro.alert('error', PosnicPro.i18n.t('lang_time_item_rate_required', 'Choose the item and enter the rate per hour.'));
+            return;
+        }
         if ($('#tableorder_id').val() !== '') {
             PosnicPro.tableOrders.editTableOrderField();
         } else {
@@ -6232,20 +6303,24 @@ PosnicPro.features = {
     accessNote: function () {
         var esc = function (v) { return $('<i>').text(v == null ? '' : v).html(); };
         var ctx = PosnicPro.features.runningContext();
+        /* HiTechPOS: name the brand's site, not posnic.com, and offer a desktop
+           download only when the brand has one (brand.json downloadUrl). */
+        var site = esc(String(PosnicPro.BRAND_URL || '').replace(/^https?:\/\//, '').replace(/\/$/, ''));
+        var download = window.POSNIC_BRAND_NAME ? (window.POSNIC_BRAND_DOWNLOAD_URL || '') : 'https://posnic.com/download';
         if (ctx === 'desktop') {
             return '<b><lang class="lang_you_are_in_the_desktop_app">You are in the desktop app.</lang></b> Your data lives on this computer, so ' +
                 'selling works with no internet at all. The same shop also opens in any web ' +
                 'browser - the address is in your welcome email, and under ' +
-                '<b><lang class="lang_my_account">My Account</lang></b> on posnic.com.';
+                '<b><lang class="lang_my_account">My Account</lang></b> on ' + site + '.';
         }
         if (ctx === 'web') {
             return '<b><lang class="lang_you_are_in_the_web_version">You are in the web version.</lang></b> The address of this shop is ' +
                 '<b>' + esc(window.location.hostname) + '</b> - it opens on any computer or ' +
-                'phone, so share it with your staff. For a till that keeps selling when the ' +
-                'internet drops, the free desktop app is at <b>posnic.com/download</b>.';
+                'phone, so share it with your staff.' + (download ? ' For a till that keeps selling when the ' +
+                'internet drops, the free desktop app is at <b>' + esc(download.replace(/^https?:\/\//, '')) + '</b>.' : '');
         }
         return '<b><lang class="lang_you_are_on_the_shop_network">You are on the shop network.</lang></b> This till runs from the shop computer ' +
-            'and works with no internet. If you signed up on posnic.com, the same shop ' +
+            'and works with no internet. If you signed up on ' + site + ', the same shop ' +
             'also opens in any browser - the address is under <b><lang class="lang_my_account">My Account</lang></b> there.';
     },
 

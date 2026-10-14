@@ -104,7 +104,7 @@ PosnicPro.returnreceivingreport = {
                             var row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
                             var trow = '<tr> <td scope="row">' + row_no + '</td> <td><a href="#/returnreceivingreport/' + row.id + '/details"><i data-toggle="tooltip" class="table_model_item">' + row.receiving_id + '</i></a></td> <td>' + row.date + '</td> <td>' + row.supplier_name + '</td> <td>' + row.payment_mode + '</td><td>' + row.count + '</td><td class="text-right">' + currency + '&nbsp;<span class="number">' + row.return + '</span></td></tr>';
                             $('#view_returnreceivingreport').children('tbody').append(trow);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var returnreport = [];
@@ -193,19 +193,19 @@ PosnicPro.returnreceivingproductreport = {
                             '<td class="text-right">' + currency + '&nbsp;<span class="number">' + val.total_amount + '</span> </td>' +
                             '</tr>';
                     $('#return_receiving_product_table tbody').append(addrowHTMLLine);
-                    $('span.number').number(true, 2);
+                    PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                     $('.discount-print-hideshow,.tax-print-hideshow').hide();
                     if (val.receiving_tax > 0) {
                         $('.tax-print-hideshow').show();
-                        $('#return_receiving_product_tax_view').number(val.receiving_tax, 2);
+                        PosnicPro.money ? PosnicPro.money.put($('#return_receiving_product_tax_view'), val.receiving_tax) : $('#return_receiving_product_tax_view').number(val.receiving_tax, 2);
                     }
 
                     if (val.receiving_discount > 0) {
                         $('.discount-print-hideshow').show();
-                        $('#receiving_return_discount_value').number(val.receiving_discount, 2);
+                        PosnicPro.money ? PosnicPro.money.put($('#receiving_return_discount_value'), val.receiving_discount) : $('#receiving_return_discount_value').number(val.receiving_discount, 2);
                     }
-                    $('#return_receiving_product_subtotal_amount_view').number(val.subtotal, 2);
-                    $('#return_receiving_product_total_amount_view').number(val.finaltotal, 2);
+                    PosnicPro.money ? PosnicPro.money.put($('#return_receiving_product_subtotal_amount_view'), val.subtotal) : $('#return_receiving_product_subtotal_amount_view').number(val.subtotal, 2);
+                    PosnicPro.money ? PosnicPro.money.put($('#return_receiving_product_total_amount_view'), val.finaltotal) : $('#return_receiving_product_total_amount_view').number(val.finaltotal, 2);
 
 
                 });
@@ -287,7 +287,7 @@ PosnicPro.returnreceivingproductreport = {
                             var row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
                             var trow = '<tr> <td scope="row">' + row_no + '</td> <td><a href="#/returnreceivingreport/' + row.return_id + '"><i data-toggle="tooltip" class="table_model_item">' + row.return_id + '</i></a></td><td>' + row.return_date + '</td><td>' + row.name + '</td><td>' + row.supplier_name + '</td> <td class="text-center">' + row.item_quantity + '</td>  <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.total_amount + '</span></td></tr>';
                             $('#view_returnreceivingproductreport').children('tbody').append(trow);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var returnproductreport = [];
@@ -367,7 +367,7 @@ PosnicPro.returnreceivingproductdetails = {
                     var row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
                     var trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.name + '</td> <td class="export-date">' + row.item_quantity + '</td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.total_amount + '</span></td></tr>';
                     $('#view_returnreceivingproductdetails').children('tbody').append(trow);
-                    $('span.number').number(true, 2);
+                    PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                 }
 
                 $('.return_receiving_product_view_name').html(response.data.custom_details.receiving_id);

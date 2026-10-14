@@ -24,7 +24,13 @@ $(document).ready(function () {
     PosnicPro.updateSaleNoteFlag = function (clickId, iconClass, text) {
         var $a = $('#' + clickId);
         if (!$a.length) { return; }
+        /* HiTechPOS: the chip is rebuilt below, which dropped its <lang> tag,
+           so after a sale "Ghi chú thanh toán" came back as "Payment note".
+           Remember the key from the markup and translate the label. */
+        if (!$a.data('labelKey')) { $a.data('labelKey', $a.find('lang').attr('class') || ''); }
+        var labelKey = $a.data('labelKey');
         var label = $a.data('label') || '';
+        if (labelKey && PosnicPro.i18n && PosnicPro.i18n.t) { label = PosnicPro.i18n.t(labelKey, label); }
         var esc = function (v) { return $('<div>').text(v == null ? '' : v).html(); };
         var t = (text == null) ? '' : String(text).trim();
         if (t.length > 0) {

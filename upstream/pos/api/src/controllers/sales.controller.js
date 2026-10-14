@@ -1992,7 +1992,9 @@ class SalesController extends BaseController {
         }
       }
 
-      const formatMoney = (value) => `${currency} ${(Number(value) || 0).toFixed(2)}`;
+      // The shop's precision and grouping (utils/money-text): whole dong, 135.000 in VN.
+      const formatMoney = (value) =>
+        `${currency} ${require('../utils/money-text').number(Number(value) || 0, branchDoc)}`;
       const writeMoney = (value, x, y, options = {}, isBold = false) => {
         doc.font(isBold ? currencyBoldFont : currencyFont).text(formatMoney(value), x, y, {
           align: 'right',
@@ -5474,6 +5476,17 @@ class SalesController extends BaseController {
         branch_phone: branch.store_telephone,
         branch_email: branch.store_email,
         branch_currency: branch.currency_type,
+        // How the customer's page writes money (it has no shop settings of
+        // its own): ISO precision and the country's grouping - 135.000 in VN.
+        ...(() => {
+          const m = require('../utils/money-text').describe(branch);
+          return {
+            branch_currency_code: m.currencyCode,
+            branch_currency_digits: m.currencyDigits,
+            branch_currency_group: m.currencyGroup,
+            branch_currency_decimal: m.currencyDecimal,
+          };
+        })(),
       };
 
       const salesDetails = {
@@ -5686,6 +5699,9 @@ class SalesController extends BaseController {
       // Generate PDF
       const PDFDocument = require('pdfkit');
       const doc = new PDFDocument({ size: 'A4', margin: 50 });
+      // The shop's precision and grouping (utils/money-text): 135.000 for a VND shop.
+      const mailMoney = (n) =>
+        require('../utils/money-text').number(Number(n) || 0, (sale && sale.branch_id) || {});
 
       // Create PDF buffer
       const chunks = [];
@@ -5780,8 +5796,8 @@ class SalesController extends BaseController {
         y = doc.y;
         doc.text(item.item_name || 'Item', 50, y);
         doc.text(item.quantity.toString(), 250, y);
-        doc.text(item.price.toFixed(2), 350, y);
-        doc.text((item.quantity * item.price).toFixed(2), 450, y);
+        doc.text(mailMoney(item.price), 350, y);
+        doc.text(mailMoney(item.quantity * item.price), 450, y);
         doc.moveDown();
       });
 
@@ -5789,15 +5805,15 @@ class SalesController extends BaseController {
       doc.moveDown();
       doc.fontSize(12);
       if (sale.subtotal) {
-        doc.text(`Subtotal: ${sale.subtotal.toFixed(2)}`, { align: 'right' });
+        doc.text(`Subtotal: ${mailMoney(sale.subtotal)}`, { align: 'right' });
       }
       if (sale.discount) {
-        doc.text(`Discount: ${sale.discount.toFixed(2)}`, { align: 'right' });
+        doc.text(`Discount: ${mailMoney(sale.discount)}`, { align: 'right' });
       }
       if (sale.tax) {
-        doc.text(`Tax: ${sale.tax.toFixed(2)}`, { align: 'right' });
+        doc.text(`Tax: ${mailMoney(sale.tax)}`, { align: 'right' });
       }
-      doc.text(`Total: ${sale.items_total.toFixed(2)}`, { align: 'right' });
+      doc.text(`Total: ${mailMoney(sale.items_total)}`, { align: 'right' });
 
       // Footer
       doc.moveDown(2);

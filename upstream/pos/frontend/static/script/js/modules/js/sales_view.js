@@ -86,6 +86,14 @@ PosnicPro.sales.view = {
         $('#sales_view').modal('show');
         $('.sale_view_hide').hide();
         var data = response.data;
+        // Display-only figures: the shop's precision and grouping (money-format.js).
+        var moneyText = function (value) {
+            var n = Number(value) || 0;
+            return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2);
+        };
+        var moneyPut = function (selector, value) {
+            return PosnicPro.money ? PosnicPro.money.put($(selector), value) : $(selector).number(value, 2);
+        };
         PosnicPro.sales.view.renderOrderEvidence(data);
         (data.partial_check === 'true' && data.sale_process !== 'PartialReturn' && data.sale_process !== 'FullReturn') ? $('#sale_view_Transaction_show').show() : $('#sale_view_Transaction_show').hide();
         $.each(data, function (key, val) {
@@ -104,7 +112,7 @@ PosnicPro.sales.view = {
         var escapePayment = function (value) { return $('<span>').text(value).html(); };
         $('#sale_view_payment_mode').html(paymentRows.length
             ? '<table class="table table-borderless table-sm mb-0" style="width:auto"><tbody>' + paymentRows.map(function (row) {
-                return '<tr><td>' + escapePayment(row.method) + '</td><td class="text-right" style="white-space:nowrap">' + escapePayment(paymentCurrency) + ' ' + row.amount.toFixed(2) + '</td></tr>';
+                return '<tr><td>' + escapePayment(row.method) + '</td><td class="text-right" style="white-space:nowrap">' + escapePayment(paymentCurrency) + ' ' + moneyText(row.amount) + '</td></tr>';
             }).join('') + '</tbody></table>' : escapePayment(data.payment_mode || ''));
 
         // When table order is disabled, hide table/order-type details in the view modal
@@ -155,7 +163,7 @@ PosnicPro.sales.view = {
                 if (discountSign === '%') {
                     discount_percentage = '' + discount + ' ' + discountSign + '';
                 } else {
-                    discount_percentage = '' + discountSign + ' ' + discount + '';
+                    discount_percentage = '' + discountSign + ' ' + moneyText(discount) + '';
                 }
             }
             var tax_percentage = '--';
@@ -268,12 +276,12 @@ PosnicPro.sales.view = {
         $('.tax-print-hideshow,.percentage-print-hideshow,.hide-sales-tax,#detailed_sale_item_tax,#detailed_sale_item_gsttax').hide();
         if (data.discount > 0) {
             $('.percentage-print-hideshow').show();
-            $('.sales-discount-text').number(data.discount, 2);
+            moneyPut('.sales-discount-text', data.discount);
         }
 
         if (data.tax > 0) {
             $('.hide-sales-tax').show();
-            $('#sale_view_tax').number(data.tax, 2);
+            moneyPut('#sale_view_tax', data.tax);
         }
 
         let roundOffValue = data.round_off;
@@ -296,14 +304,14 @@ PosnicPro.sales.view = {
             data.charges.forEach(function (c) {
                 var cTax = Number(c.tax_amount) || 0;
                 chargeViewRows += '<tr class="charge-view-row"><td>' + $('<i>').text(c.name || 'Charge').html()
-                    + (cTax > 0 ? ' <small>(+' + (c.tax_name ? $('<i>').text(c.tax_name).html() : 'tax') + ' ' + cTax.toFixed(2) + ')</small>' : '')
+                    + (cTax > 0 ? ' <small>(+' + (c.tax_name ? $('<i>').text(c.tax_name).html() : 'tax') + ' ' + moneyText(cTax) + ')</small>' : '')
                     + ' :</td>'
                     + '<td class="pull-right">' + currency + '&nbsp;<span class="number">' + (Number(c.amount) || 0).toFixed(2) + '</span></td></tr>';
             });
             $('#extra_discount_view').after(chargeViewRows);
         }
-        $('#total_amount_view').number(data.items_total, 2);
-        $('#subtotal_amount_view').number(data.items_subtotal, 2);
+        moneyPut('#total_amount_view', data.items_total);
+        moneyPut('#subtotal_amount_view', data.items_subtotal);
 
         /* Indian gst calculation */
         if (data.sale_process === 'Add' || data.sale_process === 'Edit' || data.sale_process === 'Hold' || data.sale_process === 'PartialReturn') {
@@ -312,12 +320,12 @@ PosnicPro.sales.view = {
                 if (igst > 0) {
                     $('.hide-show-igst').show();
                     $('.hide-show-scgst').hide();
-                    $('.sale_igst_tax_view').number(igst, 2);
+                    moneyPut('.sale_igst_tax_view', igst);
                     $('#detailed_sale_item_gsttax').show();
                 } else if (cgst > 0) {
                     $('.hide-show-scgst').show();
                     $('.hide-show-igst').hide();
-                    $('.sale_csgst_tax_view').number(cgst, 2);
+                    moneyPut('.sale_csgst_tax_view', cgst);
                     $('#detailed_sale_item_gsttax').show();
                 } else {
                     $('.indian-gstr').hide();
@@ -384,7 +392,7 @@ PosnicPro.sales.view = {
                     if (discountSign === '%') {
                         returndiscount_percentage = '' + discount + ' ' + discountSign + '';
                     } else {
-                        returndiscount_percentage = '' + discountSign + ' ' + discount + '';
+                        returndiscount_percentage = '' + discountSign + ' ' + moneyText(discount) + '';
                     }
                 }
                 var tax_percentage = '--';
@@ -484,16 +492,16 @@ PosnicPro.sales.view = {
             $('#detailed_sale_itemreturn_tax tbody').append(rowHTMLTaxLine);
         });
 
-        $('span.number').number(true, 2);
+        PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
 
         $('.return-percentage-print-hideshow,.hide-sale-return-tax,#detailed_sale_itemreturn_tax,#detailed_sale_itemreturn_gsttax').hide();
         if (data.return_discount > 0) {
             $('.return-percentage-print-hideshow').show();
-            $('.sales-return-discount-value').number(data.return_discount, 2);
+            moneyPut('.sales-return-discount-value', data.return_discount);
         }
         if (data.return_tax > 0) {
             $('.hide-sale-return-tax').show();
-            $('#return_tax_view').number(data.return_tax, 2);
+            moneyPut('#return_tax_view', data.return_tax);
         }
 
         roundOffValue = data.return_round_off;
@@ -510,8 +518,10 @@ PosnicPro.sales.view = {
         }
         $('#return_extra_discount_view').append(returnExtraDiscount);
         $('#return_round_off_view').append(roundOff);
-        $('#return_total_amount_view').number(data.items_return_total, 2);
-        $('#return_subtotal_amount_view').number(data.items_return_subtotal, 2);
+        // Written after the show() above: the shop's figures here too (money-format.js).
+        if (PosnicPro.money) PosnicPro.money.show($('#return_round_off_view .number, #return_extra_discount_view .number'));
+        moneyPut('#return_total_amount_view', data.items_return_total);
+        moneyPut('#return_subtotal_amount_view', data.items_return_subtotal);
 
         if (data.sale_process === 'FullReturn' || data.sale_process === 'PartialReturn') {
             /* Indian gst calculation */
@@ -520,12 +530,12 @@ PosnicPro.sales.view = {
                 if (returnigst > 0) {
                     $('.hide-show-igst').show();
                     $('.hide-show-scgst').hide();
-                    $('.return_igst_tax_view').number(returnigst, 2);
+                    moneyPut('.return_igst_tax_view', returnigst);
                     $('#detailed_sale_itemreturn_gsttax').show();
                 } else if (returncgst > 0) {
                     $('.hide-show-scgst').show();
                     $('.hide-show-igst').hide();
-                    $('.return_csgst_tax_view').number(returncgst, 3);
+                    moneyPut('.return_csgst_tax_view', returncgst);
                     $('#detailed_sale_itemreturn_gsttax').show();
                 } else {
                     $('.return-indian-gstr').hide();
@@ -672,6 +682,14 @@ PosnicPro.sales.view = {
         PosnicPro.get('sales/' + id, function (response) {
             if (response.type === 'success') {
                 data = response.data;
+                // Display-only figures: the shop's precision and grouping (money-format.js).
+                var moneyText = function (value) {
+                    var n = Number(value) || 0;
+                    return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2);
+                };
+                var moneyPut = function (selector, value) {
+                    return PosnicPro.money ? PosnicPro.money.put($(selector), value) : $(selector).number(value, 2);
+                };
 
                 // For returns we always work with the resolved currency
                 // extra discount amount stored in sale_extra_discount.
@@ -753,7 +771,7 @@ PosnicPro.sales.view = {
                     $('#extraDisc').editable('setValue', 0);
                 }
                 if (data.discount_amount > 0) {
-                    $('#salesReturnSign').html('$');
+                    $('#salesReturnSign').text(PosnicPro.local.get('currencySign') || '');
                     $("#sales_return_discountpercent").html(data.discount_amount);
                 } else {
                     $('#salesReturnSign').html('%');
@@ -763,12 +781,12 @@ PosnicPro.sales.view = {
                 if (data.partial_check === 'true') {
                     $("#paymentreturnhistory").show();
                     $('.payreturntext').html(data.payment_mode);
-                    $('.duebalance').number(data.payment_pending, 2);
+                    moneyPut('.duebalance', data.payment_pending);
                     let amount = data.wallet_amount - data.partial_balance;
                     let strAmount = amount.toString();
                     let amounts = strAmount.replace(/([-])+/g, '');
-                    $('.payreturnamount').number(amounts, 2);
-                    $('.walletreturnamount').number(data.wallet_amount, 2);
+                    moneyPut('.payreturnamount', amounts);
+                    moneyPut('.walletreturnamount', data.wallet_amount);
                 }
 
                 if (data.sale_process === 'Add' || data.sale_process === 'PartialReturn' || data.sale_process === 'FullReturn' || data.sale_process === 'Edit') {
@@ -840,7 +858,7 @@ PosnicPro.sales.view = {
                                     priceAmount += (((price.toFixed(2)) * val.item_quantity) - (((price.toFixed(2)) * val.item_quantity) * (addSalesLineDiscount / 100)));
                                     discountTotal += (((price.toFixed(2)) * val.item_quantity) * (addSalesLineDiscount / 100));
                                 } else {
-                                    discount_percentage = '' + discountSign + ' ' + addSalesLineDiscount + '';
+                                    discount_percentage = '' + discountSign + ' ' + moneyText(addSalesLineDiscount) + '';
                                     priceAmount += (((price.toFixed(2)) * val.item_quantity) - (addSalesLineDiscount * val.item_quantity));
                                     discountTotal += (addSalesLineDiscount * val.item_quantity);
                                 }
@@ -866,12 +884,12 @@ PosnicPro.sales.view = {
                         let sign = returnViewRoundOff >= 0 ? '(+)' : '(-)';
                         let returnViewTotal = (returnTotal !== 0) ? returnTotal : total;
                         var foot = '<tbody><tr>' +
-                            '<td colspan="5"><span class="pull-right"><b><lang class="lang_sub_total">Sub Total</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + priceValue.toFixed(2) + '</b></span></td></tr>' +
-                            '<tr><td colspan="5"><span class="pull-right"><b><lang class="lang_discount_amount_2">Discount Amount</lang></b></span></td><td colspan="2"><span class="pull-right">-<b>' + currency + '&nbsp;' + discountTotal.toFixed(2) + '</b></span></td>' +
-                            '<tr><td colspan="5"><span class="pull-right"><b><lang class="lang_tax_amount">Tax Amount</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + (total - (priceValue - discountTotal)).toFixed(2) + '</b></span></td>' +
-                            '<tr><td colspan="5"><span class="pull-right"><b><lang class="lang_round_off">Round Off</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + sign + '&nbsp;' + Math.abs(returnViewRoundOff).toFixed(2) + '</b></span></td>' +
-                            '<tr><td colspan="5"><span class="pull-right"><b><lang class="lang_extra_discount">Extra Discount</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + Math.abs(returnViewExtraDiscount).toFixed(2) + '</b></span></td>' +
-                            '<tr><td colspan="5"><span class="pull-right"><b><lang class="lang_grand_total">Grand Total</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + returnViewTotal.toFixed(2) + '</b></span></td>' +
+                            '<td colspan="5"><span class="pull-right"><b><lang class="lang_sub_total">Sub Total</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + moneyText(priceValue) + '</b></span></td></tr>' +
+                            '<tr><td colspan="5"><span class="pull-right"><b><lang class="lang_discount_amount_2">Discount Amount</lang></b></span></td><td colspan="2"><span class="pull-right">-<b>' + currency + '&nbsp;' + moneyText(discountTotal) + '</b></span></td>' +
+                            '<tr><td colspan="5"><span class="pull-right"><b><lang class="lang_tax_amount">Tax Amount</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + moneyText(total - (priceValue - discountTotal)) + '</b></span></td>' +
+                            '<tr><td colspan="5"><span class="pull-right"><b><lang class="lang_round_off">Round Off</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + sign + '&nbsp;' + moneyText(Math.abs(returnViewRoundOff)) + '</b></span></td>' +
+                            '<tr><td colspan="5"><span class="pull-right"><b><lang class="lang_extra_discount">Extra Discount</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + moneyText(Math.abs(returnViewExtraDiscount)) + '</b></span></td>' +
+                            '<tr><td colspan="5"><span class="pull-right"><b><lang class="lang_grand_total">Grand Total</lang></b></span></td><td colspan="2"><span class="pull-right"><b>' + currency + '&nbsp;' + moneyText(returnViewTotal) + '</b></span></td>' +
                             '</tr><tr><td colspan="7"></td></tr></tbody>';
                         app = app + '' + foot + '';
                     }
@@ -879,7 +897,7 @@ PosnicPro.sales.view = {
                     $('#sale_return_view_list').append(app);
                     $("#sale_return_view_list").insertAfter($("#table_return_page"));
                     ($('table#table_return_item_length tbody tr').length > 0) ? $('#show-sale-already-return-table').show() : $('#show-sale-already-return-table').hide();
-                    $('span.number').number(true, 2);
+                    PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
 
                     $('.sales-inline-hide').hide();
                 } else {
@@ -887,7 +905,7 @@ PosnicPro.sales.view = {
                     $('#return_icon_' + id).addClass('sales_icons');
                     hasher.setHash('sales');
                 }
-                $('span.number').number(true, 2);
+                PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                 $("#sales_return_items_table tbody tr").remove();
                 $('#sales_return_items_table tbody').append('<tr class="sales_new_tablerow_content_area" id="sales_new_tablerow_content_area"><td colspan="9"><div class="text-center text-dark"> <p class="table_cart_content"> Return Items Order Empty</p></div><img loading="lazy" decoding="async" src="static/images/general/wallet.svg" class="img-fluid sales-cart-image" style="opacity: 0.4;width: 100%;" alt="wallet"></td></tr>');
                 var imgHeight = $(window).height() - 500;
@@ -1591,7 +1609,7 @@ PosnicPro.sales.view = {
                                 if (discountSign === '%') {
                                     discount_percentage = '' + discount + ' ' + discountSign + '';
                                 } else {
-                                    discount_percentage = '' + discountSign + ' ' + discount + '';
+                                    discount_percentage = '' + discountSign + ' ' + moneyText(discount) + '';
                                 }
                             }
                             var tax = '-';
@@ -1809,7 +1827,7 @@ PosnicPro.sales.view = {
                                     if (discountSign === '%') {
                                         discount_percentage = '' + discount + ' ' + discountSign + '';
                                     } else {
-                                        discount_percentage = '' + discountSign + ' ' + discount + '';
+                                        discount_percentage = '' + discountSign + ' ' + moneyText(discount) + '';
                                     }
                                 }
                                 var tax = '-';
@@ -2081,6 +2099,11 @@ PosnicPro.sales.view = {
                 $('#receipt_wrapper').addClass(print_size);
                 PosnicPro.record_id = id;
                 var currency = PosnicPro.local.get('currencySign');
+                // Printed figures: the shop's precision and grouping (money-format.js).
+                var moneyText = function (value) {
+                    var n = Number(value) || 0;
+                    return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2);
+                };
                 $('.tax-print-hideshow,.percentage-print-hideshow,.amount-print-hideshow').hide();
                 $('.print_date').text(data.date);
                 $('.print_view_id').html('#' + data.return_id);
@@ -2142,7 +2165,7 @@ PosnicPro.sales.view = {
                             if (discountSign === '%') {
                                 discount_percentage = '' + discount + ' ' + discountSign + '';
                             } else {
-                                discount_percentage = '' + discountSign + ' ' + discount + '';
+                                discount_percentage = '' + discountSign + ' ' + moneyText(discount) + '';
                             }
                         }
                         var tax = '-';
@@ -2160,7 +2183,7 @@ PosnicPro.sales.view = {
                         let rowHTMLLine = '<tr><td height="1" colspan="7" style="border-top:1px solid #e4e4e4"></td></tr><tr>\n\
                                 <td style="color: #506fe4;" class="article print-deatils-size-family print-details-align">' + PosnicPro.textOverflowPrintEllipsis(PosnicPro.printItemName ? PosnicPro.printItemName(response.data.return_data[i], 'receipt') : response.data.return_data[i].item_name, PosnicPro.local.get('printing_max_char'), true) + '</td>' +
                             '<td class="print-deatils-size-family print-details-align lineitem_hsn" style="color: #646a6e;">' + hsn + '</td>' +
-                            '<td class="print-deatils-size-family print-details-align lineitem_price" style="color: #646a6e;" align="center">' + price.toFixed(2) + '</td>' +
+                            '<td class="print-deatils-size-family print-details-align lineitem_price" style="color: #646a6e;" align="center">' + moneyText(price) + '</td>' +
                             '<td class="print-deatils-size-family print-details-align lineitem_qty" style="color: #646a6e;" align="center">' + PosnicPro.formatQuantity(response.data.return_data[i].item_quantity, item_unit) + ' ' + item_unit + '</td>' +
                             '<td class="print-deatils-size-family print-details-align lineitem_disc" style="color: #646a6e;" align="center">' + discount_percentage + '</td>' +
                             '<td class="print-deatils-size-family print-details-align lineitem_tax" style="color: #646a6e;" align="center">' + tax + ' ' + taxSigns + '</td>' +
@@ -2335,8 +2358,8 @@ PosnicPro.sales.view = {
                     if (PosnicPro.sales.view._isA4()) {
                         if (data.partial_check === 'true' && data.sale_process !== 'PartialReturn' && data.sale_process !== 'FullReturn') {
                             $('.print-payment-status-hide').hide();
-                            $('.print-payment-balance').html(currency + '&nbsp;' + data.partial_balance.toFixed(2));
-                            $('.print-payment-pending').html(currency + '&nbsp;' + data.payment_pending.toFixed(2));
+                            $('.print-payment-balance').html(currency + '&nbsp;' + moneyText(data.partial_balance));
+                            $('.print-payment-pending').html(currency + '&nbsp;' + moneyText(data.payment_pending));
                             $('.print-payment-status').html(data.payment_status);
                         }
                         if (parseFloat(itemTotalTax) > 0) {
@@ -2361,7 +2384,7 @@ PosnicPro.sales.view = {
                         '<div class="invoice-footer-value"><lang class="lang_extra_disc_2">Extra-Disc</lang></div>' +
                         '</div>' +
                         '<div class="col-md-4 col-sm-4 col-xs-6">' +
-                        '<div class="invoice-footer-value invoice-payment text-dark">' + currency + "&nbsp;" + '-' + extraDisValue + '</div>' +
+                        '<div class="invoice-footer-value invoice-payment text-dark">' + currency + "&nbsp;" + '-' + moneyText(extraDisValue) + '</div>' +
                         '</div>';
                 }
                 $('#extra_disc_print_view').html(extraDiscPrintView);
@@ -2379,7 +2402,7 @@ PosnicPro.sales.view = {
                         '<div class="invoice-footer-value"><lang class="lang_round_off_3">Round-Off</lang></div>' +
                         '</div>' +
                         '<div class="col-md-4 col-sm-4 col-xs-6">' +
-                        '<div class="invoice-footer-value invoice-payment text-dark">' + currency + sign + Math.abs(roundOffValue).toFixed(2) + '</div>' +
+                        '<div class="invoice-footer-value invoice-payment text-dark">' + currency + sign + moneyText(Math.abs(roundOffValue)) + '</div>' +
                         '</div>';
                 }
                 $('#roundoff-value').html(roundOff);
@@ -2389,7 +2412,12 @@ PosnicPro.sales.view = {
                 $('.print-subtotal').html(currency + '&nbsp;<span class="number">' + subTotal + '</span>');
                 $('.print-total').html('<strong>' + currency + '&nbsp;<span class="number">' + grandTotal + '</span></strong>');
 
-                $('span.number').number(true, 2);
+                if (PosnicPro.money) {
+                    PosnicPro.money.markPrint($('.print-total'));
+                    PosnicPro.money.show($('span.number'));
+                } else {
+                    $('span.number').number(true, 2);
+                }
                 var contents = $(".print-modal-body").html();
                 var contentone = $(".print-modal-a4-body").html();
                 var canvas = document.getElementById("canvasTarget");

@@ -13,7 +13,17 @@ function view(row = {}) {
     ...(Array.isArray(row.adjacent_table_ids)
       ? { adjacent_table_ids: row.adjacent_table_ids.map(String) }
       : {}),
+    // HiTechPOS: hourly billing for rooms/tables (utils/time-billing.js).
+    ...timeBillingView(row.time_billing),
   };
+}
+function timeBillingView(value) {
+  try {
+    const config = require('./time-billing').normalizeConfig(value);
+    return config ? { time_billing: config } : {};
+  } catch (_) {
+    return {};
+  }
 }
 function update(data, previous = {}) {
   const next = { ...view(previous) },
@@ -46,6 +56,8 @@ function update(data, previous = {}) {
     if (!shapes.includes(data.shape)) throw new Error('Choose a table shape.');
     out.shape = data.shape;
   }
+  if (data.time_billing !== undefined)
+    out.time_billing = require('./time-billing').normalizeConfig(data.time_billing);
   return out;
 }
 function accommodates(row, guests) {

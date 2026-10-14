@@ -1,15 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- HiTechPOS: a shop's own till has no public pages to index. The product site is https://hitechpos.vn/ -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://www.posnic.com/</loc>
-    <lastmod>2026-09-02</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://www.posnic.com/login.html</loc>
-    <lastmod>2026-09-02</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
 </urlset>

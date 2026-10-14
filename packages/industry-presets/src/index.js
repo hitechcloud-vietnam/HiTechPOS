@@ -88,6 +88,8 @@ function validate(p) {
     if (!p.categories.includes(item.category)) fail(id, `item "${item.name}" has unknown category ${item.category}`);
   }
 
+  validateTables(p);
+
   if (!RECEIPT_TEMPLATES.includes(p.receipt.template)) fail(id, 'has bad receipt template');
   if (typeof p.receipt.showVatBreakdown !== 'boolean' || !p.receipt.footer) fail(id, 'has bad receipt');
   if (!p.payments.length || p.payments.some((m) => !PAYMENT_METHODS.includes(m))) fail(id, 'has bad payments');
@@ -99,6 +101,37 @@ function validate(p) {
   if (p.recommendedApps.includes('kds') && !p.features.kds.enabled) fail(id, 'recommends kds without kds feature');
 }
 
+// Same limits as Posnic's time billing (upstream/pos/api/src/utils/time-billing.js).
+const MAX_HOURLY_RATE = 1000000;
+const CLOCK = /^([01]\d|2[0-3]):[0-5]\d$|^24:00$/;
+
+function validateTables(p) {
+  const id = p.id;
+  const tables = p.sampleTables || [];
+  if (!Array.isArray(tables)) fail(id, 'has bad sampleTables');
+  const labels = new Set();
+  for (const t of tables) {
+    // Posnic table labels: 1-6 letters/digits (frontend/modals/tableorder.html).
+    if (!/^[A-Za-z0-9]{1,6}$/.test(t.label || '')) fail(id, `has bad table label ${t.label}`);
+    if (labels.has(t.label.toUpperCase())) fail(id, `repeats table ${t.label}`);
+    labels.add(t.label.toUpperCase());
+    if (t.capacity !== undefined && (!Number.isInteger(t.capacity) || t.capacity < 1 || t.capacity > 1000)) fail(id, `table ${t.label} has bad capacity`);
+    if (!t.timeBilling) continue;
+    const item = p.sampleItems.find((i) => i.name === t.item);
+    if (!item) fail(id, `table ${t.label} bills unknown item ${t.item}`);
+    if (item.price > MAX_HOURLY_RATE) fail(id, `table ${t.label} rate is above ${MAX_HOURLY_RATE}`);
+    const tb = t.timeBilling;
+    const int = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
+    if (!int(tb.blockMinutes, 1, 240) || !int(tb.minBlocks, 1, 96) || !int(tb.graceMinutes, 0, tb.blockMinutes - 1)) {
+      fail(id, `table ${t.label} has bad time blocks`);
+    }
+    for (const b of tb.bands || []) {
+      if (!CLOCK.test(b.start) || !CLOCK.test(b.end) || b.start === b.end || b.start === '24:00') fail(id, `table ${t.label} has a bad rate band`);
+      if (!int(b.rate, 1, MAX_HOURLY_RATE)) fail(id, `table ${t.label} band rate must be whole VND`);
+    }
+  }
+}
+
 function load(id) {
   const raw = require(`./presets/${id}.js`);
   if (raw.id !== id) fail(id, `file declares id "${raw.id}"`);
@@ -106,6 +139,7 @@ function load(id) {
     ...raw,
     features: buildFeatures(raw.features),
     settings: raw.settings || {},
+    sampleTables: raw.sampleTables || [],
   };
   validate(preset);
   return deepFreeze(preset);
@@ -165,6 +199,34 @@ function posnicModuleSettings(id) {
   return out;
 }
 
+/**
+ * Bodies for upstream POST /api/setting/addTableOrderData that create a
+ * preset's sample rooms/tables with their time billing. `itemIds` maps a
+ * sample item name to the id Posnic gave it when the items were seeded; a
+ * table whose item is missing is created without time billing.
+ */
+function sampleTablePayloads(id, itemIds = {}) {
+  const p = getPreset(id);
+  return (p.sampleTables || []).map((t) => {
+    const body = { tableorder_value: t.label };
+    if (t.capacity) Object.assign(body, { capacity: t.capacity, max_capacity: t.capacity });
+    if (t.area) body.area = t.area;
+    const itemId = t.timeBilling && itemIds[t.item];
+    if (itemId) {
+      const item = p.sampleItems.find((i) => i.name === t.item);
+      body.time_billing = JSON.stringify({
+        item_id: String(itemId),
+        rate: item.price,
+        block_minutes: t.timeBilling.blockMinutes,
+        min_blocks: t.timeBilling.minBlocks,
+        grace_minutes: t.timeBilling.graceMinutes,
+        bands: (t.timeBilling.bands || []).map((b) => ({ start: b.start, end: b.end, rate: b.rate, label: b.label || '' })),
+      });
+    }
+    return body;
+  });
+}
+
 /** Feature x preset matrix for documentation. */
 function featureMatrix() {
   return {
@@ -201,5 +263,6 @@ module.exports = {
   hasPreset,
   resolveInstallPayload,
   posnicModuleSettings,
+  sampleTablePayloads,
   featureMatrix,
 };

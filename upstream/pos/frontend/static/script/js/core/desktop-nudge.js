@@ -245,9 +245,27 @@
         } catch (e) { /* measurement never breaks a till */ }
     }
 
+    /*
+     * HiTechPOS: a branded installation offers its own desktop app or none.
+     * The posters name Posnic and link to Posnic's download, so a brand
+     * without a downloadUrl (brand.json) never shows them - HiTechPOS has no
+     * desktop app - and one with a downloadUrl sends people there.
+     */
+    function brandAllows() {
+        var brand = null;
+        try { brand = JSON.parse(get('posnic_brand') || 'null'); } catch (e) { brand = null; }
+        if (window.POSNIC_BRAND_NAME || (brand && brand.enabled)) {
+            var url = window.POSNIC_BRAND_DOWNLOAD_URL || (brand && brand.downloadUrl) || '';
+            if (!/^https:\/\/[^\s<>"']+$/.test(url)) { return false; }
+            DOWNLOAD_URL = url;
+        }
+        return true;
+    }
+
     /** Wait for a quiet moment, then show. Busy defers; it never cancels. */
     function whenFree(variant) {
         if (get(DONE)) { return; }
+        if (!brandAllows()) { return; }
         if (busy()) { setTimeout(function () { whenFree(variant); }, RETRY); return; }
         show(variant);
     }

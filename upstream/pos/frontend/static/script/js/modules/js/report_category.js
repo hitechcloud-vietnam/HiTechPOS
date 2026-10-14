@@ -103,12 +103,13 @@ PosnicPro.categoryreport = {
                         var page_totals = (table.data('current_page') - 1) * table.data('per_page');
                         $('#view_categoryreport_page_perpage_total').text(page_totals + response.data.list.length);
                         var currency = PosnicPro.local.get('currencySign');
+                        var moneyText = function (v) { var n = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2); };
                         for (var i = 0; i < response.data.list.length; i++) {
                             var row = response.data.list[i];
                             var row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
-                            var trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.name + '</td> <td class="text-center">' + row.item_quantity + '</td> <td class="text-right">' + currency + '&nbsp;<span>' + row.sales_profit.toFixed(2) + '</span></td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.sales_avg + '</span></td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.total_amount + '</span></td></tr>';
+                            var trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.name + '</td> <td class="text-center">' + row.item_quantity + '</td> <td class="text-right">' + currency + '&nbsp;<span>' + moneyText(row.sales_profit) + '</span></td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.sales_avg + '</span></td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.total_amount + '</span></td></tr>';
                             $('#view_categoryreport').children('tbody').append(trow);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var categoryreport = [];
@@ -226,7 +227,7 @@ PosnicPro.categoryproductreport = {
                             var row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
                             var trow = '<tr> <td scope="row">' + row_no + '</td> <td><a href="#/categoryreport/' + row.category_id + '/product" ><i data-toggle="tooltip" class="table_model_item">' + row.category_name + '</i></a></td> <td class="text-center">' + row.item_count + '</td>  <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.selling_price + '</span></td></tr>';
                             $('#view_categoryproductreport').children('tbody').append(trow);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var categoryproductreport = [];
@@ -312,7 +313,7 @@ PosnicPro.productdetails = {
                         var updateDate = PosnicPro.convertDate(row.string_date);
                         var trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.name + '</td> <td class="export-date">' + updateDate + '</td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.selling_price + '</span></td></tr>';
                         $('#view_productdetails').children('tbody').append(trow);
-                        $('span.number').number(true, 2);
+                        PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                     }
 
                     $('.category_product_details_selling').html(response.data.total.total);

@@ -92,6 +92,10 @@ PosnicPro.salereport = {
         PosnicPro.get(params, function (response) {
             loader.find(".loadingSpinner:first").remove();
             if (response.type === 'success') {
+                    // Report figures: the shop's precision and grouping on screen, plain digits in the export (money-format.js).
+                    var currency = PosnicPro.local.get('currencySign') || '';
+                    var moneyText = function (v) { var n = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2); };
+                    var moneyPlain = function (v) { var n = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.fixed(n) : n.toFixed(2); };
                     (response.data.total > 0) ? $('#salereport_exportbtn').removeAttr('disabled') : $('#salereport_exportbtn').attr('disabled', 'disabled');
                     if (type !== 'salereportexport') {
                         table.data('total', response.data.total);
@@ -145,10 +149,10 @@ PosnicPro.salereport = {
                                 if (discount > 0) {
                                     if (discountSign === '%') {
                                         discountValue = (price * discount / 100) * val.item_quantity;
-                                        discountDisplay = discount + '% (' + discountValue.toFixed(2) + ')';
+                                        discountDisplay = discount + '% (' + moneyText(discountValue) + ')';
                                     } else {
                                         discountValue = discount * val.item_quantity;
-                                        discountDisplay = '₹ ' + discount + ' (' + discountValue.toFixed(2) + ')';
+                                        discountDisplay = currency + ' ' + moneyText(discount) + ' (' + moneyText(discountValue) + ')';
                                     }
                                     updatePrice = ((price * val.item_quantity) - discountValue).toFixed(2);
                                 } else {
@@ -156,13 +160,13 @@ PosnicPro.salereport = {
                                 }
 
                                 if (val.tax > 0) {
-                                    tax_value = val.tax + '% (' + (updatePrice * (val.tax / 100)).toFixed(2) + ')';
+                                    tax_value = val.tax + '% (' + moneyText(updatePrice * (val.tax / 100)) + ')';
                                 }
 
                                 var lineitem = '<tr><td><tbody><tr style="border: 1px solid wheat;"><td class="export-item-name">' + val.item_name + '</td><td class="export-item-barcode-id text-center">' + val.barcode_id + '</td><td class="export-item-price text-right">' + currency + '&nbsp;<span class="number">' + price + '</span></td><td class="export-item-qty text-right">' + val.item_quantity + '</td><td class="export-item-discount-amount text-right">' + discountDisplay + '</td><td class="export-item-tax text-right">' + tax_value + '</td><td class="export-item-total text-right">' + currency + '&nbsp;<span class="number">' + val.total_amount + '</span></td></tr></tbody></td></tr>';
                                 $("#" + row._id + 'reportaction').children('tbody').append(lineitem);
                             }
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var salesreportexportdata = [];
@@ -195,10 +199,10 @@ PosnicPro.salereport = {
                                 if (discount > 0) {
                                     if (discountSign === '%') {
                                         discountValue = (price * discount / 100) * value.item_quantity;
-                                        discountDisplay = discount + '% (' + discountValue.toFixed(2) + ')';
+                                        discountDisplay = discount + '% (' + moneyPlain(discountValue) + ')';
                                     } else {
                                         discountValue = discount * value.item_quantity;
-                                        discountDisplay = currency + ' ' + discount + ' (' + discountValue.toFixed(2) + ')';
+                                        discountDisplay = currency + ' ' + moneyPlain(discount) + ' (' + moneyPlain(discountValue) + ')';
                                     }
                                     updatePrice = ((price * value.item_quantity) - discountValue).toFixed(2);
                                 } else {
@@ -206,11 +210,11 @@ PosnicPro.salereport = {
                                 }
 
                                 if (value.tax > 0) {
-                                    tax_value = value.tax + '% (' + (updatePrice * (value.tax / 100)).toFixed(2) + ')';
+                                    tax_value = value.tax + '% (' + moneyPlain(updatePrice * (value.tax / 100)) + ')';
                                 }
                                 var total = value.total_amount;
                                 var itemsTotal = parseFloat(val.items_total) || 0;
-                                salesreportexportdata.push({SalesId: id, Date: date, CustomerName: customer, CustomerPhone: phone, NoOfItems: totalitems, ItemName: name, SKU: sku, ItemPrice: price.toFixed(2), ItemQty: quantity, ItemDiscount: discountDisplay, ItemTax: tax_value, ItemTotal: total, ExtraDiscount: extraDiscount.toFixed(2), Total: itemsTotal.toFixed(2)});
+                                salesreportexportdata.push({SalesId: id, Date: date, CustomerName: customer, CustomerPhone: phone, NoOfItems: totalitems, ItemName: name, SKU: sku, ItemPrice: moneyPlain(price), ItemQty: quantity, ItemDiscount: discountDisplay, ItemTax: tax_value, ItemTotal: total, ExtraDiscount: moneyPlain(extraDiscount), Total: moneyPlain(itemsTotal)});
                             });
 
                         });
@@ -309,7 +313,7 @@ PosnicPro.instantreport = {
                             var trow = '<tr> <td scope="row">' + row_no + '</td><td><a href="#/instantreport/' + row._id + '/details"><i data-toggle="tooltip" class="table_model_item mobile_tooltip" title="View Details" data-t-title="lang_view_details_2">' + row.sales_id + '<i></a></td> <td>' + row.date + '</td> <td>' + row.customer_name + '</td> <td>' + row.user_name + '</td> <td class="text-center">' + row.total_qty + '</td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.total_amount + '</span></td></tr>';
                             $('#view_instantreport').children('tbody').append(trow);
                         }
-                        $('span.number').number(true, 2);
+                        PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                     } else {
                         var receivingreportexportdata = [];
                         data = response.data.list;
@@ -403,10 +407,10 @@ PosnicPro.instantdetails = {
                     $('#view_instantdetails').children('tbody').append(trow);
                     $('.instant_view_name').html(row.sales_id);
                 }
-                $('span.number').number(true, 2);
+                PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
 
                 $('.instantcurrency_symbol').html(currency);
-                $('.instant_details_totalsale').html(tot.toFixed(2));
+                $('.instant_details_totalsale').html(PosnicPro.money ? PosnicPro.money.number(tot) : tot.toFixed(2));
                 $('.instant_details_noofsale').html(qty);
             }
         }, function (xhr) {
@@ -439,15 +443,15 @@ PosnicPro.salesummaryreport = {
                 loader.find(".loadingSpinner:first").remove();
                 if (response.type === 'success') {
                     var data = response.data;
-                    $('#sale_summary_discounts').html(data.discounts.toFixed(2));
-                    $('#sale_summary_profit').html(data.gross_profit.toFixed(2));
-                    $('#sale_summary_refund').html(data.refunds.toFixed(2));
-                    $('#sale_summary_companyprice').html(data.cogs.toFixed(2));
+                    $('#sale_summary_discounts').html(PosnicPro.money ? PosnicPro.money.number(data.discounts) : data.discounts.toFixed(2));
+                    $('#sale_summary_profit').html(PosnicPro.money ? PosnicPro.money.number(data.gross_profit) : data.gross_profit.toFixed(2));
+                    $('#sale_summary_refund').html(PosnicPro.money ? PosnicPro.money.number(data.refunds) : data.refunds.toFixed(2));
+                    $('#sale_summary_companyprice').html(PosnicPro.money ? PosnicPro.money.number(data.cogs) : data.cogs.toFixed(2));
 
-                    $('#sale_summary_excltaxval').html(data.sales_exclude_tax.toFixed(2));
-                    $('#sale_summary_incltaxval').html(data.sales_include_tax.toFixed(2));
-                    $('#sale_summary_netsale').html(data.net_sales.toFixed(2));
-                    $('#sale_summary_netsaletax').html(data.net_sales_tax.toFixed(2));
+                    $('#sale_summary_excltaxval').html(PosnicPro.money ? PosnicPro.money.number(data.sales_exclude_tax) : data.sales_exclude_tax.toFixed(2));
+                    $('#sale_summary_incltaxval').html(PosnicPro.money ? PosnicPro.money.number(data.sales_include_tax) : data.sales_include_tax.toFixed(2));
+                    $('#sale_summary_netsale').html(PosnicPro.money ? PosnicPro.money.number(data.net_sales) : data.net_sales.toFixed(2));
+                    $('#sale_summary_netsaletax').html(PosnicPro.money ? PosnicPro.money.number(data.net_sales_tax) : data.net_sales_tax.toFixed(2));
 
                     // Order Type summary (Dine-in vs Take away)
                     var orderTypeSummary = data.order_type_summary || [];
@@ -470,9 +474,9 @@ PosnicPro.salesummaryreport = {
                         }
                     }
 
-                    $('#sale_summary_dinein_total').html(dineInTotal.toFixed(2));
+                    $('#sale_summary_dinein_total').html(PosnicPro.money ? PosnicPro.money.number(dineInTotal) : dineInTotal.toFixed(2));
                     $('#sale_summary_dinein_count').html(dineInCount);
-                    $('#sale_summary_takeaway_total').html(takeAwayTotal.toFixed(2));
+                    $('#sale_summary_takeaway_total').html(PosnicPro.money ? PosnicPro.money.number(takeAwayTotal) : takeAwayTotal.toFixed(2));
                     $('#sale_summary_takeaway_count').html(takeAwayCount);
 
                     // Respect table order setting: hide Order Type cards when table order is OFF

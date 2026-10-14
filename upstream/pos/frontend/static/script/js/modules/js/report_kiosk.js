@@ -66,6 +66,10 @@ PosnicPro.kioskreport = {
             PosnicPro.get(params, function (response) {
                 loader.find(".loadingSpinner:first").remove();
                 if (response.type === 'success') {
+                    // Report figures: the shop's precision and grouping on screen, plain digits in the export (money-format.js).
+                    var currency = PosnicPro.local.get('currencySign') || '';
+                    var moneyText = function (v) { var n = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2); };
+                    var moneyPlain = function (v) { var n = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.fixed(n) : n.toFixed(2); };
                     (response.data.total > 0) ? $('#kioskreport_exportbtn').removeAttr('disabled') : $('#kioskreport_exportbtn').attr('disabled', 'disabled');
                     if (type !== 'kioskreportexport') {
                         table.data('total', response.data.total);
@@ -131,10 +135,10 @@ PosnicPro.kioskreport = {
                                 if (discount > 0) {
                                     if (discountSign === '%') {
                                         discountValue = (price * discount / 100) * val.item_quantity;
-                                        discountDisplay = discount + '% (' + discountValue.toFixed(2) + ')';
+                                        discountDisplay = discount + '% (' + moneyText(discountValue) + ')';
                                     } else {
                                         discountValue = discount * val.item_quantity;
-                                        discountDisplay = '₹ ' + discount + ' (' + discountValue.toFixed(2) + ')';
+                                        discountDisplay = currency + ' ' + moneyText(discount) + ' (' + moneyText(discountValue) + ')';
                                     }
                                     updatePrice = ((price * val.item_quantity) - discountValue).toFixed(2);
                                 } else {
@@ -142,13 +146,13 @@ PosnicPro.kioskreport = {
                                 }
 
                                 if (val.tax > 0) {
-                                    tax_value = val.tax + '% (' + (updatePrice * (val.tax / 100)).toFixed(2) + ')';
+                                    tax_value = val.tax + '% (' + moneyText(updatePrice * (val.tax / 100)) + ')';
                                 }
 
                                 var lineitem = '<tr><td><tbody><tr style="border: 1px solid wheat;"><td class="export-item-name">' + val.item_name + '</td><td class="export-item-barcode-id text-center">' + val.barcode_id + '</td><td class="export-item-price text-right">' + currency + '&nbsp;<span class="number">' + price + '</span></td><td class="export-item-qty text-right">' + val.item_quantity + '</td><td class="export-item-discount-amount text-right">' + discountDisplay + '</td><td class="export-item-tax text-right">' + tax_value + '</td><td class="export-item-total text-right">' + currency + '&nbsp;<span class="number">' + val.total_amount + '</span></td></tr></tbody></td></tr>';
                                 $("#" + row._id + 'reportaction').children('tbody').append(lineitem);
                             }
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var kiosksreportexportdata = [];
@@ -186,10 +190,10 @@ PosnicPro.kioskreport = {
                                 if (discount > 0) {
                                     if (discountSign === '%') {
                                         discountValue = (price * discount / 100) * value.item_quantity;
-                                        discountDisplay = discount + '% (' + discountValue.toFixed(2) + ')';
+                                        discountDisplay = discount + '% (' + moneyPlain(discountValue) + ')';
                                     } else {
                                         discountValue = discount * value.item_quantity;
-                                        discountDisplay = '₹ ' + discount + ' (' + discountValue.toFixed(2) + ')';
+                                        discountDisplay = currency + ' ' + moneyPlain(discount) + ' (' + moneyPlain(discountValue) + ')';
                                     }
                                     updatePrice = ((price * value.item_quantity) - discountValue).toFixed(2);
                                 } else {
@@ -197,10 +201,10 @@ PosnicPro.kioskreport = {
                                 }
 
                                 if (value.tax > 0) {
-                                    tax_value = value.tax + '% (' + (updatePrice * (value.tax / 100)).toFixed(2) + ')';
+                                    tax_value = value.tax + '% (' + moneyPlain(updatePrice * (value.tax / 100)) + ')';
                                 }
                                 var total = value.total_amount;
-                                kiosksreportexportdata.push({ kiosksId: id, Date: date, SaleType: type, OrderType: order, CustomerPhone: phone, NoOfItems: totalitems, ItemName: name, SKU: sku, ItemPrice: price.toFixed(2), ItemQty: quantity, ItemDiscount: discountDisplay, ItemTax: tax_value, ItemTotal: total });
+                                kiosksreportexportdata.push({ kiosksId: id, Date: date, SaleType: type, OrderType: order, CustomerPhone: phone, NoOfItems: totalitems, ItemName: name, SKU: sku, ItemPrice: moneyPlain(price), ItemQty: quantity, ItemDiscount: discountDisplay, ItemTax: tax_value, ItemTotal: total });
                             });
 
                         });
@@ -257,29 +261,29 @@ PosnicPro.kiosksummaryreport = {
                 loader.find(".loadingSpinner:first").remove();
                 if (response.type === 'success') {
                     var data = response.data;
-                    $('#kiosk_summary_discounts').html(data.discounts.toFixed(2));
-                    $('#kiosk_summary_profit').html(data.gross_profit.toFixed(2));
-                    $('#kiosk_summary_refund').html(data.refunds.toFixed(2));
-                    $('#kiosk_summary_companyprice').html(data.cogs.toFixed(2));
+                    $('#kiosk_summary_discounts').html(PosnicPro.money ? PosnicPro.money.number(data.discounts) : data.discounts.toFixed(2));
+                    $('#kiosk_summary_profit').html(PosnicPro.money ? PosnicPro.money.number(data.gross_profit) : data.gross_profit.toFixed(2));
+                    $('#kiosk_summary_refund').html(PosnicPro.money ? PosnicPro.money.number(data.refunds) : data.refunds.toFixed(2));
+                    $('#kiosk_summary_companyprice').html(PosnicPro.money ? PosnicPro.money.number(data.cogs) : data.cogs.toFixed(2));
 
-                    $('#kiosk_summary_excltaxval').html(data.sales_exclude_tax.toFixed(2));
-                    $('#kiosk_summary_incltaxval').html(data.sales_include_tax.toFixed(2));
-                    $('#kiosk_summary_netkiosk').html(data.net_sales.toFixed(2));
-                    $('#kiosk_summary_netkiosktax').html(data.net_sales_tax.toFixed(2));
+                    $('#kiosk_summary_excltaxval').html(PosnicPro.money ? PosnicPro.money.number(data.sales_exclude_tax) : data.sales_exclude_tax.toFixed(2));
+                    $('#kiosk_summary_incltaxval').html(PosnicPro.money ? PosnicPro.money.number(data.sales_include_tax) : data.sales_include_tax.toFixed(2));
+                    $('#kiosk_summary_netkiosk').html(PosnicPro.money ? PosnicPro.money.number(data.net_sales) : data.net_sales.toFixed(2));
+                    $('#kiosk_summary_netkiosktax').html(PosnicPro.money ? PosnicPro.money.number(data.net_sales_tax) : data.net_sales_tax.toFixed(2));
                     // Handle payment_mode_totals display
                     if (data.payment_mode_totals) {
                         const paymentModes = data.payment_mode_totals;
 
                         // UPI / QR
                         if (paymentModes.Upi !== undefined) {
-                            $('#kiosk_summary_qrprice').text(parseFloat(paymentModes.Upi).toFixed(2));
+                            $('#kiosk_summary_qrprice').text(PosnicPro.money ? PosnicPro.money.number(parseFloat(paymentModes.Upi)) : parseFloat(paymentModes.Upi).toFixed(2));
                         } else {
                             $('#kiosk_summary_qrprice').text("0.00");
                         }
 
                         // Cash
                         if (paymentModes.Cash !== undefined) {
-                            $('#kiosk_summary_cashprice').text(parseFloat(paymentModes.Cash).toFixed(2));
+                            $('#kiosk_summary_cashprice').text(PosnicPro.money ? PosnicPro.money.number(parseFloat(paymentModes.Cash)) : parseFloat(paymentModes.Cash).toFixed(2));
                         } else {
                             $('#kiosk_summary_cashprice').text("0.00");
                         }

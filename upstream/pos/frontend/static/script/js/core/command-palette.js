@@ -64,7 +64,8 @@
             run: function () { PosnicPro.shiftWidget.openReport(); },
         },
         {
-            name: 'About Posnic', keywords: 'version build cache info support help about this till',
+            // HiTechPOS: the brand's name, not Posnic's; 'posnic' still finds it.
+            name: 'About ' + ((typeof window !== 'undefined' && window.POSNIC_BRAND_NAME) || 'HiTechPOS'), keywords: 'version build cache info support help about this till posnic',
             visible: function () { return !!PosnicPro.versionBadge; },
             run: function () { PosnicPro.versionBadge.show(); },
         },

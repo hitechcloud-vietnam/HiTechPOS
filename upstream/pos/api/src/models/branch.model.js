@@ -910,8 +910,13 @@ class BranchModel {
           path.join(__dirname, '../json/print_a4html.txt'),
           'utf8'
         );
+        // HiTechPOS: the fallback a Vietnamese branch is offered is the Vietnamese bill.
         withDefaults.print_standard_html = fs.readFileSync(
-          path.join(__dirname, '../json/print_standard_html.txt'),
+          path.join(
+            __dirname,
+            '../json',
+            require('../helpers/print-templates').thermalFileFor(withDefaults)
+          ),
           'utf8'
         );
       } catch (e) {
@@ -1105,8 +1110,16 @@ class BranchModel {
           path.join(__dirname, '../json/print_a4html.txt'),
           'utf8'
         );
+        // HiTechPOS: a new outlet in Vietnam starts on the Vietnamese bill.
         thermalBodyPrint = fs.readFileSync(
-          path.join(__dirname, '../json/print_standard_html.txt'),
+          path.join(
+            __dirname,
+            '../json',
+            require('../helpers/print-templates').thermalFileFor({
+              country: data.country,
+              country_id: data.country_id,
+            })
+          ),
           'utf8'
         );
       } catch (e) {

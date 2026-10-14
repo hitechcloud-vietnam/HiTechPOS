@@ -233,7 +233,8 @@ PosnicPro.sales = {
             $('.salesBalanceAmount').hide();
             $('#sales_save_button').show();
         }
-        PosnicPro.sales.view.showSalesEditPage(id);
+        // A room/table billed by time is charged up to now before it loads.
+        PosnicPro.sales.stopTableTime(id, function () { PosnicPro.sales.view.showSalesEditPage(id); });
 
         $("#time-format").attr('readOnly', 'true');
         $("#time-format").prop('disabled', true);
@@ -770,7 +771,7 @@ PosnicPro.sales = {
                     + '<td class="sl-col-date">' + esc(historyTime ? PosnicPro.convertDate(historyTime) : '-') + '</td>'
                     + (restaurant ? '<td>' + esc(r.table_number || '-') + '</td>' : '')
                     + '<td class="text-right sl-col-items">' + esc(r.number_of_items != null ? r.number_of_items : (r.items || []).length) + '</td>'
-                    + '<td class="text-right">' + cur + '&nbsp;' + (Number(r.sales_total) || 0).toFixed(digits) + '</td>'
+                    + '<td class="text-right">' + cur + '&nbsp;' + (PosnicPro.money ? PosnicPro.money.number(Number(r.sales_total) || 0, Number.isInteger(r.currencyDigits) ? digits : null) : (Number(r.sales_total) || 0).toFixed(digits)) + '</td>'
                     + '<td class="text-center">' + pill + '</td>'
                     + '</tr>';
             });
@@ -10843,6 +10844,25 @@ $(function () {
  * ('Cash' drives the drawer count and Captain), so it is translated only for
  * display. (HiTechPOS)
  */
+/* HiTechPOS: a table order billed by time (karaoke room, billiard table) is
+   charged up to now before the till loads it to take payment. The server
+   prices it (api/src/services/table-time-billing.js); this only asks. */
+PosnicPro.sales.stopTableTime = function (id, done) {
+    var finish = function () { done(); };
+    PosnicPro.get('sales/' + id, function (response) {
+        var sale = response && response.type === 'success' ? response.data : null;
+        var meta = sale && sale.time_billing;
+        if (!meta || meta.version !== 1 || meta.ended_at || sale.payment_status === 'Paid') return finish();
+        PosnicPro.post({
+            url: 'sales/tableTime',
+            data: JSON.stringify({ action: 'stop', sale_id: id, lang: PosnicPro.i18n.code() })
+        }, finish, function (xhr) {
+            var r = xhr && xhr.responseJSON;
+            if (r && r.message) PosnicPro.alert('error', r.message);
+            finish();
+        });
+    }, finish);
+};
 PosnicPro.sales.paymentLabel = function (value) {
     var v = String(value == null ? '' : value);
     if (v === 'Cash') { return PosnicPro.i18n.t('lang_cash_title', 'Cash'); }
@@ -10855,7 +10875,8 @@ PosnicPro.sales.qr = {
     hitechConfirm: function () {
         var id = $('#qrcode_id').val();
         if (!id || id.indexOf('htp_') !== 0) { return false; }
-        PosnicPro.get({ url: 'sales/hitechQrConfirm', data: { id: id } }, function (response) {
+        // POST so the request carries the CSRF token (it records money received).
+        PosnicPro.post({ url: 'sales/hitechQrConfirm', data: JSON.stringify({ id: id }) }, function (response) {
             if (response.type === 'success') {
                 PosnicPro.sales.qr.qrStatusUpdate({ id: id });
             } else {

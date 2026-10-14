@@ -112,7 +112,7 @@ PosnicPro.customerreport = {
                             var trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.customer_name + '</td> <td>' + row.customer_phone + '</td> <td class="text-center">' + row.sales_count + '</td> <td class="text-right">-' + currency + '&nbsp;<span class="number">' + row.refund_payment + '</span></td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + avgPurchase + '</span></td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.sales_payment + '</span></td></tr>';
 
                             $('#view_customerreport').children('tbody').append(trow);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var customerreport = [];
@@ -265,6 +265,7 @@ PosnicPro.customeroutstandingreport = {
                         var page_totals = (table.data('current_page') - 1) * table.data('per_page');
                         $('#view_customeroutstandingreport_page_perpage_total').text(page_totals + response.data.list.length);
                         var currency = PosnicPro.local.get('currencySign');
+                        var moneyText = function (v) { var n = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2); };
                         var pending = 0;
                         var due = 0;
 
@@ -277,14 +278,14 @@ PosnicPro.customeroutstandingreport = {
                                 ? '<span class="text-muted" style="cursor: not-allowed; opacity: 0.6;" title="Customer Deleted" data-t-title="lang_customer_deleted">' + row.name + ' (Deleted)</span>'
                                 : '<a href="#/customerreport/' + row.id + '"><i data-toggle="tooltip" class="table_model_item mobile_tooltip" title="View Details" data-t-title="lang_view_details_2">' + row.name + '</i></a>';
                             
-                            var trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + customerNameCell + '</td> <td class="text-right">' + currency + '&nbsp;<span>' + row.credit.toFixed(2) + '</td> <td class="text-right">' + currency + '&nbsp;<span>-' + row.debit.toFixed(2) + '</td> <td class="text-right">' + currency + '&nbsp;<span>' + row.wallet.toFixed(2) + '</span></td> <td class="text-right">' + currency + '&nbsp;<span>-' + row.pending.toFixed(2) + '</span></td> <td class="text-right">' + currency + '&nbsp;<span>-' + row.due.toFixed(2) + '</span></td></tr>';
+                            var trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + customerNameCell + '</td> <td class="text-right">' + currency + '&nbsp;<span>' + moneyText(row.credit) + '</td> <td class="text-right">' + currency + '&nbsp;<span>-' + moneyText(row.debit) + '</td> <td class="text-right">' + currency + '&nbsp;<span>' + moneyText(row.wallet) + '</span></td> <td class="text-right">' + currency + '&nbsp;<span>-' + moneyText(row.pending) + '</span></td> <td class="text-right">' + currency + '&nbsp;<span>-' + moneyText(row.due) + '</span></td></tr>';
                             due += row.due;
                             pending += row.pending;
                             $('#view_customeroutstandingreport').children('tbody').append(trow);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
-                        $('.customer_outstanding_salepending').text('-' + pending.toFixed(2));
-                        $('.customer_outstanding_overalldue').text('-' + due.toFixed(2));
+                        $('.customer_outstanding_salepending').text('-' + moneyText(pending));
+                        $('.customer_outstanding_overalldue').text('-' + moneyText(due));
                     } else {
                         var customeroutstandingreport = [];
                         data = response.data.list;

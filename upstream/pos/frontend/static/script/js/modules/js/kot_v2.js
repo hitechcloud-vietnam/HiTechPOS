@@ -31,6 +31,29 @@
         (P.money ? P.money.number(Number(v || 0)) : Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     const paymentTable = (s) =>
         /^take[\s_-]*away$/i.test(s.dine_type) ? 'takeaway:' + s._id : s.table_number;
+    /* HiTechPOS: hourly billing for rooms/tables. Prices come from the server
+       (sales/tableTime); api/src/utils/time-billing.js only shows the estimate. */
+    const timed = (s) => !!(s && s.time_billing && s.time_billing.version === 1);
+    const timeLang = () => (P.i18n && typeof P.i18n.code === 'function' ? P.i18n.code() : 'en');
+    const tableOf = (s) => state.floor.find((t) => String(t.tableorder_value) === String(s && s.table_number));
+    function timeQuote(meta) {
+        if (!window.PosnicTimeBilling || !meta) return null;
+        try {
+            return window.PosnicTimeBilling.quote(meta, meta.started_at, meta.ended_at || Date.now(), { offsetMinutes: meta.offset_minutes });
+        } catch (_) {
+            return null;
+        }
+    }
+    function clockText(start, end) {
+        const minutes = Math.max(0, Math.floor(((end ? Date.parse(end) : Date.now()) - Date.parse(start)) / 60000));
+        return Math.floor(minutes / 60) + ':' + String(minutes % 60).padStart(2, '0');
+    }
+    const timeAction = (action, data) => api('post', 'sales/tableTime', { action, lang: timeLang(), ...data });
+    async function stopTime(s) {
+        if (!timed(s) || s.time_billing.ended_at) return;
+        await timeAction('stop', { sale_id: s._id });
+        await refresh();
+    }
     const time = (v) =>
         v && Number.isFinite(Date.parse(v))
             ? new Date(v).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -366,6 +389,7 @@
         split: 'M5 3h14v7M5 10V3m3 3h8M12 10v5m0 0-6 6m6-6 6 6M3 17v4h4m10 0h4v-4',
         refresh: 'M20 10a8 8 0 0 0-14-5L3 8m0-5v5h5m-4 6a8 8 0 0 0 14 5l3-3m0 5v-5h-5',
         takeaway: 'M5 7h14l1 14H4L5 7zm4 2V5a3 3 0 0 1 6 0v4',
+        clock: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18M12 7v5l3 2',
     };
     function icon(name) {
         return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + paths[name] + '"/></svg>';
@@ -426,7 +450,11 @@
                               ),
                           )
                         : 0;
-                    return `<button class="kv2-table ${t.sales.some((s) => String(s._id) === state.selected) ? 'selected' : ''}" data-action="table" data-table="${esc(t.id)}" data-sale="${esc(t.sales[0]?._id || '')}" data-opened="${t.sales.length ? Math.min(...t.sales.map((s) => Date.parse(s.created_date) || Date.now())) : ''}" data-age="${!t.sales.length ? '' : minutes >= 30 ? 'late' : minutes >= 15 ? 'waiting' : 'fresh'}"><strong>${icon(t.id.startsWith('takeaway-') ? 'takeaway' : 'table')} ${esc(t.tableorder_value)}</strong><small>${t.sales.length ? t.sales.reduce((n, s) => n + (s.items || []).reduce((q, l) => q + Number(l.item_quantity || 0), 0), 0) + ' items · ' + t.sales.reduce((n, s) => n + Number(s.person_count || 0), 0) + ' guests' : esc(t.status)}</small>${t.sales.length ? `<b>${esc(money(t.sales.reduce((n, s) => n + Number(s.sales_total || 0), 0)))}</b><small data-elapsed>${minutes} min ago</small>` : ''}</button>`;
+                    const clock = t.sales.find(timed);
+                    const timeChip = clock
+                        ? `<small class="kv2-time ${clock.time_billing.ended_at ? 'stopped' : 'running'}" data-time-start="${esc(clock.time_billing.started_at)}" data-time-end="${esc(clock.time_billing.ended_at || '')}">${icon('clock')} <span>${esc(clockText(clock.time_billing.started_at, clock.time_billing.ended_at))}</span></small>`
+                        : t.time_billing ? `<small class="kv2-time idle">${icon('clock')} ${esc(P.i18n.t('lang_time_billing', 'Time billing'))}</small>` : '';
+                    return `<button class="kv2-table ${t.sales.some((s) => String(s._id) === state.selected) ? 'selected' : ''}" data-action="table" data-table="${esc(t.id)}" data-sale="${esc(t.sales[0]?._id || '')}" data-opened="${t.sales.length ? Math.min(...t.sales.map((s) => Date.parse(s.created_date) || Date.now())) : ''}" data-age="${!t.sales.length ? '' : minutes >= 30 ? 'late' : minutes >= 15 ? 'waiting' : 'fresh'}"><strong>${icon(t.id.startsWith('takeaway-') ? 'takeaway' : 'table')} ${esc(t.tableorder_value)}</strong>${timeChip}<small>${t.sales.length ? t.sales.reduce((n, s) => n + (s.items || []).filter((l) => l.time_billing_line !== true).reduce((q, l) => q + Number(l.item_quantity || 0), 0), 0) + ' items · ' + t.sales.reduce((n, s) => n + Number(s.person_count || 0), 0) + ' guests' : esc(t.status)}</small>${t.sales.length ? `<b>${esc(money(t.sales.reduce((n, s) => n + Number(s.sales_total || 0), 0)))}</b><small data-elapsed>${minutes} min ago</small>` : ''}</button>`;
                 })
                 .join('') || `<div class="kv2-floor-empty">${icon('table')}<p><lang class="lang_no_orders_here">No orders here.</lang></p>${state.filter === 'active' ? button(PosnicPro.i18n.t('lang_choose_a_table', 'Choose a table'), 'filter', 'data-value="available"') : ''}</div>`
         }</div></aside>`;
@@ -440,6 +468,13 @@
             if (label) label.textContent = minutes + ' min ago';
             card.dataset.age = minutes >= 30 ? 'late' : minutes >= 15 ? 'waiting' : 'fresh';
         });
+        root().querySelectorAll('[data-time-start]').forEach((el) => {
+            const label = el.querySelector('span') || el;
+            if (!el.dataset.timeEnd) label.textContent = clockText(el.dataset.timeStart, '');
+        });
+        const estimate = root().querySelector('[data-time-estimate]');
+        const q = timed(state.sale) && !state.sale.time_billing.ended_at ? timeQuote(state.sale.time_billing) : null;
+        if (estimate && q) estimate.textContent = money(q.amount);
     }
     setInterval(updateElapsed, 15000);
     document.addEventListener('visibilitychange', updateElapsed);
@@ -474,11 +509,43 @@
         }));
         return '<p class="kv2-takeaway-status" role="status">' + esc(ready ? P.i18n.t('lang_takeaway_ready_pickup', 'Ready for pickup') : P.i18n.t('lang_preparing', 'Preparing...')) + ' · ' + esc(sale.payment_status === 'Paid' ? P.i18n.t('lang_paid', 'Paid') : P.i18n.t('lang_unpaid', 'Unpaid')) + '</p>';
     }
+    function timeHTML(s) {
+        const table = tableOf(s);
+        if (s.payment_status === 'Paid' || (!timed(s) && !(table && table.time_billing))) return '';
+        if (!timed(s))
+            return `<div class="kv2-timebill idle"><div><strong>${icon('clock')} ${esc(P.i18n.t('lang_time_billing', 'Time billing'))}</strong><small>${esc(P.i18n.t('lang_time_not_started', 'The timer is not running for this table.'))}</small></div><div>${button(P.i18n.t('lang_time_start', 'Start timer'), 'timeStart', 'class="primary"')}</div></div>`;
+        const meta = s.time_billing;
+        const q = meta.ended_at ? null : timeQuote(meta);
+        const lines = (s.items || []).filter((l) => l.time_billing_line === true);
+        const status = meta.ended_at
+            ? P.i18n.t('lang_time_stopped', 'Time billed until') + ' ' + time(meta.ended_at)
+            : P.i18n.t('lang_time_running', 'Timer running');
+        return `<div class="kv2-timebill ${meta.ended_at ? 'stopped' : 'running'}"><div><strong>${icon('clock')} <span data-time-start="${esc(meta.started_at)}" data-time-end="${esc(meta.ended_at || '')}">${esc(clockText(meta.started_at, meta.ended_at))}</span></strong><small>${esc(status)} · ${esc(P.i18n.t('lang_time_started_at', 'Started'))} ${esc(time(meta.started_at))}</small>${lines.map((l) => `<small class="kv2-time-line"><span>${esc(l.item_name)}</span><b>${esc(money(l.total ?? l.item_total ?? 0))}</b></small>`).join('')}${q ? `<small class="kv2-time-line"><span>${esc(P.i18n.t('lang_time_estimate', 'Time charge if billed now'))}</span><b data-time-estimate>${esc(money(q.amount))}</b></small>` : ''}</div><div>${meta.ended_at ? button(P.i18n.t('lang_time_resume', 'Continue timer'), 'timeResume') : button(P.i18n.t('lang_time_stop', 'Stop and bill time'), 'timeStop', 'class="primary"')}${button(P.i18n.t('lang_time_cancel', 'Remove time charge'), 'timeCancel')}</div></div>`;
+    }
+    function timeStartDialog(t) {
+        const modal = dialog(
+            P.i18n.t('lang_time_start', 'Start timer'),
+            `<p>${esc(P.i18n.t('lang_time_billed_table', 'This table is billed by time.'))}</p><label><lang class="lang_time_guests">Guests</lang><input name="guests" type="number" min="1" max="1000" step="1" value="1" required></label>`,
+            async (form) => {
+                const r = await timeAction('start', { table_id: t.id, request_id: id(), guests: Number(form.get('guests')) });
+                await refresh();
+                if (r && r.sale_id) await select(r.sale_id);
+            },
+            P.i18n.t('lang_time_start', 'Start timer'),
+            { table: t.tableorder_value },
+        );
+        const order = document.createElement('button');
+        order.type = 'button';
+        order.textContent = P.i18n.t('lang_time_order_only', 'Order without timer');
+        order.onclick = () => { modal.close(); run(() => newOrder(false, t.id)); };
+        modal.querySelector('footer').prepend(order);
+        return modal;
+    }
     function orderHTML() {
         const s = state.sale;
         if (!s) return emptyOrderHTML();
         const details = s.restaurant_details || {};
-        return `<section class="kv2-order"><header><div><h2>${esc(s.dine_type === 'Take away' ? 'Takeaway ' + (s.takeaway_number || s.token_id || '') : 'Table ' + s.table_number)}</h2>${takeawayStatus(s)}<small>${esc(s.person_count || 0)} guests · ${esc(details.taken_by)} · ${esc(time(s.created_date))}</small></div><div>${iconButton('move', 'Move table')}${iconButton('merge', 'Merge tables')}${iconButton('split', 'Split payment')}${button('Actions', 'actions', 'aria-haspopup="true" aria-expanded="false" aria-controls="kv2-actions-menu"')}</div></header><div class="kv2-customer">Customer <strong>${esc(s.customer_name || 'Walk-in customer')}</strong> ${esc(s.customer_phone || '')}${button('Choose customer', 'customer')}</div><nav>${button('Order', 'tab', `data-value="order" class="kv2-tab ${state.tab === 'order' ? 'active' : ''}"`)}${button('Activity', 'tab', `data-value="activity" class="kv2-tab ${state.tab === 'activity' ? 'active' : ''}"`)}${button(state.pending ? 'Pending only ✓' : 'Pending only', 'pending')}${button(isTakeaway(s) ? P.i18n.t('lang_takeaway_given', 'Given to customer') : 'Serve all', 'serveAll')}${s.payment_status === 'Paid' ? '' : button('＋ Add items', 'add', 'class="primary"')}</nav><div class="kv2-lines">${state.tab === 'activity' ? (details.events || []).map((e) => `<article><strong>${esc(e.kind)}</strong> · ${esc(time(e.at))} · ${esc(e.actor)}<p>${esc((e.items || []).map((l) => l.quantity + ' × ' + l.name).join(', '))}</p></article>`).join('') : roundHTML(s)}</div><details class="kv2-breakdown"><summary>Bill breakdown & kitchen note</summary><div class="kv2-bill-content"><div class="kv2-bill-summary"><p>Subtotal <b>${esc(money(s.sales_sub_total || s.subtotal || 0))}</b></p><p>Tax <b>${esc(money(s.tax || 0))}</b></p>${taxBreakdown(s)}${(s.charges || []).map(c => `<p><span>${esc(c.name)}</span><b>${esc(money(c.amount))}</b></p>`).join('')}<p>Discount <b>${esc(money(Number(s.discount || 0) + Number(s.sale_extra_discount || 0)))}</b></p>${Number(s.round_off || s.sales_round_off) ? `<p>Rounding <b>${esc(money(s.round_off || s.sales_round_off))}</b></p>` : ''}</div><div class="kv2-bill-notes"><p>${esc(details.preparation_note || 'No kitchen note')}</p><div class="kv2-bill-actions">${s.payment_status === 'Paid' ? '' : button('Additional charges', 'charges') + button('Edit details', 'notes')}</div></div></div></details><footer><div><small><lang class="lang_total_title">Total</lang></small><strong>${esc(money(s.sales_total))}</strong></div>${s.payment_status === 'Paid' ? '' : button('Discount', 'discount')}${button('Print bill', 'printBill')}${button('Print KOT', 'printKOT')}${s.payment_status === 'Paid' ? '<strong>' + esc(P.i18n.t('lang_paid', 'Paid')) + '</strong>' : button('Take payment', 'pay', 'class="primary"')}</footer></section>`;
+        return `<section class="kv2-order"><header><div><h2>${esc(s.dine_type === 'Take away' ? 'Takeaway ' + (s.takeaway_number || s.token_id || '') : 'Table ' + s.table_number)}</h2>${takeawayStatus(s)}<small>${esc(s.person_count || 0)} guests · ${esc(details.taken_by)} · ${esc(time(s.created_date))}</small></div><div>${iconButton('move', 'Move table')}${iconButton('merge', 'Merge tables')}${iconButton('split', 'Split payment')}${button('Actions', 'actions', 'aria-haspopup="true" aria-expanded="false" aria-controls="kv2-actions-menu"')}</div></header><div class="kv2-customer">Customer <strong>${esc(s.customer_name || 'Walk-in customer')}</strong> ${esc(s.customer_phone || '')}${button('Choose customer', 'customer')}</div>${timeHTML(s)}<nav>${button('Order', 'tab', `data-value="order" class="kv2-tab ${state.tab === 'order' ? 'active' : ''}"`)}${button('Activity', 'tab', `data-value="activity" class="kv2-tab ${state.tab === 'activity' ? 'active' : ''}"`)}${button(state.pending ? 'Pending only ✓' : 'Pending only', 'pending')}${button(isTakeaway(s) ? P.i18n.t('lang_takeaway_given', 'Given to customer') : 'Serve all', 'serveAll')}${s.payment_status === 'Paid' ? '' : button('＋ Add items', 'add', 'class="primary"')}</nav><div class="kv2-lines">${state.tab === 'activity' ? (details.events || []).map((e) => `<article><strong>${esc(e.kind)}</strong> · ${esc(time(e.at))} · ${esc(e.actor)}<p>${esc((e.items || []).map((l) => l.quantity + ' × ' + l.name).join(', '))}</p></article>`).join('') : roundHTML(s)}</div><details class="kv2-breakdown"><summary>Bill breakdown & kitchen note</summary><div class="kv2-bill-content"><div class="kv2-bill-summary"><p>Subtotal <b>${esc(money(s.sales_sub_total || s.subtotal || 0))}</b></p><p>Tax <b>${esc(money(s.tax || 0))}</b></p>${taxBreakdown(s)}${(s.charges || []).map(c => `<p><span>${esc(c.name)}</span><b>${esc(money(c.amount))}</b></p>`).join('')}<p>Discount <b>${esc(money(Number(s.discount || 0) + Number(s.sale_extra_discount || 0)))}</b></p>${Number(s.round_off || s.sales_round_off) ? `<p>Rounding <b>${esc(money(s.round_off || s.sales_round_off))}</b></p>` : ''}</div><div class="kv2-bill-notes"><p>${esc(details.preparation_note || 'No kitchen note')}</p><div class="kv2-bill-actions">${s.payment_status === 'Paid' ? '' : button('Additional charges', 'charges') + button('Edit details', 'notes')}</div></div></div></details><footer><div><small><lang class="lang_total_title">Total</lang></small><strong>${esc(money(s.sales_total))}</strong></div>${s.payment_status === 'Paid' ? '' : button('Discount', 'discount')}${button('Print bill', 'printBill')}${button('Print KOT', 'printKOT')}${s.payment_status === 'Paid' ? '<strong>' + esc(P.i18n.t('lang_paid', 'Paid')) + '</strong>' : button('Take payment', 'pay', 'class="primary"')}</footer></section>`;
     }
     function catalogueHTML() {
         return state.catalogue.map((item, i) => {
@@ -1189,6 +1256,7 @@
                         }
                     };
                 } else if (b.dataset.sale) await select(b.dataset.sale);
+                else if (t && t.time_billing && t.status === 'available') timeStartDialog(t);
                 else await newOrder(false, b.dataset.table);
             } else if (a === 'category') {
                 state.category = b.dataset.category; state.catalogue = []; state.catalogueLoaded = false; render();
@@ -1287,11 +1355,35 @@
             else if (a === 'transfer') await P.kotWorkspace.transfer(s._id);
             else if (a === 'discount') discount();
             else if (a === 'charges') await charges();
-            else if (a === 'printBill') P.kot.printKOTReceipt(s._id);
+            else if (a === 'timeStart') {
+                await timeAction('start', { sale_id: s._id, request_id: id() });
+                await refresh();
+            } else if (a === 'timeStop') await stopTime(s);
+            else if (a === 'timeResume') {
+                await timeAction('resume', { sale_id: s._id });
+                await refresh();
+            } else if (a === 'timeCancel')
+                dialog(
+                    P.i18n.t('lang_time_cancel', 'Remove time charge'),
+                    '<p>' + esc(P.i18n.t('lang_time_cancel_confirm', 'Remove the time charge from this order? Use this only for a timer started by mistake.')) + '</p>',
+                    async () => {
+                        await timeAction('cancel', { sale_id: s._id });
+                        await refresh();
+                    },
+                    P.i18n.t('lang_time_cancel', 'Remove time charge'),
+                    s,
+                );
+            else if (a === 'printBill') {
+                // A bill is asked for when the guests leave: stop the clock first.
+                await stopTime(s);
+                P.kot.printKOTReceipt(s._id);
+            }
             else if (a === 'printKOT') P.kot.printKOTSlip(s._id);
             else if (a === 'pay') {
                 if (!window.CaptainPayments)
                     throw new Error('Payment screen is unavailable. Reload the app.');
+                // Time is charged up to now before the payment screen reads the total.
+                await stopTime(s);
                 await CaptainPayments.open(paymentTable(s), branch());
             } else if (a === 'actions') {
                 const existing = document.getElementById('kv2-actions-menu');

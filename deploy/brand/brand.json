@@ -1,4 +1,7 @@
 {
   "enabled": true,
-  "name": "HiTechPOS"
+  "name": "HiTechPOS",
+  "url": "https://hitechpos.vn",
+  "accountUrl": "https://app.hitechpos.vn/account",
+  "supportUrl": "https://hitechpos.vn"
 }

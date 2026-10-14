@@ -3960,6 +3960,13 @@ class SettingModel extends BaseModel {
       const collection = await this.getCollection(this.tableOrderCollection);
 
       await require('../utils/table-details').ensureIdentity(collection);
+      // HiTechPOS: hourly billing settings must name an open-price item.
+      if (data.time_billing !== undefined)
+        await require('../services/table-time-billing').checkItem(
+          await this.getCollection('items'),
+          this.normalizeId(this.licenseId),
+          data.time_billing
+        );
 
       // PHP Parity: Duplicate check (case-insensitive)
       // PHP: new MongoDB\BSON\Regex('^' . preg_quote($data['tableorder_value'], '/') . '$', 'i')
@@ -4051,6 +4058,13 @@ class SettingModel extends BaseModel {
       await require('../utils/table-details').ensureIdentity(collection);
       const previous = await collection.findOne(tableFilter);
       if (!previous) throw new Error('Table not found.');
+      // HiTechPOS: hourly billing settings must name an open-price item.
+      if (data.time_billing !== undefined)
+        await require('../services/table-time-billing').checkItem(
+          await this.getCollection('items'),
+          this.normalizeId(this.licenseId),
+          data.time_billing
+        );
 
       // PHP lines 2968-2971: Build tableorder_data array
       const tableorder_data = [

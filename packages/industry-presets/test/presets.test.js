@@ -196,3 +196,44 @@ test('listPresets returns a lightweight summary', () => {
     assert.ok(item.highlights.length > 0);
   }
 });
+
+test('karaoke/bida sample rooms and tables bill time the way the till prices it', () => {
+  // Contract with the Posnic patch: the settings these payloads write must be
+  // accepted by upstream/pos/api/src/utils/time-billing.js (test-only import).
+  const timeBilling = require('../../../upstream/pos/api/src/utils/time-billing.js');
+  const p = presets.getPreset('karaoke-bida');
+  assert.ok(p.sampleTables.length >= 2);
+  const ids = Object.fromEntries(p.sampleItems.map((item, i) => [item.name, String(i + 1).padStart(24, '0')]));
+  const bodies = presets.sampleTablePayloads('karaoke-bida', ids);
+  assert.deepEqual(bodies.map((b) => b.tableorder_value), p.sampleTables.map((t) => t.label));
+  for (const body of bodies) {
+    assert.match(body.tableorder_value, /^[A-Za-z0-9]{1,6}$/);
+    const config = timeBilling.normalizeConfig(body.time_billing);
+    assert.ok(config, body.tableorder_value);
+    assert.ok(Number.isSafeInteger(config.rate));
+  }
+  // VIP room from 19:05 Vietnam time at the evening rate (350.000 đ/h), 15-minute
+  // blocks with 5 grace minutes: leaving at 20:40 bills 1 h 30 min, at 20:41
+  // the started block counts and it bills 1 h 45 min.
+  const vip = timeBilling.normalizeConfig(bodies.find((b) => b.tableorder_value === 'VIP1').time_billing);
+  assert.equal(timeBilling.quote(vip, '2026-10-14T19:05:00+07:00', '2026-10-14T20:40:00+07:00').amount, 525000);
+  const q = timeBilling.quote(vip, '2026-10-14T19:05:00+07:00', '2026-10-14T20:41:00+07:00');
+  assert.equal(q.amount, 612500);
+  assert.equal(timeBilling.lineName('Giờ hát phòng VIP', 'VIP1', q.lines[0], 'vi'), 'Giờ hát phòng VIP VIP1 · 19:05-20:41 · 1 giờ 45 phút (Buổi tối)');
+  // A short game on the billiard table is charged the 30-minute minimum.
+  const bida = timeBilling.normalizeConfig(bodies.find((b) => b.tableorder_value === 'BIDA1').time_billing);
+  assert.equal(timeBilling.quote(bida, '2026-10-14T14:00:00+07:00', '2026-10-14T14:12:00+07:00').amount, 30000);
+  // Without seeded item ids the tables are still created, just not timed.
+  assert.ok(presets.sampleTablePayloads('karaoke-bida').every((b) => b.time_billing === undefined));
+  assert.deepEqual(presets.sampleTablePayloads('cafe-tra-sua'), []);
+});
+
+test('time items are services sold by the hour', () => {
+  const p = presets.getPreset('karaoke-bida');
+  for (const t of p.sampleTables) {
+    const item = p.sampleItems.find((i) => i.name === t.item);
+    assert.equal(item.unit, 'gio', t.label);
+    assert.ok(Number.isSafeInteger(item.price) && item.price > 0);
+  }
+  assert.ok(Object.isFrozen(p.sampleTables[0].timeBilling.bands));
+});

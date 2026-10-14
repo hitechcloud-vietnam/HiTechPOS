@@ -22,4 +22,11 @@ module.exports = [
     description: 'Repair untouched demo document line fields and restaurant supply purchases',
     up: require('../../services/demo-repair').repairDemoRecords,
   },
+  {
+    // HiTechPOS: see helpers/print-templates.js. Only branches in Vietnam
+    // still on the untouched stock thermal template; a customised one is kept.
+    id: '003-vietnamese-default-bill',
+    description: 'Vietnamese shops still on the stock thermal receipt get the Vietnamese bill',
+    up: (db) => require('../../helpers/print-templates').upgradeVietnameseThermalTemplates(db),
+  },
 ];

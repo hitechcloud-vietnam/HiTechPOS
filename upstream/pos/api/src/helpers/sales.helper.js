@@ -1084,6 +1084,8 @@ const formatSaleListEntry = (saleDoc) => {
             // The desktop KOT editor renders this list, then uses the identity
             // to match each preparation in the full order before saving.
             ...(item.line_id ? { line_id: item.line_id } : {}),
+            // HiTechPOS: room/table time charge (services/table-time-billing.js).
+            ...(item.time_billing_line === true ? { time_billing_line: true } : {}),
             item_name: item.item_name || item.name || item.itemName || '',
             /*
              * The waiter's note and nothing else.
@@ -1113,6 +1115,8 @@ const formatSaleListEntry = (saleDoc) => {
     table_number: doc.table_number || null,
     table_id: doc.table_id || null,
     dine_type: doc.dine_type || null,
+    // HiTechPOS: the running clock on the table workspace floor.
+    ...(doc.time_billing ? { time_billing: doc.time_billing } : {}),
     sale_status: doc.sale_status || doc.payment_status || '',
     discount_percentage: roundToTwo(doc.discount_percentage ?? 0),
     discount_amount: amount(doc.discount_amount ?? 0),

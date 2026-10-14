@@ -61,3 +61,36 @@ jobs:
       - run: npm ci --ignore-scripts --no-audit --no-fund --replace-registry-host=registry.npmmirror.com --registry=https://registry.npmjs.org/
         working-directory: upstream/pos/api
       - run: node scripts/e2e.mjs
+
+  e2e-ui:
+    # The same stack driven through Chromium: landing-page signup, the /account
+    # VietQR form, the Posnic web till served by the shard, a QR sale.
+    name: Browser end-to-end
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            upstream/pos/api/package-lock.json
+            upstream/pos/frontend/package-lock.json
+      - run: npm ci
+      - run: npm ci --ignore-scripts --no-audit --no-fund --replace-registry-host=registry.npmmirror.com --registry=https://registry.npmjs.org/
+        working-directory: upstream/pos/api
+      - name: Build the web till (upstream/pos/frontend/public)
+        run: npm ci --no-audit --no-fund && npm run build:assets
+        working-directory: upstream/pos/frontend
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/e2e-ui.mjs
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-ui-screenshots
+          path: scripts/.e2e-ui-out/
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7

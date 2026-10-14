@@ -8532,10 +8532,19 @@ class SalesRepository {
 
   async createOnlineOrder(
     data,
-    { SaleModel, staffOrder = false, seatingProtocol = false, paperOrder = null } = {}
+    {
+      SaleModel,
+      staffOrder = false,
+      seatingProtocol = false,
+      paperOrder = null,
+      quietLineIds = [],
+    } = {}
   ) {
     try {
       const db = await BaseModel.getDb();
+      // HiTechPOS: server-owned time-billing lines (services/table-time-billing.js)
+      // are charges for the room, not food, so they never print in the kitchen.
+      const quietLines = new Set((quietLineIds || []).map(String));
 
       const {
         branch,
@@ -8877,6 +8886,7 @@ class SalesRepository {
           servicePoint,
           channel: staffOrder ? 'tableside' : 'online',
           captainPriceClient: staffOrder ? client : null,
+          timeLineIds: quietLines,
         });
         if (priced.status === false) return priced;
         saleItems.push(priced.line);
@@ -9021,7 +9031,9 @@ class SalesRepository {
             spice_level: spiceLevel.levelOf(si.spice_level),
           };
         })
-        .filter((it) => it.item_id && it.item_quantity > 0);
+        .filter(
+          (it) => it.item_id && it.item_quantity > 0 && !quietLines.has(String(it.line_id || ''))
+        );
 
       // Use raw MongoDB insert to bypass Mongoose schema validators
       /*
@@ -10605,6 +10617,7 @@ class SalesRepository {
       charges,
       preview = false,
       previewContext,
+      timeBilling,
     } = {}
   ) {
     let finishCaptainEdit;
@@ -10945,6 +10958,16 @@ class SalesRepository {
       const pricingContext = needsRules ? await pricingAuthority.loadContext(db, orderDoc) : {};
       orderLine.validate(existingItems);
       orderLine.validate(items);
+      /*
+       * HiTechPOS time billing. Lines named by the server-side option are the
+       * room/table time charge (services/table-time-billing.js); a line saved
+       * as one stays one. They carry the server's name and never produce a
+       * kitchen ticket. Request JSON cannot add an entry to this option.
+       */
+      const timeLines = (timeBilling && timeBilling.lines) || {};
+      const isTimeLine = (key, previous) =>
+        Object.prototype.hasOwnProperty.call(timeLines, key) ||
+        (previous && previous.time_billing_line === true);
       const oldItemsData = {};
 
       for (const ex of existingItems) {
@@ -10996,6 +11019,7 @@ class SalesRepository {
             : String(previousLine?.item_description || '');
         if (
           previousLine &&
+          !isTimeLine(lineKey, previousLine) &&
           (JSON.stringify(preparation) !== JSON.stringify(serviceLine.metadata(previousLine)) ||
             newNote !== String(previousLine.item_description || ''))
         ) {
@@ -11104,6 +11128,10 @@ class SalesRepository {
           }
           itemDoc = { _id: productId, name: previousLine.item_name };
         }
+        // A new time-billing line is priced by the table's hourly rates, which
+        // the server computed; the item's catalogue price does not apply.
+        if (!previousLine && Object.prototype.hasOwnProperty.call(timeLines, lineKey))
+          itemDoc = { ...itemDoc, open_price: true };
         if (
           itemDoc.branch_id &&
           String(itemDoc.branch_id) !== String(orderDoc.branch_id) &&
@@ -11187,7 +11215,7 @@ class SalesRepository {
           changeQty = oldQty - qty;
         }
 
-        if (changeQty > 0) {
+        if (changeQty > 0 && !isTimeLine(lineKey, previousLine)) {
           changesItems.push({
             item_id: productId,
             ...preparation,
@@ -11247,11 +11275,17 @@ class SalesRepository {
         // added portions; a new-item quote must not certify all old portions.
         if (previousLine && orderDoc.captain_transfer_allocation && !previousLine.pricing)
           delete nextLine.pricing;
+        if (isTimeLine(lineKey, previousLine)) {
+          nextLine.time_billing_line = true;
+          if (timeLines[lineKey] && timeLines[lineKey].name)
+            nextLine.item_name = String(timeLines[lineKey].name);
+        }
         if (previousLine) updatedItems[existingIndex[lineKey]] = nextLine;
         else updatedItems.push({ ...nextLine, item_status: 'Add', return: false });
       }
 
-      for (const remItemData of Object.values(oldItemsData)) {
+      for (const [remKey, remItemData] of Object.entries(oldItemsData)) {
+        if ((existingItems[existingIndex[remKey]] || {}).time_billing_line === true) continue;
         const remQty = parseFloat(remItemData.quantity || 0);
         if (remQty <= 0) continue;
         const remPrice = parseFloat(remItemData.price || 0);
@@ -11409,6 +11443,8 @@ class SalesRepository {
         for (const key of Object.keys(updateFields)) delete updateFields[key];
         Object.assign(updateFields, reconciled);
       }
+
+      if (timeBilling && timeBilling.meta !== undefined) updateFields.time_billing = timeBilling.meta;
 
       if (preview) {
         // Detect an order change during catalogue reads without taking a lease.
@@ -11697,7 +11733,7 @@ class SalesRepository {
     if (!ObjectId.isValid(itemId)) {
       return { status: false, message: 'Enter must correct item id', data: null };
     }
-    const itemDoc = await itemCollection.findOne({
+    let itemDoc = await itemCollection.findOne({
       _id: new ObjectId(itemId),
       license: branchDoc.license || BaseModel.license,
       $or: [{ branch_id: branchObjectId }, { 'branch_access.branch_id': branchObjectId }],
@@ -11709,6 +11745,10 @@ class SalesRepository {
         message: 'This product has already been removed, so you can not modify anything.',
       };
     }
+    // HiTechPOS: a server-priced time-billing line (createOnlineOrder's
+    // quietLineIds) carries the table's hourly rate, not the catalogue price.
+    if (where.timeLineIds && where.timeLineIds.has(String(item.line_id || '')))
+      itemDoc = { ...itemDoc, open_price: true };
 
     /*
      * Breakfast at four in the afternoon.

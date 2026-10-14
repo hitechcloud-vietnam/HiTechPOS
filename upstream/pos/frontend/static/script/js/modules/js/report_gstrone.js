@@ -297,7 +297,7 @@ PosnicPro.gstrOne = {
                     $('.stateTax').html(currency + '&nbsp;<span class="number">' + stateTax + '</span>');
 
                 }
-                $('span.number').number(true, 2);
+                PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
             } else {
                 PosnicPro.alert(response.type, response.message);
             }

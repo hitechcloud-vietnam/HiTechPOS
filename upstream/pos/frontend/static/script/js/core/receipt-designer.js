@@ -8,6 +8,20 @@
     var copy = function (v) { return JSON.parse(JSON.stringify(v)); };
     function label(value) { return PosnicPro.receiptDesignLabel ? PosnicPro.receiptDesignLabel(value) : value; }
     function block(type, extra) { return Object.assign({ id: 'b' + Math.random().toString(36).slice(2), type: type, align: 'left' }, extra || {}); }
+    /*
+     * HiTechPOS: a Vietnamese shop prints a Vietnamese bill - "HOÁ ĐƠN BÁN
+     * HÀNG", MST, VAT per rate, the total in words - whatever blocks its design
+     * holds. Decided from the shop (country, then the till's currency), never
+     * from the cashier's UI language. See api/src/helpers/vn-bill.js.
+     */
+    function vnShop(data) {
+        var vn = window.PosnicVnBill;
+        if (!vn) return false;
+        return vn.isVietnamese(data || {}, {
+            country: PosnicPro.local.get('countryid') || PosnicPro.local.get('country_setting'),
+            currency: (PosnicPro.money && PosnicPro.money.code()) || PosnicPro.local.get('currencySign')
+        });
+    }
     // A clean starting template, separate from migrating a shop's legacy settings.
     function standardLayout(format) {
         var sheet = !!contract.formats[format].height;
@@ -32,7 +46,11 @@
             blocks.push(block('items', { hsn: on(branch.bill_print_hsn), itemLayout: sheet ? 'detailed' : 'columns', nameMaxChars: 20, lineStyle: 'dotted', fontSize: sheet ? undefined : format === '58' ? 9 : 11 }), block('totals'));
             if (on(branch.bill_print_total_qty) || (!sheet && branch.bill_print_total_qty == null)) blocks.push(block('field', { field: 'total_quantity' }));
             if (on(branch.print_sale_notes)) blocks.push(block('field', { field: 'sale_note' }));
-            if (branch.footer_print) blocks.push(block('text', { text: plain(branch.footer_print), align: 'center' }));
+            // HiTechPOS: a Vietnamese shop that kept the installer's English
+            // footer (or none) thanks its guests in Vietnamese.
+            var footerText = branch.footer_print ? plain(branch.footer_print) : '';
+            if (vnShop(branch) && /^\s*(Thank you for shopping\.*!?)?\s*$/.test(footerText)) footerText = window.PosnicVnBill.LABELS.thanks;
+            if (footerText) blocks.push(block('text', { text: footerText, align: 'center' }));
             if (branch.footer_image_caption) blocks.push(block('text', { text: branch.footer_image_caption, align: 'center' }));
             if (branch.footer_qr_url) blocks.push(block('qr', { text: branch.footer_qr_url, src: branch.footer_image || '', width: sheet ? 20 : 50, align: 'center' }));
             else if (contract.image(branch.footer_image)) blocks.push(block('image', { src: branch.footer_image, width: sheet ? 25 : 65, align: 'center' }));
@@ -219,6 +237,13 @@
         var pendingGoods = data.pending_goods_receipt === true;
         var beforePayment = pendingGoods || preview || !data.sales_id;
         var documentTitle = pendingGoods ? label('Bill') : beforePayment ? (present(data.branch_gstin_number) || on(data.gst) ? label('Tax invoice') : label('Bill')) : label('Receipt');
+        var vn = vnShop(data);
+        var VN = vn ? window.PosnicVnBill.LABELS : null;
+        var vnDigits = billDigits != null ? billDigits : PosnicPro.money ? PosnicPro.money.digits() : 0;
+        if (vn) {
+            registrationLabel = VN.taxCode;
+            if (!pendingGoods) documentTitle = beforePayment ? VN.provisionalTitle : VN.title;
+        }
         var hasField = function (field) { return layout.blocks.some(function (b) { return b.type === 'field' && b.field === field; }); };
         var values = {
             customer_name: data.customer_name, customer_phone: data.customer_phone, customer_email: data.customer_email,
@@ -229,6 +254,36 @@
             steward: data.steward_name || data.steward || data.created_by || data.user_name, session: data.serving_session || data.session_name,
             fssai: data.branch_fssai_number, source: data.order_source || data.source,
         };
+        /*
+         * The Vietnamese totals: Tạm tính, Chiết khấu, VAT per rate, Tổng cộng,
+         * the total in words, then what was paid and the change handed back.
+         * VAT rows come from the same helper the server uses, so a preview and
+         * a reprint state the same per-rate amounts; a transferred bill keeps
+         * the rows it was issued with.
+         */
+        function vnTotals() {
+            var vnBill = window.PosnicVnBill;
+            var row = function (name, value, total) { return '<div class="rd-total-row' + (total ? ' rd-grand-total' : '') + '"><span>' + esc(name) + '</span><span>' + value + '</span></div>'; };
+            var out = '<div class="rd-totals">' + row(VN.subtotal, money(data.items_subtotal));
+            if (Number(data.discount)) out += row(VN.discount, money(-Number(data.discount)));
+            if (Number(data.sale_extra_discount)) out += row(VN.extraDiscount, money(-Number(data.sale_extra_discount)));
+            var vat = data.transferred_bill && Array.isArray(data.receipt_tax_rows)
+                ? data.receipt_tax_rows : vnBill.vatGroups(items, data.tax, { digits: vnDigits });
+            vat.forEach(function (r) { out += row(r.label, money(r.amount)); });
+            (data.charges || []).forEach(function (c) { out += row(c.name || 'Phụ thu', money(Number(c.amount || 0) + Number(c.tax_amount || 0))); });
+            if (Number(data.round_off)) out += row(VN.roundOff, money(data.round_off));
+            out += row(VN.total, money(data.items_total), true);
+            try {
+                out += '<div class="rd-vn-words"><strong>' + esc(VN.inWords) + ':</strong> ' + esc(vnBill.amountInWords(Number(data.items_total) || 0)) + '</div>';
+            } catch (e) { /* an amount that cannot be read out is simply not read out */ }
+            if (!beforePayment && data.sales_id) {
+                var lines = vnBill.paymentLines(PosnicSalePayments.rows(data), data.items_total, { digits: vnDigits });
+                if (lines.length) lines.forEach(function (l) { out += row(l.label, money(l.amount)); });
+                else if (data.payment_mode) out += row('Thanh toán', esc(vnBill.paymentLabel(data.payment_mode)));
+                if (data.partial_check === true || data.partial_check === 'true') out += row(VN.paid, money(data.partial_balance)) + row(VN.due, money(data.payment_pending));
+            }
+            return out + '</div>';
+        }
         var fixedItems = !sheet && layout.blocks.find(function (b) { return b.type === 'items' && b.itemLayout === 'columns'; });
         var headerFssai = layout.blocks.some(function (b) { return b.type === 'store' && b.fssaiInHeader; });
         var rendered = layout.blocks.map(function (b) {
@@ -237,7 +292,7 @@
             if (b.type === 'field' && !contract.fieldAvailable(b.field, data)) return '';
             if (b.type === 'store') {
                 content = '<div class="rd-store"><h1>' + esc(data.branch_name || data.store_name || PosnicPro.local.get('branchname')) + '</h1><div class="rd-store-contact">' + esc(plain(data.printing_address || data.store_address || '')) + '</div>';
-                if (data.store_telephone) content += '<p>' + esc(data.store_telephone) + '</p>';
+                if (data.store_telephone) content += '<p>' + (vn ? esc(VN.phone) + ': ' : '') + esc(data.store_telephone) + '</p>';
                 if (b.showEmail !== false && data.store_email) content += '<p>' + esc(data.store_email) + '</p>';
                 if (data.branch_gstin_number) content += '<p>' + esc(registrationLabel) + ': ' + esc(data.branch_gstin_number) + '</p>';
                 if (contract.fieldAvailable('fssai', data) && present(data.branch_fssai_number) && (headerFssai || !hasField('fssai'))) content += '<p>' + esc(fieldLabel('fssai')) + ': ' + esc(String(data.branch_fssai_number).trim()) + '</p>';
@@ -246,7 +301,22 @@
                 var receiptDate = data.receipt_date || data.created_date || data.date || '';
                 var formattedDate = transactionDate(receiptDate, b, data.receipt_date_order);
                 var customLabel = typeof b.labelText === 'string';
-                if (sheet) {
+                if (vn) {
+                    // Title, then Số / Ngày / Thu ngân / Bàn - one per line,
+                    // dd/mm/yyyy HH:mm unless the block chose its own format.
+                    var ownFormat = (b.dateFormat && b.dateFormat !== 'auto') || (b.timeFormat && b.timeFormat !== 'auto');
+                    var vnDate = ownFormat ? formattedDate : window.PosnicVnBill.billDateTime(receiptDate, { order: data.receipt_date_order });
+                    var vnTitle = customLabel && b.labelText ? b.labelText : documentTitle;
+                    var cashier = [data.user_name, data.created_by_name, data.created_by].find(present);
+                    var meta = [];
+                    if (data.sales_id) meta.push([VN.number, data.sales_id]);
+                    if (vnDate) meta.push([VN.date, vnDate]);
+                    if (cashier && !hasField('steward')) meta.push([VN.cashier, String(cashier).trim()]);
+                    if (present(data.table_number) && !hasField('table')) meta.push([VN.table, String(data.table_number).trim()]);
+                    content = sheet
+                        ? '<div class="rd-invoice-meta"><div class="rd-invoice-title">' + esc(vnTitle) + '</div><dl>' + meta.map(function (m) { return '<dt>' + esc(m[0]) + '</dt><dd>' + esc(m[1]) + '</dd>'; }).join('') + '</dl></div>'
+                        : '<div class="rd-vn-title">' + esc(vnTitle) + '</div><div class="rd-vn-meta">' + meta.map(function (m) { return '<div>' + esc(m[0]) + ': ' + headerValue(m[1]) + '</div>'; }).join('') + '</div>';
+                } else if (sheet) {
                     content = '<div class="rd-invoice-meta"><div class="rd-invoice-title">' + esc(documentTitle) + '</div><dl>';
                     if (data.sales_id) content += '<dt>' + esc(beforePayment ? PosnicPro.i18n.t('lang_bill_no', 'Bill no') : PosnicPro.i18n.t('lang_rd_receipt_number', 'Receipt number')) + '</dt><dd>' + esc(data.sales_id) + '</dd>';
                     content += '<dt>' + esc(PosnicPro.i18n.t('lang_date_title', 'Date')) + '</dt><dd>' + esc(receiptDate) + '</dd></dl></div>';
@@ -266,7 +336,9 @@
             } else if (b.type === 'items') {
                 var compact = !sheet && b.itemLayout === 'compact';
                 var columns = !sheet && b.itemLayout === 'columns';
-                content = '<table' + (columns ? ' class="rd-fixed-columns"' : '') + '><colgroup><col style="width:' + (sheet ? '46' : columns ? (format === '58' ? '40' : '46') : compact ? '68' : '60') + '%">' + (sheet ? '<col style="width:12%"><col style="width:20%"><col style="width:22%">' : columns ? (format === '58' ? '<col style="width:23%"><col style="width:12%"><col style="width:25%">' : '<col style="width:20%"><col style="width:10%"><col style="width:24%">') : '<col style="width:' + (compact ? '32' : '40') + '%">') + '</colgroup><thead><tr><th>' + esc(compact ? label('Item') + ' × ' + label('Qty') : columns ? label('Item name') : label('Item')) + '</th>' + (sheet ? '<th class="rd-number">' + esc(label('Qty')) + '</th><th class="rd-number">' + esc(label('Unit price')) + '</th>' : columns ? '<th class="rd-number">' + esc(label('Rate')) + '</th><th class="rd-number">' + esc(label('Qty')) + '</th>' : '') + '<th class="rd-number">' + esc(label('Amount')) + '</th></tr></thead><tbody>';
+                // Vietnamese bills read Tên hàng | SL | Đơn giá | T.Tiền: quantity before price.
+                var il = function (n) { return vn ? ({ 'Item': VN.item, 'Item name': VN.item, 'Qty': VN.qty, 'Unit price': VN.price, 'Rate': VN.price, 'Amount': sheet ? VN.amount : VN.amountShort, 'Discount': VN.discount }[n] || label(n)) : label(n); };
+                content = '<table' + (columns ? ' class="rd-fixed-columns"' : '') + '><colgroup><col style="width:' + (sheet ? '46' : columns ? (format === '58' ? '40' : '46') : compact ? '68' : '60') + '%">' + (sheet ? '<col style="width:12%"><col style="width:20%"><col style="width:22%">' : columns ? (format === '58' ? (vn ? '<col style="width:12%"><col style="width:23%"><col style="width:25%">' : '<col style="width:23%"><col style="width:12%"><col style="width:25%">') : (vn ? '<col style="width:10%"><col style="width:20%"><col style="width:24%">' : '<col style="width:20%"><col style="width:10%"><col style="width:24%">')) : '<col style="width:' + (compact ? '32' : '40') + '%">') + '</colgroup><thead><tr><th>' + esc(compact ? il('Item') + ' × ' + il('Qty') : columns ? il('Item name') : il('Item')) + '</th>' + (sheet ? '<th class="rd-number">' + esc(il('Qty')) + '</th><th class="rd-number">' + esc(il('Unit price')) + '</th>' : columns ? (vn ? '<th class="rd-number">' + esc(il('Qty')) + '</th><th class="rd-number">' + esc(il('Rate')) + '</th>' : '<th class="rd-number">' + esc(label('Rate')) + '</th><th class="rd-number">' + esc(label('Qty')) + '</th>') : '') + '<th class="rd-number">' + esc(il('Amount')) + '</th></tr></thead><tbody>';
                 receiptItems.forEach(function (item, index) {
                     var qty = Number(item.item_quantity || 0);
                     var hsn = item.hsncode || item.hsn_code || item.hsn || (/^\d{4,8}$/.test(item.tax_name || '') ? item.tax_name : '');
@@ -278,11 +350,15 @@
                     }
                     content += '<tr><td' + (columns ? ' class="rd-item-fixed"' : '') + '>' + (b.showRowNumbers ? '<span class="rd-row-number">' + (index + 1) + '. </span>' : '') + esc(name) + (compact ? ' × ' + esc(qty) : '') + (b.hsn && hsn ? '<div class="rd-line-detail">HSN/SAC: ' + esc(hsn) + '</div>' : '');
                     if (!sheet && !compact && !columns) content += '<div class="rd-line-detail">' + esc(qty + ' ' + (item.item_unit || '') + ' × ') + money(item.item_price) + '</div>';
-                    if (Number(item.item_discount) || Number(item.item_discount_percentage)) content += '<div class="rd-line-detail">' + esc(label('Discount')) + ': ' + (Number(item.item_discount_percentage) ? esc(item.item_discount_percentage) + '%' : money(item.item_discount)) + '</div>';
-                    content += '</td>' + (sheet ? '<td class="rd-number">' + esc(qty + ' ' + (item.item_unit || '')) + '</td><td class="rd-number">' + money(item.item_price) + '</td>' : columns ? '<td class="rd-number">' + esc(figure(item.item_price)) + '</td><td class="rd-number">' + esc(qty) + '</td>' : '') + '<td class="rd-number">' + (columns ? esc(figure(item.total_amount)) : money(item.total_amount)) + '</td></tr>';
+                    if (Number(item.item_discount) || Number(item.item_discount_percentage)) content += '<div class="rd-line-detail">' + esc(il('Discount')) + ': ' + (Number(item.item_discount_percentage) ? esc(item.item_discount_percentage) + '%' : money(item.item_discount)) + '</div>';
+                    content += '</td>' + (sheet ? '<td class="rd-number">' + esc(qty + ' ' + (item.item_unit || '')) + '</td><td class="rd-number">' + money(item.item_price) + '</td>' : columns ? (vn ? '<td class="rd-number">' + esc(qty) + '</td><td class="rd-number">' + esc(figure(item.item_price)) + '</td>' : '<td class="rd-number">' + esc(figure(item.item_price)) + '</td><td class="rd-number">' + esc(qty) + '</td>') : '') + '<td class="rd-number">' + (columns ? esc(figure(item.total_amount)) : money(item.total_amount)) + '</td></tr>';
                 });
-                if (columns && hasField('total_quantity')) content += '<tr class="rd-total-quantity"><td colspan="2">' + esc(label('Total Items')) + ': ' + receiptItems.length + '</td><td class="rd-number">' + esc(values.total_quantity) + '</td><td></td></tr>';
+                if (columns && hasField('total_quantity')) content += vn
+                    ? '<tr class="rd-total-quantity"><td>' + esc(VN.totalQty) + '</td><td class="rd-number">' + esc(values.total_quantity) + '</td><td colspan="2"></td></tr>'
+                    : '<tr class="rd-total-quantity"><td colspan="2">' + esc(label('Total Items')) + ': ' + receiptItems.length + '</td><td class="rd-number">' + esc(values.total_quantity) + '</td><td></td></tr>';
                 content += '</tbody></table>';
+            } else if (b.type === 'totals' && vn) {
+                content = vnTotals();
             } else if (b.type === 'totals') {
                 content = '<div class="rd-totals">' + pair('Subtotal', money(data.items_subtotal));
                 if (Number(data.discount)) content += pair('Discount', money(-Number(data.discount)));
@@ -343,13 +419,14 @@
         if (pendingGoods) html += '<section class="rd-block rd-payment-status">' + esc(label('Payment pending')) + '</section>';
         if (sheet) {
             var notes = '';
-            if ((data.branch_gstin_number || on(data.gst)) && PosnicPro.sales && PosnicPro.sales.view && PosnicPro.sales.view._amountInWords) {
+            if (!vn && (data.branch_gstin_number || on(data.gst)) && PosnicPro.sales && PosnicPro.sales.view && PosnicPro.sales.view._amountInWords) {
                 notes += '<div class="rd-terms"><strong>' + esc(PosnicPro.i18n.t('lang_amount_in_words', 'Amount in words:')) + '</strong> ' + esc(PosnicPro.sales.view._amountInWords(data.items_total)) + '</div>';
             }
             if (data.invoice_terms) notes += '<div class="rd-terms"><strong>' + esc(PosnicPro.i18n.t('lang_terms_conditions', 'Terms & conditions')) + '</strong><br>' + esc(data.invoice_terms) + '</div>';
             if (notes) html += '<div class="rd-invoice-end"><div class="rd-invoice-end-notes">' + notes + '</div></div>';
         }
-        return '<style>' + css(format, layout.fontSize) + (fixedItems ? '.rd-fixed-columns .rd-number{white-space:nowrap;}.rd-fixed-columns td{border-bottom:0;padding-top:2px;padding-bottom:2px;}.rd-fixed-columns th,.rd-total-quantity td,.rd-grand-total{border-color:#333;border-top-style:' + (fixedItems.lineStyle || 'dotted') + ';border-bottom-style:' + (fixedItems.lineStyle || 'dotted') + ';}.rd-transaction{border-bottom-style:' + (fixedItems.lineStyle || 'dotted') + ';}.rd-total-quantity td{border-top:1px ' + (fixedItems.lineStyle || 'dotted') + ' #333;padding-top:6px;}.rd-grand-total{border-top-width:1px;border-bottom:1px ' + (fixedItems.lineStyle || 'dotted') + ' #333;padding-bottom:6px;}' : '') + '</style><article class="rd-document' + (sheet ? ' rd-sheet' : '') + '" data-receipt-design="' + format + '">' + html + '</article>';
+        var vnCss = vn ? '.rd-vn-title{text-align:center;font-weight:bold;font-size:1.25em;letter-spacing:.03em;margin:4px 0 2px;}.rd-vn-meta{text-align:left;border-bottom:1px dashed #555;padding-bottom:3px;}.rd-vn-words{margin-top:3px;font-style:italic;white-space:normal;}' : '';
+        return '<style>' + css(format, layout.fontSize) + vnCss + (fixedItems ? '.rd-fixed-columns .rd-number{white-space:nowrap;}.rd-fixed-columns td{border-bottom:0;padding-top:2px;padding-bottom:2px;}.rd-fixed-columns th,.rd-total-quantity td,.rd-grand-total{border-color:#333;border-top-style:' + (fixedItems.lineStyle || 'dotted') + ';border-bottom-style:' + (fixedItems.lineStyle || 'dotted') + ';}.rd-transaction{border-bottom-style:' + (fixedItems.lineStyle || 'dotted') + ';}.rd-total-quantity td{border-top:1px ' + (fixedItems.lineStyle || 'dotted') + ' #333;padding-top:6px;}.rd-grand-total{border-top-width:1px;border-bottom:1px ' + (fixedItems.lineStyle || 'dotted') + ' #333;padding-bottom:6px;}' : '') + '</style><article class="rd-document' + (sheet ? ' rd-sheet' : '') + '" data-receipt-design="' + format + '">' + html + '</article>';
     }
     var activeSale = false;
     var printCount = 0;

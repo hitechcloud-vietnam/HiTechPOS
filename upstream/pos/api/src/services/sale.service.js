@@ -840,7 +840,12 @@ const processSale = async (
 
     // Date
     const dateInput = data.date || new Date();
-    let mongo_date = new Date(dateInput);
+    // The till's date is the shop's wall clock: read it in the branch's zone,
+    // not the server's (helpers/shop-wall-clock.js).
+    let mongo_date = require('../helpers/shop-wall-clock').parseShopDate(
+      dateInput,
+      context.branchSettings && context.branchSettings.time_zone
+    );
 
     // Cancelled Items (Remaining in oldItemsData)
     if (id !== '' && Object.keys(oldItemsData).length > 0) {
@@ -4345,6 +4350,19 @@ module.exports = {
     salesRepository.qrCodeCloseModel(id, {
       SaleModel: getModel(SaleModel),
     }),
+  /* HiTechPOS: the till links a paid counter QR (htp_...) to the sale it paid
+     for. Called from qrSalePayementUpdate, which had no implementation and
+     answered 500 after every QR sale. Other QR providers are not linked here. */
+  qrSalePayementUpdateModel: async (id, saleid) =>
+    require('./hitech-pay').linkSale(
+      await BaseModel.getDb(),
+      {
+        ...(BaseModel.license ? { license: BaseModel.license } : {}),
+        ...(BaseModel.currentBranch ? { branch_id: BaseModel.currentBranch } : {}),
+      },
+      id,
+      saleid
+    ),
   kioskOrderModel: async (data, { SaleModel } = {}) =>
     salesRepository.kioskOrderModel(data, {
       SaleModel: getModel(SaleModel),

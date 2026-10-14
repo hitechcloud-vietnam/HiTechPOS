@@ -10,6 +10,14 @@ PosnicPro.customermail = {
             if (response.type === 'success') {
 
                 let data = response.data;
+                // A customer opens this from a mail link: no shop settings in this browser,
+                // so the server says how the shop writes money (whole dong, 135.000 in VN).
+                let figDigits = Number.isInteger(data.branch_currency_digits) ? data.branch_currency_digits : 2;
+                let figMarks = data.branch_currency_group ? { group: data.branch_currency_group, decimal: data.branch_currency_decimal || '.' } : { group: ',', decimal: '.' };
+                let fig = function (v) {
+                    let n = Number(v) || 0;
+                    return PosnicPro.money ? PosnicPro.money.group(PosnicPro.money.round(n, figDigits).toFixed(figDigits), figMarks) : n.toFixed(figDigits);
+                };
                 let image_path = (data.branch_image !== "store.png") ? data.branch_image : 'static/images/default/' + data.branch_image;
                 $('.branch_image').attr('src', image_path);
                 $("#getCustomerMailId").val(id);
@@ -30,16 +38,16 @@ PosnicPro.customermail = {
 
                 let discount = '--';
                 if (data.discount > 0) {
-                    discount = (data.discount).toFixed(2);
+                    discount = fig(data.discount);
                 } else {
                     $('#customer_discount_view').hide();
                 }
                 $('.customer_discount_view').html(discount);
 
-                $('.customer_subtotal_view').html(data.branch_currency + '&nbsp;' + '' + data.sales_sub_total.toFixed(2));
-                $('.customer_total_view').html(data.branch_currency + '&nbsp;' + '' + data.total_amount.toFixed(2));
-                $('.customer_Credits_view').html(data.branch_currency + '&nbsp;' + '' + data.partial_balance.toFixed(2));
-                $('.customer_BalanceDue_view').html(data.branch_currency + '&nbsp;' + '' + data.payment_pending.toFixed(2));
+                $('.customer_subtotal_view').html(data.branch_currency + '&nbsp;' + '' + fig(data.sales_sub_total));
+                $('.customer_total_view').html(data.branch_currency + '&nbsp;' + '' + fig(data.total_amount));
+                $('.customer_Credits_view').html(data.branch_currency + '&nbsp;' + '' + fig(data.partial_balance));
+                $('.customer_BalanceDue_view').html(data.branch_currency + '&nbsp;' + '' + fig(data.payment_pending));
                 $('.customer_PaymentStatus_view').html(data.payment_status);
 
                 (typeof (data.payment_status) === "undefined" || data.payment_status === null || data.payment_status === 'Paid') ?
@@ -73,7 +81,7 @@ PosnicPro.customermail = {
                     let rowHTMLLine = ' <tr> ' +
                             '<td class="text-left">' + data.items[i].item_name + '</td>' +
                             '<td class="text-center">' + data.items[i].item_quantity + '</td>' +
-                            '<td class="text-right">' + data.branch_currency + '&nbsp;' + (price * data.items[i].item_quantity).toFixed(2) + ' </td>' +
+                            '<td class="text-right">' + data.branch_currency + '&nbsp;' + fig(price * data.items[i].item_quantity) + ' </td>' +
                             '</tr>';
                     $('#customer_item_list tbody').append(rowHTMLLine);
 
@@ -114,7 +122,7 @@ PosnicPro.customermail = {
                         var rowHTMLTaxLine = '<p>' +
                                 '<span class="lbl" style="display:none;">' + val.tax_id + '</span>' +
                                 '<span class="lbl">' + val.tax_name + '</span>' +
-                                '<span class="amt">' + data.branch_currency + '&nbsp;<span class="number">' + (val.amount).toFixed(2) + '</span></span>' +
+                                '<span class="amt">' + data.branch_currency + '&nbsp;<span class="number">' + fig(val.amount) + '</span></span>' +
                                 '</p>';
                         $('#tax_details_customerprint').append(rowHTMLTaxLine);
                     }
@@ -134,12 +142,12 @@ PosnicPro.customermail = {
                         $('.customer_hide-show-igst').show();
                         $('.customer_hide-show-scgst').hide();
                         $('.customer_gst-text-value').html(PosnicPro.removeDuplicates(taxText));
-                        $('.print_igst_tax_view').html(data.branch_currency + '&nbsp;<span class="number">' + igst.toFixed(2) + '</span>');
+                        $('.print_igst_tax_view').html(data.branch_currency + '&nbsp;<span class="number">' + fig(igst) + '</span>');
                     } else if (parseFloat(cgst) > 0) {
                         $('.customer_hide-show-scgst').show();
                         $('.customer_hide-show-igst').hide();
                         $('.customer_cgst-text-value').html(PosnicPro.removeDuplicates(taxCgstText));
-                        $('.print_csgst_tax_view').html(data.branch_currency + '&nbsp;<span class="number">' + cgst.toFixed(2) + '</span>');
+                        $('.print_csgst_tax_view').html(data.branch_currency + '&nbsp;<span class="number">' + fig(cgst) + '</span>');
                     } else {
                         $('.customer_indian-gstr').hide();
                     }
@@ -150,7 +158,7 @@ PosnicPro.customermail = {
                 }
                 var tax = '--';
                 if (data.tax !== 0 && data.tax !== '') {
-                    tax = (data.tax).toFixed(2);
+                    tax = fig(data.tax);
                 } else {
                     $('.customer_indian-gstr,.customer_tax_print_hide,#customer_tax_value').hide();
                 }
@@ -161,7 +169,7 @@ PosnicPro.customermail = {
                 $('#customer_roundoff_view').hide();
                 if (roundOffValue !== 0) {
                     $('#customer_roundoff_view').show();
-                    $('.customer_roundoff_view').html(data.branch_currency + '<span class="number">' + roundOffValue.toFixed(2));
+                    $('.customer_roundoff_view').html(data.branch_currency + '<span class="number">' + fig(roundOffValue));
                 }
 
             } else {

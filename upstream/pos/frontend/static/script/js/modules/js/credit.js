@@ -66,6 +66,8 @@ PosnicPro.credit = {
         $('#credit_outstanding_total').text('0');
         return;
       }
+      // The shop's precision and grouping (money-format.js).
+      var fig = function (v) { var n = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2); };
       var total = 0;
       rows.forEach(function (r) {
         total += Number(r.due) || 0;
@@ -73,12 +75,12 @@ PosnicPro.credit = {
           '<tr>' +
             '<td>' + PosnicPro.credit.esc(r.name) + '</td>' +
             '<td>' + PosnicPro.credit.esc(r.phone || '') + '</td>' +
-            '<td class="text-right text-danger">' + sign + (Number(r.due) || 0).toFixed(2) + '</td>' +
+            '<td class="text-right text-danger">' + sign + fig(r.due) + '</td>' +
             '<td class="text-center"><a href="javascript:void(0)" class="btn btn-sm btn-outline-primary credit-remind-one" data-id="' + r.customer_id + '">Remind</a></td>' +
           '</tr>'
         );
       });
-      $('#credit_outstanding_total').text(sign + total.toFixed(2));
+      $('#credit_outstanding_total').text(sign + fig(total));
     });
   },
 

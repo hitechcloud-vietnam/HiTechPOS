@@ -103,12 +103,13 @@ PosnicPro.userreport = {
                         var page_totals = (table.data('current_page') - 1) * table.data('per_page');
                         $('#view_userreport_page_perpage_total').text(page_totals + response.data.list.length);
                         var currency = PosnicPro.local.get('currencySign');
+                        var moneyText = function (v) { var n = Number(v) || 0; return PosnicPro.money ? PosnicPro.money.number(n) : n.toFixed(2); };
                         for (var i = 0; i < response.data.list.length; i++) {
                             var row = response.data.list[i];
                             var row_no = (table.data('current_page') - 1) * table.data('per_page') + i + 1;
-                            var trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.user_name + '</td> <td class="text-center">' + row.sales_count + '</td> <td class="text-right">-' + currency + '&nbsp;<span class="number">' + row.refund_payment + '</span></td> <td class="text-right">' + currency + '&nbsp;<span>' + row.sales_profit.toFixed(2) + '</span></td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.sales_avg + '</span></td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.sales_payment + '</span></td></tr>';
+                            var trow = '<tr> <td scope="row">' + row_no + '</td> <td>' + row.user_name + '</td> <td class="text-center">' + row.sales_count + '</td> <td class="text-right">-' + currency + '&nbsp;<span class="number">' + row.refund_payment + '</span></td> <td class="text-right">' + currency + '&nbsp;<span>' + moneyText(row.sales_profit) + '</span></td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.sales_avg + '</span></td> <td class="text-right">' + currency + '&nbsp;<span class="number">' + row.sales_payment + '</span></td></tr>';
                             $('#view_userreport').children('tbody').append(trow);
-                            $('span.number').number(true, 2);
+                            PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
                         }
                     } else {
                         var userreport = [];

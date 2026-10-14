@@ -314,7 +314,7 @@ PosnicPro.gstrThree = {
                 // Intrastate unregister,composite purchase list
 
                 $('#intrastate_value').html(currency + '&nbsp;<span class="number">' + data.intra_state_purchase + '</span>');
-                $('span.number').number(true, 2);
+                PosnicPro.money ? PosnicPro.money.show($('span.number')) : $('span.number').number(true, 2);
             } else {
                 PosnicPro.alert(response.type, response.message);
             }

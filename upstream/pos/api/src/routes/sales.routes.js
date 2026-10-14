@@ -810,14 +810,17 @@ router.post('/salesPaymentClose', bindController(salesController.salesPaymentClo
 // PHP: qrCodeClose() - Close QR code
 router.get('/qrCodeClose', bindController(salesController.qrCodeClose));
 
-// HiTechPOS: cashier confirms a direct VietQR transfer (services/hitech-pay.js)
-router.get('/hitechQrConfirm', async (req, res) => {
+// HiTechPOS: cashier confirms a direct VietQR transfer (services/hitech-pay.js).
+// A POST, never a GET: it records money as received, so it must carry the
+// CSRF token (middleware/csrf.js exempts GET, and the login cookie is
+// SameSite=None) - a link opened on the till must not confirm a payment.
+router.post('/hitechQrConfirm', async (req, res) => {
   if (req.user?.access?.sales?.write !== true) {
     return res.status(403).json({ type: 'error', message: 'Unauthorized', data: null });
   }
   try {
     const hitechPay = require('../services/hitech-pay');
-    const id = String(req.query.id || '');
+    const id = String((req.body && req.body.id) || '');
     if (!hitechPay.isHitechId(id)) return res.status(400).json({ type: 'error', message: 'Invalid QR id', data: null });
     const out = await hitechPay.confirm(id, { by: req.user?.username || req.user?.email || 'cashier' });
     return res.json({ type: 'success', message: out.message, data: out.data });
@@ -825,6 +828,10 @@ router.get('/hitechQrConfirm', async (req, res) => {
     return res.status(502).json({ type: 'error', message: error.message, data: null });
   }
 });
+
+// HiTechPOS: time billing for rooms/tables - start, stop ("Tính giờ"), resume,
+// cancel (services/table-time-billing.js). Permission is checked there.
+router.post('/tableTime', (req, res) => require('../services/table-time-billing').route(req, res));
 
 // PHP: qrSalePayementUpdate() - Update QR sale payment
 router.get('/qrSalePayementUpdate', bindController(salesController.qrSalePayementUpdate));

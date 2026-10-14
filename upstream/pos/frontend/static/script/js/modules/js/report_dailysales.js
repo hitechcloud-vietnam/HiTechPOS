@@ -294,8 +294,8 @@ PosnicPro.quickreport = {
         var qtyDecimals = qtyValue % 1 === 0 ? 0 : 2;
         $(".daily_report_qty_price").number(qtyValue, qtyDecimals);
 
-        $(".daily_report_product_price").number(safeNum(price), 2);
-        $(".daily_report_product_total").number(safeNum(total), 2);
+        PosnicPro.money ? PosnicPro.money.put($(".daily_report_product_price"), safeNum(price)) : $(".daily_report_product_price").number(safeNum(price), 2);
+        PosnicPro.money ? PosnicPro.money.put($(".daily_report_product_total"), safeNum(total)) : $(".daily_report_product_total").number(safeNum(total), 2);
         // $('.daily_report_product_profit').number(safeNum(profit), 2);
 
         // ---- Payments ----
@@ -375,7 +375,7 @@ PosnicPro.quickreport = {
         }
         
         // Display tender total as-is (backend already accounts for discounts)
-        $(".daily_report_product_tender_total").number(safeNum(tenderTotal), 2);
+        PosnicPro.money ? PosnicPro.money.put($(".daily_report_product_tender_total"), safeNum(tenderTotal)) : $(".daily_report_product_tender_total").number(safeNum(tenderTotal), 2);
 
         /*
          * Keep the figures the screen just showed, for the printed slip.
@@ -413,14 +413,14 @@ PosnicPro.quickreport = {
         [['Cash received', summaryCash], ['Card received', summaryCard], ['Total payments received', tenderTotal]].forEach(function (entry) {
           var card = $('<div class="card p-3 mb-1">');
           $('<span>').text(entry[0]).appendTo(card);
-          $('<strong class="h4 mb-0">').text((PosnicPro.local.get('currencySign') || '') + safeNum(entry[1]).toFixed(2)).appendTo(card);
+          $('<strong class="h4 mb-0">').text((PosnicPro.local.get('currencySign') || '') + (PosnicPro.money ? PosnicPro.money.number(safeNum(entry[1])) : safeNum(entry[1]).toFixed(2))).appendTo(card);
           summary.append(card);
         });
 
         // The PDF's Summary section - the on-screen stat cards are divs the
         // exporter cannot gather, so the numbers ride this hidden table.
         (function () {
-          var money = function (n) { return Number(n || 0).toFixed(2); };
+          var money = function (n) { return PosnicPro.money ? PosnicPro.money.number(Number(n || 0)) : Number(n || 0).toFixed(2); };
           var rows = '<tr><td><lang class="lang_total_sales">Total sales</lang></td><td class="text-right">' + money(PosnicPro.quickreport.lastReport.total) + '</td></tr>'
             + '<tr><td><lang class="lang_items_sold">Items sold</lang></td><td class="text-right">' + PosnicPro.quickreport.lastReport.qty + '</td></tr>'
             + '<tr><td><lang class="lang_payments_received">Payments received</lang></td><td class="text-right">' + money(PosnicPro.quickreport.lastReport.tenderTotal) + '</td></tr>';
@@ -471,7 +471,7 @@ PosnicPro.quickreport = {
           }
         }
         
-        $(".daily_report_extra_discount_total").number(total_sale_extra_discount, 2);
+        PosnicPro.money ? PosnicPro.money.put($(".daily_report_extra_discount_total"), total_sale_extra_discount) : $(".daily_report_extra_discount_total").number(total_sale_extra_discount, 2);
 
         // ---- Table-wise totals ----
         var tableSummary =
@@ -526,7 +526,7 @@ PosnicPro.quickreport = {
             $("#daily_report_table_summary tbody").append(rowHTMLTable);
           }
 
-          $(".daily_report_table_total").number(safeNum(tableTotal), 2);
+          PosnicPro.money ? PosnicPro.money.put($(".daily_report_table_total"), safeNum(tableTotal)) : $(".daily_report_table_total").number(safeNum(tableTotal), 2);
           $(".daily_report_table_pax").text(
             tablePaxTotal > 0 ? tablePaxTotal : ""
           );
@@ -594,7 +594,7 @@ PosnicPro.quickreport = {
           $("#daily_report_tax_details").closest(".col-sm-12").hide();
         }
         
-        $(".daily_report_product_tax_total").number(safeNum(taxTotal), 2);
+        PosnicPro.money ? PosnicPro.money.put($(".daily_report_product_tax_total"), safeNum(taxTotal)) : $(".daily_report_product_tax_total").number(safeNum(taxTotal), 2);
         
         if (PosnicPro.local.get("table_options") === "enable") {
           $("#daily_report_dine_details").show();
@@ -669,7 +669,7 @@ PosnicPro.quickreport = {
         $(".daily_report_dine_count").text(dineCountTotal);
         // If total pax is 0, keep footer blank instead of showing 0
         $(".daily_report_dine_pax").text(dinePaxTotal > 0 ? dinePaxTotal : "");
-        $(".daily_report_dine_total").number(safeNum(dineAmountTotal), 2);
+        PosnicPro.money ? PosnicPro.money.put($(".daily_report_dine_total"), safeNum(dineAmountTotal)) : $(".daily_report_dine_total").number(safeNum(dineAmountTotal), 2);
 
         // Show/hide Pax column itself based on whether we have any positive pax
         // Note: the header uses <td>, not <th>, so target td in thead.
@@ -685,7 +685,7 @@ PosnicPro.quickreport = {
         }
 
         // format numeric spans
-        $("span.number").number(true, 2);
+        PosnicPro.money ? PosnicPro.money.show($("span.number")) : $("span.number").number(true, 2);
 
         // ---- CSV Export (ES5-safe) ----
         if (type === "CSV") {
@@ -876,7 +876,8 @@ PosnicPro.quickreport = {
 
   /* The slip document, one builder for both print rails. */
   _slipDoc: function (report) {
-    var money = function (n) { return Number(n || 0).toFixed(2); };
+    // The shop's precision and grouping (money-format.js): a slip in Vietnam reads 135.000.
+    var money = function (n) { return PosnicPro.money ? PosnicPro.money.number(Number(n || 0)) : Number(n || 0).toFixed(2); };
 
     // Cash is the figure the slip exists for, so it is named rather than left
     // for the reader to find among the other tenders.
