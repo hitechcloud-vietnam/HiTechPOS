@@ -121,7 +121,7 @@ test('public pages: internal links, assets and anchors resolve', async (t) => {
 
 test('public pages: no external or inline scripts, styles from self only', () => {
   for (const [page, body] of Object.entries(html)) {
-    for (const m of body.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)) {
+    for (const m of body.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\b[^>]*>/gi)) {
       const src = (m[1].match(/\bsrc="([^"]*)"/) || [])[1];
       assert.ok(src, `${page}: no inline <script> (CSP)`);
       assert.match(src, /^\/[^/]/, `${page}: script ${src} is served by this origin`);
