@@ -85,6 +85,7 @@ function validate(p) {
     if (!unitCodes.has(item.unit)) fail(id, `item "${item.name}" uses unknown unit ${item.unit}`);
     if (!Number.isSafeInteger(item.price) || item.price <= 0) fail(id, `item "${item.name}" has bad price`);
     if (!VAT_RATES.includes(item.vatRate)) fail(id, `item "${item.name}" has bad vatRate`);
+    if (!p.categories.includes(item.category)) fail(id, `item "${item.name}" has unknown category ${item.category}`);
   }
 
   if (!RECEIPT_TEMPLATES.includes(p.receipt.template)) fail(id, 'has bad receipt template');
