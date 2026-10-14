@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Thanh toán QR chuyển khoản – Trợ giúp HiTechPOS</title>
+<meta name="description" content="Hiện mã QR đúng số tiền cho khách quét, xác nhận tiền về, màn hình cho khách và cách xử lý khi có sự cố.">
+<link rel="stylesheet" href="/help/help.css">
+<script src="/help/help.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#noi-dung">Bỏ qua, tới nội dung</a>
+<header class="top">
+  <a class="brand" href="/help/"><strong>HiTechPOS</strong><span>Trung tâm trợ giúp</span></a>
+  <nav class="toplinks" aria-label="Liên kết chính"><a href="/">Trang chủ</a><a href="/account">Quản lý cửa hàng</a></nav>
+</header>
+<div class="layout">
+  <aside class="side">
+    <div class="search" data-help-search>
+      <label class="sr" for="help-q">Tìm trong trợ giúp</label>
+      <input id="help-q" type="search" placeholder="Tìm: VietQR, ký hiệu, mật khẩu…" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="help-q-results" aria-expanded="false">
+      <ul class="results" id="help-q-results" role="listbox" hidden></ul>
+    </div>
+    <button class="navtoggle" type="button" aria-expanded="false" aria-controls="help-nav">Danh mục trợ giúp</button>
+    <nav class="nav" id="help-nav" aria-label="Danh mục trợ giúp">
+      <a href="/help/">Trang chủ trợ giúp</a>
+      <div class="group"><div class="gt">Bắt đầu</div><a href="/help/bat-dau">Bắt đầu sử dụng</a></div>
+      <div class="group"><div class="gt">Bán hàng</div><a href="/help/ban-hang">Bán hàng tại quầy</a><a href="/help/thanh-toan-qr" aria-current="page">Thanh toán QR chuyển khoản</a></div>
+      <div class="group"><div class="gt">Cài đặt</div><a href="/help/cau-hinh-thanh-toan">Cấu hình thanh toán QR</a><a href="/help/hoa-don-dien-tu">Hoá đơn điện tử</a></div>
+      <div class="group"><div class="gt">Tài khoản</div><a href="/help/goi-cuoc">Gói cước và thanh toán phí</a><a href="/help/ten-mien-rieng">Tên miền riêng</a><a href="/help/tai-khoan">Mật khẩu, khoá API, dữ liệu</a></div>
+      <div class="group"><div class="gt">Hỗ trợ</div><a href="/help/cau-hoi-thuong-gap">Câu hỏi thường gặp</a></div>
+    </nav>
+  </aside>
+  <main id="noi-dung" class="content">
+    <nav class="crumbs" aria-label="Vị trí"><a href="/help/">Trợ giúp</a> <span aria-hidden="true">›</span> <span>Bán hàng</span></nav>
+    <article>
+    <h1>Thanh toán QR chuyển khoản</h1>
+    <p class="lead">Hiện mã QR đúng số tiền cho khách quét, xác nhận tiền về, màn hình cho khách và cách xử lý khi có sự cố.</p>
+    <nav class="toc" aria-label="Trên trang này"><div class="gt">Trên trang này</div><ol><li><a href="#tong-quan">Tổng quan</a></li><li><a href="#cac-buoc">Các bước tại quầy</a></li><li><a href="#xac-nhan">Xác nhận chuyển khoản (nút “Đã nhận tiền”)</a></li><li><a href="#noi-dung-chuyen-khoan">Nội dung chuyển khoản</a></li><li><a href="#bien-dong-so-du">Tự động xác nhận qua biến động số dư Pay2S</a></li><li><a href="#man-hinh-khach">Màn hình cho khách</a></li><li><a href="#trang-thai">Trạng thái giao dịch</a></li><li><a href="#su-co">Xử lý sự cố</a></li></ol></nav>
+<section>
+<h2 id="tong-quan">Tổng quan <a class="anchor" href="#tong-quan" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Tiền khách trả chuyển thẳng vào tài khoản của cửa hàng – HiTechPOS không giữ tiền. Cửa hàng có thể dùng một hoặc nhiều cách sau:</p>
+<div class="table"><table>
+<thead><tr><th>Cách</th><th>Tiền về đâu</th><th>Xác nhận đã nhận tiền</th><th>Mã QR hết hạn</th></tr></thead>
+<tbody>
+<tr><td><b>VietQR</b></td><td>Tài khoản ngân hàng của cửa hàng</td><td>Thu ngân bấm <b class="ui">Đã nhận tiền</b>, hoặc tự động khi bật <a href="/help/thanh-toan-qr#bien-dong-so-du">biến động số dư Pay2S</a></td><td>Không</td></tr>
+<tr><td><b>payOS</b></td><td>Tài khoản đã liên kết với payOS của cửa hàng</td><td>Tự động khi payOS báo về</td><td>Sau 15 phút</td></tr>
+<tr><td><b>Pay2S</b></td><td>Tài khoản đã liên kết với Pay2S của cửa hàng</td><td>Tự động khi Pay2S báo về</td><td>Sau 15 phút</td></tr>
+</tbody></table></div>
+<p>Chưa cấu hình? Xem <a href="/help/cau-hinh-thanh-toan">Cấu hình thanh toán QR</a>.</p>
+</section>
+<section>
+<h2 id="cac-buoc">Các bước tại quầy <a class="anchor" href="#cac-buoc" aria-label="Liên kết tới mục này">#</a></h2>
+<ol class="steps">
+<li>Tạo đơn như bình thường và bấm <b class="ui">THANH TOÁN</b>.</li>
+<li>Chọn <b class="ui">QR chuyển khoản</b>. Cửa sổ <b class="ui">Thanh toán QR</b> hiện mã QR với đúng số tiền của đơn (hoặc số tiền trả một phần nếu bạn đã nhập).</li>
+<li>Khách mở ứng dụng ngân hàng hoặc ví, quét mã và xác nhận chuyển khoản. Số tiền và nội dung đã điền sẵn.</li>
+<li>Máy bán hàng kiểm tra trạng thái vài giây một lần. Khi tiền đã được xác nhận, đơn tự hoàn tất.</li>
+<li>Với VietQR chưa bật biến động số dư: kiểm tra tiền đã về rồi bấm <b class="ui">Đã nhận tiền</b> (xem <a href="/help/thanh-toan-qr#xac-nhan">Xác nhận chuyển khoản</a>).</li>
+</ol>
+<p>Khách đổi ý hoặc cần sửa đơn: bấm <b class="ui">Hủy thanh toán</b> trước, sửa đơn, rồi tạo mã QR mới. Đừng để khách quét lại mã cũ.</p>
+</section>
+<section>
+<h2 id="xac-nhan">Xác nhận chuyển khoản (nút “Đã nhận tiền”) <a class="anchor" href="#xac-nhan" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Với <b>VietQR</b>, ngân hàng không báo cho HiTechPOS khi tiền về (trừ khi bật biến động số dư), nên thu ngân xác nhận bằng tay:</p>
+<ol class="steps">
+<li>Kiểm tra trên ứng dụng ngân hàng hoặc thông báo biến động số dư của cửa hàng: đã có khoản tiền vào <b>đúng số tiền</b>, nội dung bắt đầu bằng mã giao dịch hiện trên màn hình.</li>
+<li>Bấm <b class="ui">Đã nhận tiền</b> trong cửa sổ Thanh toán QR. Đơn hoàn tất.</li>
+</ol>
+<p class="warn">Chỉ bấm khi đã thấy tiền thật sự về tài khoản. Ảnh chụp màn hình “chuyển khoản thành công” của khách không phải là bằng chứng tiền đã về.</p>
+<p>Với <b>payOS</b> và <b>Pay2S</b>, giao dịch tự xác nhận khi cổng thanh toán báo về; nút này sẽ báo “Chỉ xác nhận thủ công được với VietQR chuyển khoản trực tiếp”.</p>
+</section>
+<section>
+<h2 id="noi-dung-chuyen-khoan">Nội dung chuyển khoản <a class="anchor" href="#noi-dung-chuyen-khoan" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Với VietQR, nội dung chuyển khoản trong mã QR bắt đầu bằng <b>mã giao dịch</b> (một dãy 13–16 chữ số), sau đó là tên cửa hàng và mã đơn, tối đa 25 ký tự không dấu. Nhờ mã giao dịch đứng đầu, khoản tiền vào vẫn khớp được với đơn kể cả khi ngân hàng cắt bớt phần sau.</p>
+<p class="note">Nhắc khách <b>không sửa nội dung chuyển khoản</b>. Nếu mất mã giao dịch, hệ thống không tự xác nhận được và thu ngân phải kiểm tra, xác nhận bằng tay.</p>
+</section>
+<section>
+<h2 id="bien-dong-so-du">Tự động xác nhận qua biến động số dư Pay2S <a class="anchor" href="#bien-dong-so-du" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Nếu tài khoản ngân hàng của cửa hàng được theo dõi qua dịch vụ biến động số dư của Pay2S và cửa hàng đã <a href="/help/cau-hinh-thanh-toan#bien-dong-so-du">bật tính năng này</a>, mỗi khoản tiền vào được Pay2S báo về HiTechPOS. Hệ thống tìm mã giao dịch trong nội dung chuyển khoản và tự đánh dấu đơn VietQR tương ứng là đã thanh toán – thu ngân không cần bấm <b class="ui">Đã nhận tiền</b>.</p>
+<p>Điều kiện để tự xác nhận:</p>
+<ul>
+<li>Là khoản tiền <b>vào</b>, tới đúng tài khoản đã khai báo ở phần VietQR.</li>
+<li>Nội dung chuyển khoản còn giữ mã giao dịch.</li>
+<li>Số tiền đúng bằng số tiền cần thu. Nếu khác, giao dịch chuyển sang <b>Cần đối soát</b> thay vì “Đã thanh toán”.</li>
+</ul>
+</section>
+<section>
+<h2 id="man-hinh-khach">Màn hình cho khách <a class="anchor" href="#man-hinh-khach" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Trong cửa sổ Thanh toán QR, nút <b class="ui">Màn hình khách</b> mở một trang riêng cho giao dịch đó, dạng <code>https://app.hitechpos.vn/pay/<var>mã-cửa-hàng</var>/<var>mã-giao-dịch</var></code>. Mở trang này trên màn hình phụ hướng về phía khách hoặc trên máy tính bảng.</p>
+<p>Trang hiển thị tên cửa hàng, số tiền, nội dung chuyển khoản, mã QR và (với VietQR) ngân hàng, số tài khoản, tên chủ tài khoản. Trạng thái tự cập nhật mỗi 2 giây:</p>
+<ul>
+<li>“Đang chờ thanh toán – quét mã bằng ứng dụng ngân hàng”</li>
+<li>“✓ Đã thanh toán – cảm ơn quý khách!” (nền xanh)</li>
+<li>“Đã nhận tiền – đang đối soát” khi số tiền nhận khác số tiền cần thu</li>
+<li>“Giao dịch đã huỷ”, “Mã thanh toán đã hết hạn”, “Thanh toán không thành công”</li>
+</ul>
+<p>Nếu cổng thanh toán không trả mã QR, trang hiện nút <b class="ui">Mở trang thanh toán</b> để khách thanh toán trên trang của cổng. Trang cho khách chỉ hiện thông tin thanh toán, không có thông tin quản trị của cửa hàng. Mỗi giao dịch có một trang riêng; đơn sau cần mở lại từ nút Màn hình khách.</p>
+</section>
+<section>
+<h2 id="trang-thai">Trạng thái giao dịch <a class="anchor" href="#trang-thai" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Chủ cửa hàng xem 100 giao dịch QR gần nhất ở mục <b class="ui">Giao dịch tại quầy gần đây</b> trên <a href="/account">trang quản lý</a>.</p>
+<div class="table"><table>
+<thead><tr><th>Trạng thái</th><th>Ý nghĩa</th><th>Cần làm</th></tr></thead>
+<tbody>
+<tr><td><span class="pill pending">Chờ thanh toán</span></td><td>Mã QR đang chờ khách trả</td><td>Đợi, hoặc huỷ nếu khách không trả</td></tr>
+<tr><td><span class="pill ok">Đã thanh toán</span></td><td>Đã nhận đủ tiền</td><td>Không</td></tr>
+<tr><td><span class="pill bad">Cần đối soát</span></td><td>Tiền đã về nhưng khác số tiền cần thu</td><td>Xem <a href="/help/thanh-toan-qr#su-co">Xử lý sự cố</a></td></tr>
+<tr><td><span class="pill bad">Đã huỷ</span></td><td>Thu ngân huỷ, hoặc đơn được tạo lại với số tiền khác</td><td>Không</td></tr>
+<tr><td><span class="pill bad">Hết hạn</span></td><td>Cổng thanh toán báo mã đã hết hạn (mã payOS/Pay2S có hiệu lực 15 phút)</td><td>Tạo mã mới</td></tr>
+<tr><td><span class="pill bad">Thất bại</span></td><td>Cổng thanh toán báo không thành công</td><td>Tạo mã mới hoặc thu cách khác</td></tr>
+</tbody></table></div>
+<p>Mỗi giao dịch chỉ được ghi nhận “Đã thanh toán” một lần, kể cả khi cổng thanh toán báo về nhiều lần.</p>
+</section>
+<section>
+<h2 id="su-co">Xử lý sự cố <a class="anchor" href="#su-co" aria-label="Liên kết tới mục này">#</a></h2>
+<h3 id="khong-hien-qr">Không có ô QR chuyển khoản hoặc báo lỗi khi tạo mã</h3>
+<ul>
+<li>Cửa hàng chưa cấu hình phương thức nào: xem <a href="/help/cau-hinh-thanh-toan">Cấu hình thanh toán QR</a>.</li>
+<li>Vừa lưu cấu hình: đợi khoảng 1 phút rồi tải lại màn hình bán hàng.</li>
+<li>Cửa hàng đang bị tạm ngưng do hết hạn gói: <a href="/help/goi-cuoc#het-han">gia hạn</a> để dùng lại.</li>
+<li>Khoá API “Posnic – màn hình bán hàng” đã bị thu hồi: xem <a href="/help/tai-khoan#khoa-noi-bo">Khoá nội bộ của màn hình bán hàng</a>.</li>
+</ul>
+<h3 id="sai-so-tien">Khách chuyển thiếu hoặc thừa tiền</h3>
+<p>Giao dịch sang trạng thái <b>Cần đối soát</b>, không bao giờ tự thành “Đã thanh toán”. Đối chiếu sao kê ngân hàng, thu thêm phần thiếu hoặc trả lại phần thừa. Với VietQR, sau khi đã xử lý xong khoản chênh lệch, thu ngân có thể bấm <b class="ui">Đã nhận tiền</b> để chốt đơn. Với payOS/Pay2S, liên hệ <a href="/help/cau-hoi-thuong-gap#lien-he">bộ phận hỗ trợ</a>.</p>
+<h3 id="chua-nhan">Khách báo đã chuyển nhưng máy chưa nhận</h3>
+<ul>
+<li>VietQR không bật biến động số dư: thu ngân phải tự kiểm tra và bấm <b class="ui">Đã nhận tiền</b>.</li>
+<li>Kiểm tra khách có sửa nội dung chuyển khoản hay chuyển nhầm tài khoản không.</li>
+<li>Chuyển khoản liên ngân hàng đôi khi về chậm; kiểm tra lại sau ít phút.</li>
+</ul>
+<h3 id="tien-ve-sau-huy">Tiền về sau khi đã huỷ mã</h3>
+<p>Nếu khách vẫn chuyển khoản theo mã đã huỷ hoặc đã hết hạn, giao dịch vẫn được ghi nhận khi cổng thanh toán hoặc biến động số dư báo về. Kiểm tra mục Giao dịch tại quầy gần đây để ghi nhận đơn hoặc hoàn tiền cho khách.</p>
+</section>
+    </article>
+    <nav class="pager" aria-label="Trang trước và sau">
+      <a class="prev" href="/help/ban-hang"><small>Trang trước</small>Bán hàng tại quầy</a>
+      <a class="next" href="/help/cau-hinh-thanh-toan"><small>Trang sau</small>Cấu hình thanh toán QR</a>
+    </nav>
+  </main>
+</div>
+<footer class="foot">
+  <p>HiTechPOS · HiTechCloud-VN · Phố Tuệ Software Solutions JSC</p>
+  <p><a href="/help/cau-hoi-thuong-gap#lien-he">Liên hệ hỗ trợ</a> · Phần mềm nguồn mở AGPL-3.0, dựa trên Posnic · <a href="/source">Mã nguồn</a></p>
+</footer>
+</body>
+</html>

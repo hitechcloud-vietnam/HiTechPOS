@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Bắt đầu với HiTechPOS – Trợ giúp HiTechPOS</title>
+<meta name="description" content="Đăng ký dùng thử, chọn ngành nghề, đăng nhập máy bán hàng và trang quản lý, làm quen với dữ liệu mẫu.">
+<link rel="stylesheet" href="/help/help.css">
+<script src="/help/help.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#noi-dung">Bỏ qua, tới nội dung</a>
+<header class="top">
+  <a class="brand" href="/help/"><strong>HiTechPOS</strong><span>Trung tâm trợ giúp</span></a>
+  <nav class="toplinks" aria-label="Liên kết chính"><a href="/">Trang chủ</a><a href="/account">Quản lý cửa hàng</a></nav>
+</header>
+<div class="layout">
+  <aside class="side">
+    <div class="search" data-help-search>
+      <label class="sr" for="help-q">Tìm trong trợ giúp</label>
+      <input id="help-q" type="search" placeholder="Tìm: VietQR, ký hiệu, mật khẩu…" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="help-q-results" aria-expanded="false">
+      <ul class="results" id="help-q-results" role="listbox" hidden></ul>
+    </div>
+    <button class="navtoggle" type="button" aria-expanded="false" aria-controls="help-nav">Danh mục trợ giúp</button>
+    <nav class="nav" id="help-nav" aria-label="Danh mục trợ giúp">
+      <a href="/help/">Trang chủ trợ giúp</a>
+      <div class="group"><div class="gt">Bắt đầu</div><a href="/help/bat-dau" aria-current="page">Bắt đầu sử dụng</a></div>
+      <div class="group"><div class="gt">Bán hàng</div><a href="/help/ban-hang">Bán hàng tại quầy</a><a href="/help/thanh-toan-qr">Thanh toán QR chuyển khoản</a></div>
+      <div class="group"><div class="gt">Cài đặt</div><a href="/help/cau-hinh-thanh-toan">Cấu hình thanh toán QR</a><a href="/help/hoa-don-dien-tu">Hoá đơn điện tử</a></div>
+      <div class="group"><div class="gt">Tài khoản</div><a href="/help/goi-cuoc">Gói cước và thanh toán phí</a><a href="/help/ten-mien-rieng">Tên miền riêng</a><a href="/help/tai-khoan">Mật khẩu, khoá API, dữ liệu</a></div>
+      <div class="group"><div class="gt">Hỗ trợ</div><a href="/help/cau-hoi-thuong-gap">Câu hỏi thường gặp</a></div>
+    </nav>
+  </aside>
+  <main id="noi-dung" class="content">
+    <nav class="crumbs" aria-label="Vị trí"><a href="/help/">Trợ giúp</a> <span aria-hidden="true">›</span> <span>Bắt đầu</span></nav>
+    <article>
+    <h1>Bắt đầu với HiTechPOS</h1>
+    <p class="lead">Đăng ký dùng thử, chọn ngành nghề, đăng nhập máy bán hàng và trang quản lý, làm quen với dữ liệu mẫu.</p>
+    <nav class="toc" aria-label="Trên trang này"><div class="gt">Trên trang này</div><ol><li><a href="#hai-dia-chi">Máy bán hàng và trang quản lý</a></li><li><a href="#dang-ky">Đăng ký dùng thử</a></li><li><a href="#nganh-nghe">Chọn ngành nghề</a></li><li><a href="#dang-nhap">Đăng nhập</a></li><li><a href="#du-lieu-mau">Dữ liệu mẫu</a></li><li><a href="#viec-tiep-theo">Việc nên làm tiếp theo</a></li></ol></nav>
+<section>
+<h2 id="hai-dia-chi">Máy bán hàng và trang quản lý <a class="anchor" href="#hai-dia-chi" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Mỗi cửa hàng HiTechPOS dùng hai địa chỉ, mỗi nơi một việc:</p>
+<div class="table"><table>
+<thead><tr><th></th><th>Máy bán hàng</th><th>Trang quản lý</th></tr></thead>
+<tbody>
+<tr><th>Địa chỉ</th><td><code>https://<var>ten-cua-hang</var>.hitechpos.vn</code></td><td><code>https://app.hitechpos.vn/account</code></td></tr>
+<tr><th>Ai dùng</th><td>Chủ cửa hàng, thu ngân, nhân viên</td><td>Chủ cửa hàng</td></tr>
+<tr><th>Dùng để</th><td>Bán hàng, hàng hoá, khách hàng, nhân viên, báo cáo, in hoá đơn</td><td>Gói cước, thanh toán QR tại quầy, hoá đơn điện tử, khoá API, tên miền riêng, xuất dữ liệu, mật khẩu</td></tr>
+<tr><th>Đăng nhập bằng</th><td>Tài khoản của máy bán hàng</td><td>Email và mật khẩu đăng ký</td></tr>
+</tbody></table></div>
+<p class="note">Lúc đăng ký, cả hai nơi dùng chung email và mật khẩu bạn nhập. Sau đó hai mật khẩu là <b>độc lập</b>: đổi mật khẩu ở trang quản lý không đổi mật khẩu máy bán hàng và ngược lại.</p>
+</section>
+<section>
+<h2 id="dang-ky">Đăng ký dùng thử <a class="anchor" href="#dang-ky" aria-label="Liên kết tới mục này">#</a></h2>
+<ol class="steps">
+<li>Mở <a href="/">trang chủ HiTechPOS</a>, kéo xuống mục <b class="ui">Đăng ký dùng thử</b>.</li>
+<li>Điền <b>Tên cửa hàng</b> và <b>Địa chỉ truy cập</b> – phần đứng trước <code>.hitechpos.vn</code>. Ô bên dưới báo ngay địa chỉ còn trống hay đã có người dùng.</li>
+<li>Chọn <b>Ngành nghề</b> (xem <a href="/help/bat-dau#nganh-nghe">Chọn ngành nghề</a>).</li>
+<li>Nhập họ tên chủ cửa hàng, email, số điện thoại di động, mã số thuế (không bắt buộc) và mật khẩu (ít nhất 8 ký tự).</li>
+<li>Bấm <b class="ui">Tạo cửa hàng</b>. Khi xong, trang hiện địa chỉ bán hàng và liên kết tới trang quản lý; email chào mừng được gửi tới hộp thư của bạn.</li>
+</ol>
+<p>Quy tắc địa chỉ truy cập:</p>
+<ul>
+<li>Từ 3 đến 30 ký tự, chỉ gồm chữ thường không dấu, chữ số và dấu gạch ngang <code>-</code>.</li>
+<li>Không bắt đầu hoặc kết thúc bằng dấu gạch ngang, không có hai dấu gạch ngang liền nhau.</li>
+<li>Một số tên được hệ thống giữ chỗ và không đăng ký được.</li>
+</ul>
+<p class="warn">Chọn địa chỉ cẩn thận: trang quản lý hiện chưa có chức năng đổi địa chỉ này. Gói Doanh nghiệp có thể dùng thêm <a href="/help/ten-mien-rieng">tên miền riêng</a>.</p>
+<p>Mỗi email đăng ký được một cửa hàng. Cửa hàng mới được <b>dùng thử miễn phí 14 ngày</b> với giới hạn của gói Dùng thử (xem <a href="/help/goi-cuoc#bang-gia">Bảng giá</a>).</p>
+</section>
+<section>
+<h2 id="nganh-nghe">Chọn ngành nghề <a class="anchor" href="#nganh-nghe" aria-label="Liên kết tới mục này">#</a></h2>
+<p>HiTechPOS có 15 mẫu ngành dựng sẵn:</p>
+<ul class="cols">
+<li>Tạp hóa / Minimart / Siêu thị mini</li><li>Cà phê / Trà sữa</li><li>Nhà hàng / Quán ăn</li><li>Karaoke / Bida</li>
+<li>Thời trang / Giày dép</li><li>Nhà thuốc</li><li>Điện thoại / Điện máy</li><li>Spa / Salon / Nail</li>
+<li>Vật liệu xây dựng</li><li>Mẹ &amp; bé</li><li>Mỹ phẩm</li><li>Tiệm bánh</li>
+<li>Nhà sách / Văn phòng phẩm</li><li>Nông sản / Thực phẩm tươi</li><li>Bán lẻ khác</li>
+</ul>
+<p>Mẫu ngành được áp dụng một lần khi tạo cửa hàng. Ngay sau khi cài đặt, máy bán hàng được thiết lập sẵn:</p>
+<ul>
+<li>Ngôn ngữ tiếng Việt, tiền tệ VND, múi giờ Việt Nam, định dạng ngày dd/mm/yyyy, làm tròn tiền.</li>
+<li>Các mức thuế GTGT 0%, 5%, 8%, 10% và “KCT-Không chịu thuế”, thuế mặc định theo ngành.</li>
+<li>Phương thức thanh toán ghi nhận thủ công phù hợp ngành như “Chuyển khoản”, “Ví MoMo”, “ZaloPay” (bên cạnh Tiền mặt và Thẻ).</li>
+<li>Đơn vị tính (ví dụ Thùng, Lốc, Kg cho tạp hóa; Ly, Phần cho cà phê), danh mục hàng và chân hoá đơn tiếng Việt.</li>
+<li>Bật các tính năng hợp với ngành, ví dụ cân điện tử và công nợ cho tạp hóa, ứng dụng gọi món Captain cho nhà hàng.</li>
+</ul>
+<p>Sau đó bạn vẫn tự thêm, sửa danh mục, đơn vị, thuế và hàng hoá trong máy bán hàng.</p>
+</section>
+<section>
+<h2 id="dang-nhap">Đăng nhập <a class="anchor" href="#dang-nhap" aria-label="Liên kết tới mục này">#</a></h2>
+<h3 id="dang-nhap-may-ban-hang">Máy bán hàng</h3>
+<ol class="steps">
+<li>Mở <code>https://<var>ten-cua-hang</var>.hitechpos.vn</code> trên máy tính, máy tính bảng hoặc điện thoại.</li>
+<li>Đăng nhập bằng email và mật khẩu đã đăng ký – đây là tài khoản quản trị của cửa hàng.</li>
+<li>Tạo tài khoản riêng cho từng thu ngân, nhân viên trong máy bán hàng. Số tài khoản nhân viên tối đa tuỳ gói cước.</li>
+</ol>
+<h3 id="dang-nhap-trang-quan-ly">Trang quản lý</h3>
+<ol class="steps">
+<li>Mở <a href="/account">app.hitechpos.vn/account</a>.</li>
+<li>Đăng nhập bằng email và mật khẩu đăng ký. Ngay sau khi đăng ký, trình duyệt dùng để đăng ký đã được đăng nhập sẵn.</li>
+<li>Phiên đăng nhập có hiệu lực 7 ngày. Bấm <b class="ui">Đăng xuất</b> ở góc trên khi dùng máy chung.</li>
+</ol>
+<p>Quên mật khẩu? Xem <a href="/help/tai-khoan#quen-mat-khau">Quên mật khẩu</a>.</p>
+</section>
+<section>
+<h2 id="du-lieu-mau">Dữ liệu mẫu <a class="anchor" href="#du-lieu-mau" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Để bạn bán thử được ngay, cửa hàng mới có sẵn một ít <b>hàng mẫu</b> (từ 5 đến 9 mặt hàng tuỳ ngành) và các <b>danh mục</b> của ngành đã chọn, ví dụ “Cà phê sữa đá” cho quán cà phê.</p>
+<ul>
+<li>Giá hàng mẫu tính bằng VND và <b>đã gồm thuế GTGT</b>, như giá niêm yết thông thường ở Việt Nam.</li>
+<li>Hàng mẫu không theo dõi tồn kho và có mã vạch nội bộ.</li>
+<li>Không có đơn bán hàng mẫu nào được tạo sẵn.</li>
+</ul>
+<p class="note">Hãy sửa giá, tên hoặc xoá hàng mẫu trong máy bán hàng trước khi bán thật, đặc biệt nếu bạn bật <a href="/help/hoa-don-dien-tu">hoá đơn điện tử</a>.</p>
+</section>
+<section>
+<h2 id="viec-tiep-theo">Việc nên làm tiếp theo <a class="anchor" href="#viec-tiep-theo" aria-label="Liên kết tới mục này">#</a></h2>
+<ol class="checklist">
+<li>Nhập hàng hoá, giá bán và tạo tài khoản nhân viên trong máy bán hàng.</li>
+<li><a href="/help/cau-hinh-thanh-toan">Cấu hình thanh toán QR</a> để khách quét mã chuyển khoản tại quầy.</li>
+<li><a href="/help/hoa-don-dien-tu">Kết nối hoá đơn điện tử</a> nếu cửa hàng phải xuất hoá đơn.</li>
+<li>Thử một đơn: <a href="/help/ban-hang">Bán hàng tại quầy</a>.</li>
+<li>Trước khi hết 14 ngày dùng thử, <a href="/help/goi-cuoc#gia-han">chọn gói cước</a>.</li>
+</ol>
+</section>
+    </article>
+    <nav class="pager" aria-label="Trang trước và sau">
+      <a class="prev" href="/help/"><small>Trang trước</small>Trang chủ trợ giúp</a>
+      <a class="next" href="/help/ban-hang"><small>Trang sau</small>Bán hàng tại quầy</a>
+    </nav>
+  </main>
+</div>
+<footer class="foot">
+  <p>HiTechPOS · HiTechCloud-VN · Phố Tuệ Software Solutions JSC</p>
+  <p><a href="/help/cau-hoi-thuong-gap#lien-he">Liên hệ hỗ trợ</a> · Phần mềm nguồn mở AGPL-3.0, dựa trên Posnic · <a href="/source">Mã nguồn</a></p>
+</footer>
+</body>
+</html>

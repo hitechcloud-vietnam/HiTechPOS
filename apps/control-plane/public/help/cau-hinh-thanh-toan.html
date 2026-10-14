@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cấu hình thanh toán QR – Trợ giúp HiTechPOS</title>
+<meta name="description" content="Khai báo tài khoản VietQR, payOS, Pay2S và biến động số dư để bật ô “QR chuyển khoản” trên màn hình bán hàng.">
+<link rel="stylesheet" href="/help/help.css">
+<script src="/help/help.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#noi-dung">Bỏ qua, tới nội dung</a>
+<header class="top">
+  <a class="brand" href="/help/"><strong>HiTechPOS</strong><span>Trung tâm trợ giúp</span></a>
+  <nav class="toplinks" aria-label="Liên kết chính"><a href="/">Trang chủ</a><a href="/account">Quản lý cửa hàng</a></nav>
+</header>
+<div class="layout">
+  <aside class="side">
+    <div class="search" data-help-search>
+      <label class="sr" for="help-q">Tìm trong trợ giúp</label>
+      <input id="help-q" type="search" placeholder="Tìm: VietQR, ký hiệu, mật khẩu…" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="help-q-results" aria-expanded="false">
+      <ul class="results" id="help-q-results" role="listbox" hidden></ul>
+    </div>
+    <button class="navtoggle" type="button" aria-expanded="false" aria-controls="help-nav">Danh mục trợ giúp</button>
+    <nav class="nav" id="help-nav" aria-label="Danh mục trợ giúp">
+      <a href="/help/">Trang chủ trợ giúp</a>
+      <div class="group"><div class="gt">Bắt đầu</div><a href="/help/bat-dau">Bắt đầu sử dụng</a></div>
+      <div class="group"><div class="gt">Bán hàng</div><a href="/help/ban-hang">Bán hàng tại quầy</a><a href="/help/thanh-toan-qr">Thanh toán QR chuyển khoản</a></div>
+      <div class="group"><div class="gt">Cài đặt</div><a href="/help/cau-hinh-thanh-toan" aria-current="page">Cấu hình thanh toán QR</a><a href="/help/hoa-don-dien-tu">Hoá đơn điện tử</a></div>
+      <div class="group"><div class="gt">Tài khoản</div><a href="/help/goi-cuoc">Gói cước và thanh toán phí</a><a href="/help/ten-mien-rieng">Tên miền riêng</a><a href="/help/tai-khoan">Mật khẩu, khoá API, dữ liệu</a></div>
+      <div class="group"><div class="gt">Hỗ trợ</div><a href="/help/cau-hoi-thuong-gap">Câu hỏi thường gặp</a></div>
+    </nav>
+  </aside>
+  <main id="noi-dung" class="content">
+    <nav class="crumbs" aria-label="Vị trí"><a href="/help/">Trợ giúp</a> <span aria-hidden="true">›</span> <span>Cài đặt</span></nav>
+    <article>
+    <h1>Cấu hình thanh toán QR</h1>
+    <p class="lead">Khai báo tài khoản VietQR, payOS, Pay2S và biến động số dư để bật ô “QR chuyển khoản” trên màn hình bán hàng.</p>
+    <nav class="toc" aria-label="Trên trang này"><div class="gt">Trên trang này</div><ol><li><a href="#chung">Trước khi bắt đầu</a></li><li><a href="#vietqr">VietQR (chuyển khoản trực tiếp)</a></li><li><a href="#payos">payOS</a></li><li><a href="#pay2s">Pay2S</a></li><li><a href="#bien-dong-so-du">Biến động số dư Pay2S (tự xác nhận VietQR)</a></li><li><a href="#mac-dinh">Chọn phương thức cho ô QR chuyển khoản</a></li></ol></nav>
+<section>
+<h2 id="chung">Trước khi bắt đầu <a class="anchor" href="#chung" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Mọi cấu hình nằm ở mục <b class="ui">Thanh toán tại quầy</b> trên <a href="/account">trang quản lý</a>. Chỉ chủ cửa hàng làm được việc này.</p>
+<ul>
+<li>Bạn chỉ cần một phương thức để bắt đầu. VietQR đơn giản nhất: chỉ cần số tài khoản ngân hàng.</li>
+<li>Khi lưu phương thức đầu tiên, ô <b class="ui">QR chuyển khoản</b> trên màn hình bán hàng tự được bật, có hiệu lực sau khoảng 1 phút.</li>
+<li>Khoá bí mật (API Key, Checksum Key, Secret Key, mã bảo mật) được mã hoá khi lưu và không bao giờ hiển thị lại – trang chỉ hiện <code>••••••••</code>.</li>
+<li>Dòng <b class="ui">Đang bật</b> cuối mục cho biết các phương thức đã cấu hình.</li>
+</ul>
+</section>
+<section>
+<h2 id="vietqr">VietQR (chuyển khoản trực tiếp) <a class="anchor" href="#vietqr" aria-label="Liên kết tới mục này">#</a></h2>
+<ol class="steps">
+<li><b>Ngân hàng (VietQR)</b>: gõ tên viết tắt (ví dụ <code>MB</code>, <code>Vietcombank</code>) hoặc mã BIN (ví dụ <code>970436</code>) rồi chọn trong danh sách ngân hàng NAPAS.</li>
+<li><b>Số tài khoản</b>: 4–19 chữ số hoặc chữ cái; khoảng trắng được tự bỏ.</li>
+<li><b>Tên chủ tài khoản</b>: được tự chuyển thành chữ in hoa không dấu, như trên ứng dụng ngân hàng.</li>
+<li>Bấm <b class="ui">Lưu VietQR</b>.</li>
+</ol>
+<p>VietQR không cần đăng ký cổng thanh toán. Thu ngân xác nhận tiền về bằng nút <b class="ui">Đã nhận tiền</b>, hoặc bật <a href="/help/cau-hinh-thanh-toan#bien-dong-so-du">biến động số dư Pay2S</a> để tự xác nhận.</p>
+<p class="note">Muốn đổi tài khoản nhận tiền, nhập thông tin mới và bấm Lưu VietQR lần nữa. Mã QR tạo sau đó dùng tài khoản mới.</p>
+</section>
+<section>
+<h2 id="payos">payOS <a class="anchor" href="#payos" aria-label="Liên kết tới mục này">#</a></h2>
+<ol class="steps">
+<li>Đăng ký tài khoản doanh nghiệp/hộ kinh doanh tại payOS và tạo một <b>kênh thanh toán</b> liên kết với tài khoản ngân hàng của cửa hàng.</li>
+<li>Trong kênh thanh toán, sao chép <b>Client ID</b>, <b>API Key</b> và <b>Checksum Key</b>.</li>
+<li>Dán cả ba vào form payOS trên trang quản lý, bấm <b class="ui">Lưu payOS</b>. Mỗi lần lưu cần nhập đủ cả ba giá trị.</li>
+<li>Sao chép dòng <b class="ui">Webhook payOS</b> hiện ngay dưới form, có dạng <code>https://app.hitechpos.vn/webhooks/shop/<var>mã-cửa-hàng</var>/payos</code>, và khai báo làm Webhook URL của kênh thanh toán trên trang quản trị payOS.</li>
+</ol>
+<p>Từ đó, giao dịch payOS tại quầy tự chuyển “Đã thanh toán” khi payOS báo về. Webhook được xác thực bằng Checksum Key riêng của cửa hàng bạn.</p>
+</section>
+<section>
+<h2 id="pay2s">Pay2S <a class="anchor" href="#pay2s" aria-label="Liên kết tới mục này">#</a></h2>
+<ol class="steps">
+<li>Lấy <b>Partner Code</b>, <b>Access Key</b> và <b>Secret Key</b> từ tài khoản Pay2S của cửa hàng.</li>
+<li>Nhập vào form Pay2S, chọn <b>Môi trường</b>: <b>Production</b> để thu tiền thật, <b>Sandbox</b> chỉ để thử nghiệm.</li>
+<li>Bấm <b class="ui">Lưu Pay2S</b>.</li>
+</ol>
+<p>Đường dẫn nhận kết quả (IPN) hiện ở dòng <b class="ui">IPN Pay2S</b>, có dạng <code>https://app.hitechpos.vn/webhooks/shop/<var>mã-cửa-hàng</var>/pay2s</code>. HiTechPOS tự gửi đường dẫn này kèm mỗi giao dịch; nếu Pay2S yêu cầu khai báo, dùng đúng đường dẫn đó.</p>
+</section>
+<section>
+<h2 id="bien-dong-so-du">Biến động số dư Pay2S (tự xác nhận VietQR) <a class="anchor" href="#bien-dong-so-du" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Tính năng này cho phép chuyển khoản VietQR tự được xác nhận, thu ngân không cần bấm <b class="ui">Đã nhận tiền</b>. Cần một tài khoản Pay2S đang theo dõi <b>chính tài khoản ngân hàng đã khai báo ở phần VietQR</b>.</p>
+<ol class="steps">
+<li>Tự đặt một <b>mã bảo mật</b> ngẫu nhiên, dài ít nhất 16 ký tự. Không dùng lại mật khẩu khác.</li>
+<li>Trên trang quản lý, nhập mã vào ô <b class="ui">mã bảo mật webhook</b> và bấm <b class="ui">Lưu</b>. Trạng thái chuyển thành “đang bật”.</li>
+<li>Trong Pay2S, tạo webhook giao dịch trỏ tới đường dẫn hiện trên trang quản lý, dạng <code>https://app.hitechpos.vn/webhooks/shop/<var>mã-cửa-hàng</var>/bank-feed</code>, với xác thực <code>Bearer <var>mã bảo mật</var></code>.</li>
+<li>Thử một giao dịch VietQR nhỏ để kiểm tra.</li>
+</ol>
+<p>Cách khớp giao dịch và các trường hợp chuyển sang “Cần đối soát”: xem <a href="/help/thanh-toan-qr#bien-dong-so-du">Tự động xác nhận qua biến động số dư</a>.</p>
+</section>
+<section>
+<h2 id="mac-dinh">Chọn phương thức cho ô QR chuyển khoản <a class="anchor" href="#mac-dinh" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Dòng <b class="ui">Ô “QR chuyển khoản” trên màn hình bán hàng dùng</b> quyết định mã QR được tạo qua đâu:</p>
+<ul>
+<li><b>Tự chọn</b>: ưu tiên payOS, rồi Pay2S, rồi VietQR – trong số các phương thức đã cấu hình. payOS và Pay2S tự xác nhận nên được ưu tiên.</li>
+<li><b>VietQR</b>, <b>payOS</b> hoặc <b>Pay2S</b>: luôn dùng phương thức đó.</li>
+</ul>
+<p>Thay đổi được lưu ngay khi chọn. Nếu chọn một phương thức chưa cấu hình, hệ thống quay về Tự chọn.</p>
+</section>
+    </article>
+    <nav class="pager" aria-label="Trang trước và sau">
+      <a class="prev" href="/help/thanh-toan-qr"><small>Trang trước</small>Thanh toán QR chuyển khoản</a>
+      <a class="next" href="/help/hoa-don-dien-tu"><small>Trang sau</small>Hoá đơn điện tử</a>
+    </nav>
+  </main>
+</div>
+<footer class="foot">
+  <p>HiTechPOS · HiTechCloud-VN · Phố Tuệ Software Solutions JSC</p>
+  <p><a href="/help/cau-hoi-thuong-gap#lien-he">Liên hệ hỗ trợ</a> · Phần mềm nguồn mở AGPL-3.0, dựa trên Posnic · <a href="/source">Mã nguồn</a></p>
+</footer>
+</body>
+</html>

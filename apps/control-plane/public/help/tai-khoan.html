@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Mật khẩu, khoá API và dữ liệu – Trợ giúp HiTechPOS</title>
+<meta name="description" content="Đổi hoặc lấy lại mật khẩu trang quản lý, tạo khoá API cho máy bán hàng và tải toàn bộ dữ liệu cửa hàng.">
+<link rel="stylesheet" href="/help/help.css">
+<script src="/help/help.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#noi-dung">Bỏ qua, tới nội dung</a>
+<header class="top">
+  <a class="brand" href="/help/"><strong>HiTechPOS</strong><span>Trung tâm trợ giúp</span></a>
+  <nav class="toplinks" aria-label="Liên kết chính"><a href="/">Trang chủ</a><a href="/account">Quản lý cửa hàng</a></nav>
+</header>
+<div class="layout">
+  <aside class="side">
+    <div class="search" data-help-search>
+      <label class="sr" for="help-q">Tìm trong trợ giúp</label>
+      <input id="help-q" type="search" placeholder="Tìm: VietQR, ký hiệu, mật khẩu…" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="help-q-results" aria-expanded="false">
+      <ul class="results" id="help-q-results" role="listbox" hidden></ul>
+    </div>
+    <button class="navtoggle" type="button" aria-expanded="false" aria-controls="help-nav">Danh mục trợ giúp</button>
+    <nav class="nav" id="help-nav" aria-label="Danh mục trợ giúp">
+      <a href="/help/">Trang chủ trợ giúp</a>
+      <div class="group"><div class="gt">Bắt đầu</div><a href="/help/bat-dau">Bắt đầu sử dụng</a></div>
+      <div class="group"><div class="gt">Bán hàng</div><a href="/help/ban-hang">Bán hàng tại quầy</a><a href="/help/thanh-toan-qr">Thanh toán QR chuyển khoản</a></div>
+      <div class="group"><div class="gt">Cài đặt</div><a href="/help/cau-hinh-thanh-toan">Cấu hình thanh toán QR</a><a href="/help/hoa-don-dien-tu">Hoá đơn điện tử</a></div>
+      <div class="group"><div class="gt">Tài khoản</div><a href="/help/goi-cuoc">Gói cước và thanh toán phí</a><a href="/help/ten-mien-rieng">Tên miền riêng</a><a href="/help/tai-khoan" aria-current="page">Mật khẩu, khoá API, dữ liệu</a></div>
+      <div class="group"><div class="gt">Hỗ trợ</div><a href="/help/cau-hoi-thuong-gap">Câu hỏi thường gặp</a></div>
+    </nav>
+  </aside>
+  <main id="noi-dung" class="content">
+    <nav class="crumbs" aria-label="Vị trí"><a href="/help/">Trợ giúp</a> <span aria-hidden="true">›</span> <span>Tài khoản</span></nav>
+    <article>
+    <h1>Mật khẩu, khoá API và dữ liệu</h1>
+    <p class="lead">Đổi hoặc lấy lại mật khẩu trang quản lý, tạo khoá API cho máy bán hàng và tải toàn bộ dữ liệu cửa hàng.</p>
+    <nav class="toc" aria-label="Trên trang này"><div class="gt">Trên trang này</div><ol><li><a href="#doi-mat-khau">Đổi mật khẩu</a></li><li><a href="#quen-mat-khau">Quên mật khẩu</a></li><li><a href="#khoa-api">Khoá API cho máy bán hàng</a></li><li><a href="#xuat-du-lieu">Xuất dữ liệu cửa hàng</a></li></ol></nav>
+<section>
+<h2 id="doi-mat-khau">Đổi mật khẩu <a class="anchor" href="#doi-mat-khau" aria-label="Liên kết tới mục này">#</a></h2>
+<ol class="steps">
+<li>Trên <a href="/account">trang quản lý</a>, mục <b class="ui">Đổi mật khẩu</b>, nhập mật khẩu hiện tại và mật khẩu mới (ít nhất 8 ký tự).</li>
+<li>Bấm <b class="ui">Đổi mật khẩu</b>. Mọi phiên đăng nhập khác của trang quản lý bị đăng xuất; trình duyệt đang dùng vẫn giữ đăng nhập.</li>
+</ol>
+<p class="note">Việc này chỉ đổi mật khẩu <b>trang quản lý</b>. Mật khẩu đăng nhập máy bán hàng được quản lý riêng trong máy bán hàng.</p>
+</section>
+<section>
+<h2 id="quen-mat-khau">Quên mật khẩu <a class="anchor" href="#quen-mat-khau" aria-label="Liên kết tới mục này">#</a></h2>
+<ol class="steps">
+<li>Mở <a href="/reset">trang đặt lại mật khẩu</a> (hoặc bấm <b class="ui">Quên mật khẩu?</b> ở form đăng nhập trang quản lý).</li>
+<li>Nhập email đã đăng ký và bấm <b class="ui">Gửi liên kết</b>. Trang luôn báo cùng một thông báo, dù email có đăng ký hay không, để người khác không dò được email.</li>
+<li>Mở email “Đặt lại mật khẩu HiTechPOS”, bấm nút trong email. Liên kết có hiệu lực <b>60 phút</b> và chỉ dùng được <b>một lần</b>.</li>
+<li>Nhập mật khẩu mới hai lần và bấm <b class="ui">Đặt mật khẩu mới</b>. Mọi phiên đăng nhập cũ bị đăng xuất.</li>
+</ol>
+<p>Không thấy email? Kiểm tra thư mục Spam/Quảng cáo, chờ vài phút rồi gửi lại. Cách này áp dụng cho trang quản lý; nếu không đăng nhập được máy bán hàng, <a href="/help/cau-hoi-thuong-gap#lien-he">liên hệ hỗ trợ</a>.</p>
+</section>
+<section>
+<h2 id="khoa-api">Khoá API cho máy bán hàng <a class="anchor" href="#khoa-api" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Khoá API cho phép máy bán hàng khác hoặc phần mềm tích hợp gọi API của HiTechPOS (tạo thanh toán QR tại quầy, phát hành hoá đơn điện tử) thay mặt cửa hàng.</p>
+<ol class="steps">
+<li>Mục <b class="ui">Khoá API cho máy bán hàng</b>, nhập <b>Tên thiết bị</b> (ví dụ “Quầy 1”) và bấm <b class="ui">Tạo khoá</b>.</li>
+<li>Khoá có dạng <code>htp_live_…</code> và <b>chỉ hiện một lần</b>. Dán ngay vào thiết bị hoặc phần mềm cần dùng.</li>
+<li>Bảng bên dưới liệt kê tên thiết bị, 4 ký tự cuối của khoá, ngày tạo, trạng thái. Bấm <b class="ui">Thu hồi</b> khi mất thiết bị hoặc không dùng nữa – khoá ngừng hoạt động ngay.</li>
+</ol>
+<ul>
+<li>HiTechPOS chỉ lưu dạng băm của khoá, nên không thể xem lại khoá cũ. Mất khoá thì tạo khoá mới và thu hồi khoá cũ.</li>
+<li>Khi cửa hàng bị tạm ngưng, mọi khoá API tạm thời không dùng được.</li>
+<li>Lập trình viên: tài liệu API nằm trong tệp <code>docs/API.md</code> của <a href="/source">mã nguồn HiTechPOS</a>.</li>
+</ul>
+<h3 id="khoa-noi-bo">Khoá nội bộ của màn hình bán hàng</h3>
+<p>Khi bạn lưu cấu hình thanh toán QR lần đầu, hệ thống tự tạo khoá tên <b>“Posnic – màn hình bán hàng”</b> để ô QR chuyển khoản hoạt động. <b>Đừng thu hồi khoá này.</b> Nếu lỡ thu hồi, lưu lại bất kỳ cấu hình nào trong mục Thanh toán tại quầy (ví dụ chọn lại phương thức cho ô QR) để hệ thống cấp khoá mới, rồi đợi khoảng 1 phút.</p>
+</section>
+<section>
+<h2 id="xuat-du-lieu">Xuất dữ liệu cửa hàng <a class="anchor" href="#xuat-du-lieu" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Mục <b class="ui">Dữ liệu cửa hàng</b> → <b class="ui">Tải dữ liệu cửa hàng</b> tải về toàn bộ dữ liệu của máy bán hàng (đơn bán, hàng hoá, khách hàng, cài đặt…) để tự lưu trữ hoặc chuyển sang hệ thống khác.</p>
+<ul>
+<li>Tệp có tên dạng <code>hitechpos-<var>ten-cua-hang</var>-<var>ngày</var>.ndjson.gz</code>: định dạng NDJSON nén gzip, mỗi dòng là một bản ghi kèm tên bảng dữ liệu; dòng đầu ghi thông tin cửa hàng, thời điểm xuất và danh sách bảng.</li>
+<li>Mật khẩu, mã PIN, khoá và token đăng nhập được loại bỏ khỏi tệp.</li>
+<li>Giải nén bằng các công cụ hỗ trợ gzip (7-Zip, WinRAR…); mở tệp bằng trình soạn thảo văn bản hoặc công cụ xử lý JSON.</li>
+<li>Nếu máy chủ chưa hỗ trợ, trang báo “Chức năng xuất dữ liệu chưa sẵn sàng trên máy chủ này”.</li>
+</ul>
+<p class="warn">Tệp chứa dữ liệu khách hàng của bạn. Lưu trữ cẩn thận và không gửi cho người không có trách nhiệm.</p>
+</section>
+    </article>
+    <nav class="pager" aria-label="Trang trước và sau">
+      <a class="prev" href="/help/ten-mien-rieng"><small>Trang trước</small>Tên miền riêng</a>
+      <a class="next" href="/help/cau-hoi-thuong-gap"><small>Trang sau</small>Câu hỏi thường gặp</a>
+    </nav>
+  </main>
+</div>
+<footer class="foot">
+  <p>HiTechPOS · HiTechCloud-VN · Phố Tuệ Software Solutions JSC</p>
+  <p><a href="/help/cau-hoi-thuong-gap#lien-he">Liên hệ hỗ trợ</a> · Phần mềm nguồn mở AGPL-3.0, dựa trên Posnic · <a href="/source">Mã nguồn</a></p>
+</footer>
+</body>
+</html>

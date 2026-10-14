@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Tên miền riêng – Trợ giúp HiTechPOS</title>
+<meta name="description" content="Dùng địa chỉ của chính cửa hàng, ví dụ pos.cuahang.vn, cho máy bán hàng. Có trong gói Doanh nghiệp.">
+<link rel="stylesheet" href="/help/help.css">
+<script src="/help/help.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#noi-dung">Bỏ qua, tới nội dung</a>
+<header class="top">
+  <a class="brand" href="/help/"><strong>HiTechPOS</strong><span>Trung tâm trợ giúp</span></a>
+  <nav class="toplinks" aria-label="Liên kết chính"><a href="/">Trang chủ</a><a href="/account">Quản lý cửa hàng</a></nav>
+</header>
+<div class="layout">
+  <aside class="side">
+    <div class="search" data-help-search>
+      <label class="sr" for="help-q">Tìm trong trợ giúp</label>
+      <input id="help-q" type="search" placeholder="Tìm: VietQR, ký hiệu, mật khẩu…" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="help-q-results" aria-expanded="false">
+      <ul class="results" id="help-q-results" role="listbox" hidden></ul>
+    </div>
+    <button class="navtoggle" type="button" aria-expanded="false" aria-controls="help-nav">Danh mục trợ giúp</button>
+    <nav class="nav" id="help-nav" aria-label="Danh mục trợ giúp">
+      <a href="/help/">Trang chủ trợ giúp</a>
+      <div class="group"><div class="gt">Bắt đầu</div><a href="/help/bat-dau">Bắt đầu sử dụng</a></div>
+      <div class="group"><div class="gt">Bán hàng</div><a href="/help/ban-hang">Bán hàng tại quầy</a><a href="/help/thanh-toan-qr">Thanh toán QR chuyển khoản</a></div>
+      <div class="group"><div class="gt">Cài đặt</div><a href="/help/cau-hinh-thanh-toan">Cấu hình thanh toán QR</a><a href="/help/hoa-don-dien-tu">Hoá đơn điện tử</a></div>
+      <div class="group"><div class="gt">Tài khoản</div><a href="/help/goi-cuoc">Gói cước và thanh toán phí</a><a href="/help/ten-mien-rieng" aria-current="page">Tên miền riêng</a><a href="/help/tai-khoan">Mật khẩu, khoá API, dữ liệu</a></div>
+      <div class="group"><div class="gt">Hỗ trợ</div><a href="/help/cau-hoi-thuong-gap">Câu hỏi thường gặp</a></div>
+    </nav>
+  </aside>
+  <main id="noi-dung" class="content">
+    <nav class="crumbs" aria-label="Vị trí"><a href="/help/">Trợ giúp</a> <span aria-hidden="true">›</span> <span>Tài khoản</span></nav>
+    <article>
+    <h1>Tên miền riêng</h1>
+    <p class="lead">Dùng địa chỉ của chính cửa hàng, ví dụ pos.cuahang.vn, cho máy bán hàng. Có trong gói Doanh nghiệp.</p>
+    <nav class="toc" aria-label="Trên trang này"><div class="gt">Trên trang này</div><ol><li><a href="#them">Thêm tên miền</a></li><li><a href="#ban-ghi-dns">Bản ghi TXT và CNAME</a></li><li><a href="#luu-y">Lưu ý</a></li></ol></nav>
+<section>
+<h2 id="them">Thêm tên miền <a class="anchor" href="#them" aria-label="Liên kết tới mục này">#</a></h2>
+<ol class="steps">
+<li>Trên <a href="/account">trang quản lý</a>, mục <b class="ui">Tên miền riêng</b>, nhập tên miền (ví dụ <code>pos.cuahang.vn</code>) và bấm <b class="ui">Thêm tên miền</b>.</li>
+<li>Trang hiện hai bản ghi DNS cần tạo ở nơi quản lý tên miền của bạn (xem bảng dưới).</li>
+<li>Tạo xong, bấm <b class="ui">Xác minh</b>. Bản ghi DNS có thể mất vài phút đến vài giờ để có hiệu lực; nếu báo chưa thấy bản ghi TXT, đợi thêm rồi bấm lại.</li>
+<li>Khi đã xác minh, máy bán hàng trả lời ở tên miền mới. Chứng chỉ HTTPS được cấp tự động ở lần truy cập đầu tiên.</li>
+</ol>
+</section>
+<section>
+<h2 id="ban-ghi-dns">Bản ghi TXT và CNAME <a class="anchor" href="#ban-ghi-dns" aria-label="Liên kết tới mục này">#</a></h2>
+<div class="table"><table>
+<thead><tr><th>Loại</th><th>Tên</th><th>Giá trị</th><th>Mục đích</th></tr></thead>
+<tbody>
+<tr><td>TXT</td><td><code>_hitechpos.pos.cuahang.vn</code></td><td><code>hitechpos-verify=<var>mã xác minh</var></code></td><td>Chứng minh bạn sở hữu tên miền</td></tr>
+<tr><td>CNAME</td><td><code>pos.cuahang.vn</code></td><td><code><var>ten-cua-hang</var>.hitechpos.vn</code></td><td>Trỏ tên miền về cửa hàng</td></tr>
+</tbody></table></div>
+<p>Sao chép đúng tên và giá trị hiện trên trang quản lý – mã xác minh là riêng cho từng tên miền. Một số nhà cung cấp DNS tự thêm tên miền gốc vào ô Tên; khi đó chỉ nhập phần đầu (<code>_hitechpos.pos</code> và <code>pos</code>).</p>
+<p class="note">Nên dùng tên miền con như <code>pos.cuahang.vn</code> hoặc <code>banhang.cuahang.vn</code>: nhiều nhà cung cấp DNS không cho đặt CNAME ở tên miền gốc <code>cuahang.vn</code>.</p>
+</section>
+<section>
+<h2 id="luu-y">Lưu ý <a class="anchor" href="#luu-y" aria-label="Liên kết tới mục này">#</a></h2>
+<ul>
+<li>Mỗi cửa hàng dùng tối đa 5 tên miền riêng.</li>
+<li>Không dùng được tên miền thuộc <code>hitechpos.vn</code>, hoặc tên miền đang được cửa hàng khác sử dụng.</li>
+<li>Địa chỉ <code><var>ten-cua-hang</var>.hitechpos.vn</code> vẫn tiếp tục hoạt động song song.</li>
+<li>Bấm <b class="ui">Gỡ</b> để ngừng dùng một tên miền. Sau khi gỡ, máy bán hàng không còn trả lời ở tên miền đó.</li>
+<li>Trang quản lý vẫn ở <code>app.hitechpos.vn/account</code>; tên miền riêng chỉ dành cho máy bán hàng.</li>
+</ul>
+</section>
+    </article>
+    <nav class="pager" aria-label="Trang trước và sau">
+      <a class="prev" href="/help/goi-cuoc"><small>Trang trước</small>Gói cước và thanh toán phí</a>
+      <a class="next" href="/help/tai-khoan"><small>Trang sau</small>Mật khẩu, khoá API và dữ liệu</a>
+    </nav>
+  </main>
+</div>
+<footer class="foot">
+  <p>HiTechPOS · HiTechCloud-VN · Phố Tuệ Software Solutions JSC</p>
+  <p><a href="/help/cau-hoi-thuong-gap#lien-he">Liên hệ hỗ trợ</a> · Phần mềm nguồn mở AGPL-3.0, dựa trên Posnic · <a href="/source">Mã nguồn</a></p>
+</footer>
+</body>
+</html>

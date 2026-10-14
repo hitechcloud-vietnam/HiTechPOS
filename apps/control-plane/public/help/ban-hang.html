@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Bán hàng tại quầy – Trợ giúp HiTechPOS</title>
+<meta name="description" content="Tạo đơn trên máy bán hàng, thu tiền mặt hoặc ghi nhận các phương thức khác. Dành cho thu ngân.">
+<link rel="stylesheet" href="/help/help.css">
+<script src="/help/help.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#noi-dung">Bỏ qua, tới nội dung</a>
+<header class="top">
+  <a class="brand" href="/help/"><strong>HiTechPOS</strong><span>Trung tâm trợ giúp</span></a>
+  <nav class="toplinks" aria-label="Liên kết chính"><a href="/">Trang chủ</a><a href="/account">Quản lý cửa hàng</a></nav>
+</header>
+<div class="layout">
+  <aside class="side">
+    <div class="search" data-help-search>
+      <label class="sr" for="help-q">Tìm trong trợ giúp</label>
+      <input id="help-q" type="search" placeholder="Tìm: VietQR, ký hiệu, mật khẩu…" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="help-q-results" aria-expanded="false">
+      <ul class="results" id="help-q-results" role="listbox" hidden></ul>
+    </div>
+    <button class="navtoggle" type="button" aria-expanded="false" aria-controls="help-nav">Danh mục trợ giúp</button>
+    <nav class="nav" id="help-nav" aria-label="Danh mục trợ giúp">
+      <a href="/help/">Trang chủ trợ giúp</a>
+      <div class="group"><div class="gt">Bắt đầu</div><a href="/help/bat-dau">Bắt đầu sử dụng</a></div>
+      <div class="group"><div class="gt">Bán hàng</div><a href="/help/ban-hang" aria-current="page">Bán hàng tại quầy</a><a href="/help/thanh-toan-qr">Thanh toán QR chuyển khoản</a></div>
+      <div class="group"><div class="gt">Cài đặt</div><a href="/help/cau-hinh-thanh-toan">Cấu hình thanh toán QR</a><a href="/help/hoa-don-dien-tu">Hoá đơn điện tử</a></div>
+      <div class="group"><div class="gt">Tài khoản</div><a href="/help/goi-cuoc">Gói cước và thanh toán phí</a><a href="/help/ten-mien-rieng">Tên miền riêng</a><a href="/help/tai-khoan">Mật khẩu, khoá API, dữ liệu</a></div>
+      <div class="group"><div class="gt">Hỗ trợ</div><a href="/help/cau-hoi-thuong-gap">Câu hỏi thường gặp</a></div>
+    </nav>
+  </aside>
+  <main id="noi-dung" class="content">
+    <nav class="crumbs" aria-label="Vị trí"><a href="/help/">Trợ giúp</a> <span aria-hidden="true">›</span> <span>Bán hàng</span></nav>
+    <article>
+    <h1>Bán hàng tại quầy</h1>
+    <p class="lead">Tạo đơn trên máy bán hàng, thu tiền mặt hoặc ghi nhận các phương thức khác. Dành cho thu ngân.</p>
+    <nav class="toc" aria-label="Trên trang này"><div class="gt">Trên trang này</div><ol><li><a href="#tao-don">Tạo đơn</a></li><li><a href="#tien-mat">Thanh toán tiền mặt</a></li><li><a href="#phuong-thuc-thu-cong">Chuyển khoản, MoMo, ZaloPay ghi nhận thủ công</a></li><li><a href="#qr">Thanh toán QR chuyển khoản</a></li><li><a href="#sau-khi-ban">Sau khi bán</a></li></ol></nav>
+<section>
+<h2 id="tao-don">Tạo đơn <a class="anchor" href="#tao-don" aria-label="Liên kết tới mục này">#</a></h2>
+<ol class="steps">
+<li>Đăng nhập máy bán hàng tại <code>https://<var>ten-cua-hang</var>.hitechpos.vn</code> và mở màn hình bán hàng.</li>
+<li>Thêm hàng vào đơn: quét mã vạch, gõ tên/mã vào ô <b class="ui">Quét mã vạch hoặc tìm mặt hàng...</b>, hoặc chạm vào mặt hàng.</li>
+<li>Sửa số lượng, giảm giá nếu cần.</li>
+<li>Nếu khách cần hoá đơn GTGT ghi tên công ty, chọn khách hàng đã lưu mã số thuế (xem <a href="/help/hoa-don-dien-tu#nguoi-mua">Thông tin người mua</a>).</li>
+<li>Bấm <b class="ui">THANH TOÁN</b> và chọn cách khách trả tiền.</li>
+</ol>
+<p>Cần để khách chờ? Dùng <b class="ui">Lưu tạm đơn</b> để giữ đơn và mở lại sau. Đơn lưu tạm chưa phải đơn đã bán nên không được xuất hoá đơn điện tử.</p>
+</section>
+<section>
+<h2 id="tien-mat">Thanh toán tiền mặt <a class="anchor" href="#tien-mat" aria-label="Liên kết tới mục này">#</a></h2>
+<ol class="steps">
+<li>Trong cửa sổ thanh toán, chọn <b class="ui">Tiền mặt</b>.</li>
+<li>Nhập số tiền khách đưa. Máy bán hàng tính <b class="ui">Tiền thừa trả khách</b>.</li>
+<li>Hoàn tất đơn và <b class="ui">In hoá đơn</b> nếu khách cần.</li>
+</ol>
+<p>Tiền mặt được cộng vào số tiền két của ca bán hàng.</p>
+</section>
+<section>
+<h2 id="phuong-thuc-thu-cong">Chuyển khoản, MoMo, ZaloPay ghi nhận thủ công <a class="anchor" href="#phuong-thuc-thu-cong" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Các phương thức như <b>Chuyển khoản</b>, <b>Ví MoMo</b>, <b>ZaloPay</b>, <b>Thẻ</b> trong danh sách thanh toán chỉ dùng để <b>ghi nhận</b> khách đã trả theo cách đó. Máy bán hàng không tạo mã QR và không tự kiểm tra tiền đã về hay chưa – thu ngân tự kiểm tra trước khi chốt đơn.</p>
+<p>Muốn hiện mã QR đúng số tiền và để hệ thống tự xác nhận, dùng ô <b class="ui">QR chuyển khoản</b>: xem <a href="/help/thanh-toan-qr">Thanh toán QR chuyển khoản</a>.</p>
+</section>
+<section>
+<h2 id="qr">Thanh toán QR chuyển khoản <a class="anchor" href="#qr" aria-label="Liên kết tới mục này">#</a></h2>
+<p>Khi cửa hàng đã <a href="/help/cau-hinh-thanh-toan">cấu hình thanh toán QR</a>, cửa sổ thanh toán có ô <b class="ui">QR chuyển khoản</b>. Khách quét mã bằng ứng dụng ngân hàng, tiền về thẳng tài khoản của cửa hàng. Hướng dẫn chi tiết: <a href="/help/thanh-toan-qr#cac-buoc">Các bước tại quầy</a>.</p>
+</section>
+<section>
+<h2 id="sau-khi-ban">Sau khi bán <a class="anchor" href="#sau-khi-ban" aria-label="Liên kết tới mục này">#</a></h2>
+<ul>
+<li><b>Hoá đơn điện tử</b>: nếu bật <a href="/help/hoa-don-dien-tu#tu-dong">tự động phát hành khi chốt đơn</a>, HiTechPOS tự xuất hoá đơn cho đơn đã thanh toán, thu ngân không cần làm gì thêm.</li>
+<li><b>Giao dịch QR</b>: chủ cửa hàng xem 100 giao dịch QR gần nhất ở mục <b class="ui">Giao dịch tại quầy gần đây</b> trên <a href="/account">trang quản lý</a>.</li>
+<li><b>Trả hàng</b> sau khi đã xuất hoá đơn điện tử cần lập hoá đơn điều chỉnh – xem <a href="/help/hoa-don-dien-tu#loi">Xử lý lỗi</a>.</li>
+</ul>
+</section>
+    </article>
+    <nav class="pager" aria-label="Trang trước và sau">
+      <a class="prev" href="/help/bat-dau"><small>Trang trước</small>Bắt đầu với HiTechPOS</a>
+      <a class="next" href="/help/thanh-toan-qr"><small>Trang sau</small>Thanh toán QR chuyển khoản</a>
+    </nav>
+  </main>
+</div>
+<footer class="foot">
+  <p>HiTechPOS · HiTechCloud-VN · Phố Tuệ Software Solutions JSC</p>
+  <p><a href="/help/cau-hoi-thuong-gap#lien-he">Liên hệ hỗ trợ</a> · Phần mềm nguồn mở AGPL-3.0, dựa trên Posnic · <a href="/source">Mã nguồn</a></p>
+</footer>
+</body>
+</html>
