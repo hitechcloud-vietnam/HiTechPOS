@@ -52,6 +52,14 @@ const TEMPLATES = {
     ],
     cta: { href: `${config.publicUrl}/account`, label: 'Xem lịch sử thanh toán' },
   }),
+  passwordReset: ({ config, token }) => ({
+    subject: 'Đặt lại mật khẩu HiTechPOS',
+    paragraphs: [
+      'Có yêu cầu đặt lại mật khẩu trang quản lý HiTechPOS cho email này.',
+      'Liên kết có hiệu lực trong 60 phút và chỉ dùng được một lần. Nếu bạn không yêu cầu, hãy bỏ qua email này.',
+    ],
+    cta: { href: `${config.publicUrl}/reset?token=${encodeURIComponent(token)}`, label: 'Đặt lại mật khẩu' },
+  }),
   suspended: ({ tenant, config }) => ({
     subject: `Cửa hàng ${tenant.businessName} tạm ngưng do hết hạn`,
     paragraphs: [
@@ -106,6 +114,22 @@ function createNotifier({ store, config, now = () => new Date(), transport, logg
     }
   }
 
+  /* One-off message to an address (no once-per-key bookkeeping). */
+  async function sendTo(to, name, ctx = {}) {
+    const message = render(name, { config, ...ctx });
+    if (!mailer) {
+      logger.info?.(`[notify] (no SMTP) ${name} -> ${to}: ${message.subject}`);
+      return 'logged';
+    }
+    try {
+      await mailer.sendMail({ from, to, subject: message.subject, html: message.html, text: message.text });
+      return 'sent';
+    } catch (e) {
+      logger.warn(`[notify] ${name} to ${to} failed: ${e.message}`);
+      return 'failed';
+    }
+  }
+
   /* Daily: trial reminders 3 days and 1 day before the end. */
   async function runReminders() {
     const out = [];
@@ -125,7 +149,7 @@ function createNotifier({ store, config, now = () => new Date(), transport, logg
     return out;
   }
 
-  return { send, runReminders, render };
+  return { send, sendTo, runReminders, render };
 }
 
 module.exports = { createNotifier, render, TEMPLATES };

@@ -53,6 +53,7 @@ const MESSAGES = {
   sale_already_paid: 'Hoá đơn này đã được thanh toán.',
   payment_not_in_review: 'Giao dịch không ở trạng thái cần đối soát.',
   rate_limited: 'Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút.',
+  reset_token_invalid: 'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.',
   payment_not_found: 'Không tìm thấy giao dịch.',
   manual_confirm_not_allowed: 'Chỉ xác nhận thủ công được với VietQR chuyển khoản trực tiếp.',
   payos_configuration_invalid: 'Thông tin kết nối payOS chưa đầy đủ.',
@@ -115,10 +116,14 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
 
   app.use(express.json({ limit: '64kb' }));
 
-  const auth = (req, _res, next) => {
+  /* A password change or reset invalidates every session issued before it. */
+  const auth = async (req, _res, next) => {
     const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
     const claims = verifyToken(token, config.sessionSecret, { now: now().getTime() });
     if (!claims) return next(httpError('unauthorized', 401));
+    const account = await store.accounts.findById(claims.sub);
+    if (!account) return next(httpError('unauthorized', 401));
+    if (account.passwordChangedAt && claims.iat * 1000 < new Date(account.passwordChangedAt).getTime() - 1000) return next(httpError('unauthorized', 401));
     req.account = claims;
     next();
   };
@@ -183,6 +188,42 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
     if (!account || !verifyPassword((req.body || {}).password, account.passwordHash)) throw httpError('credentials_invalid', 401);
     const tenant = await store.tenants.findOne({ ownerAccountId: String(account._id) });
     res.json({ token: signToken({ sub: String(account._id), tenantId: tenant ? String(tenant._id) : null }, config.sessionSecret, { now: now().getTime() }) });
+  });
+
+  /*
+   * Password reset: always answers 200 so the endpoint does not reveal which
+   * emails have accounts. The emailed token is stored only as a SHA-256 hash,
+   * is single-use and expires after an hour.
+   */
+  const crypto = require('node:crypto');
+  const sha256 = (v) => crypto.createHash('sha256').update(String(v)).digest('hex');
+  app.post('/api/auth/forgot', loginLimit, async (req, res) => {
+    const email = String((req.body || {}).email || '').trim().toLowerCase();
+    const account = EMAIL.test(email) ? await store.accounts.findByEmail(email) : null;
+    if (account) {
+      const token = crypto.randomBytes(32).toString('base64url');
+      await store.accounts.update(account._id, { resetTokenHash: sha256(token), resetExpiresAt: new Date(now().getTime() + 3600000).toISOString() });
+      await notifier.sendTo(account.email, 'passwordReset', { token }).catch(() => {});
+    }
+    res.json({ ok: true, message: 'Nếu email đã đăng ký, hướng dẫn đặt lại mật khẩu đã được gửi.' });
+  });
+  app.post('/api/auth/reset', loginLimit, async (req, res) => {
+    const { token, password } = req.body || {};
+    if (typeof password !== 'string' || password.length < 8) throw httpError('password_weak', 422);
+    const account = typeof token === 'string' && token ? await store.accounts.findOne({ resetTokenHash: sha256(token) }) : null;
+    if (!account || !account.resetExpiresAt || new Date(account.resetExpiresAt).getTime() < now().getTime()) throw httpError('reset_token_invalid', 400);
+    await store.accounts.update(account._id, { passwordHash: hashPassword(password), resetTokenHash: null, resetExpiresAt: null, passwordChangedAt: now().toISOString() });
+    res.json({ ok: true });
+  });
+  app.post('/api/me/password', auth, async (req, res) => {
+    const { currentPassword, newPassword } = req.body || {};
+    const account = await store.accounts.findById(req.account.sub);
+    if (!account || !verifyPassword(currentPassword, account.passwordHash)) throw httpError('credentials_invalid', 401);
+    if (typeof newPassword !== 'string' || newPassword.length < 8) throw httpError('password_weak', 422);
+    const changedAt = now().toISOString();
+    await store.accounts.update(account._id, { passwordHash: hashPassword(newPassword), passwordChangedAt: changedAt });
+    const token = signToken({ sub: String(account._id), tenantId: req.account.tenantId }, config.sessionSecret, { now: now().getTime() + 1000 });
+    res.json({ ok: true, token });
   });
 
   app.get('/api/me', auth, async (req, res) => {

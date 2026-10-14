@@ -53,6 +53,13 @@ function createMemoryStore() {
       },
       async findByEmail(email) { return clone([...accounts.values()].find((a) => a.email === email) || null); },
       async findById(id) { return clone(accounts.get(String(id)) || null); },
+      async findOne(query) { return clone([...accounts.values()].find((a) => matches(a, query)) || null); },
+      async update(id, patch) {
+        const row = accounts.get(String(id));
+        if (!row) return null;
+        Object.assign(row, clone(patch));
+        return clone(row);
+      },
     },
     payments: createPaymentStore(),
     /* E-invoice idempotency guard rows, keyed "<tenantId>:<refId>". */

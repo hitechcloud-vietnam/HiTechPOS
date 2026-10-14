@@ -48,7 +48,7 @@
     <button>Đăng nhập</button>
   </form>
   <p class="msg" id="loginMsg"></p>
-  <p class="muted">Chưa có cửa hàng? <a href="/">Đăng ký dùng thử</a></p>
+  <p class="muted"><a href="/reset">Quên mật khẩu?</a> · Chưa có cửa hàng? <a href="/">Đăng ký dùng thử</a></p>
 </section>
 
 <main id="app" hidden>
@@ -161,6 +161,15 @@
     <h2>Lịch sử thanh toán gói cước</h2>
     <div class="wrap"><table><thead><tr><th>Thời gian</th><th>Gói</th><th>Số tiền</th><th>Cổng</th><th>Trạng thái</th></tr></thead><tbody id="subs"></tbody></table></div>
   </section>
+  <section class="card">
+    <h2>Đổi mật khẩu</h2>
+    <form id="pwForm" class="row">
+      <label>Mật khẩu hiện tại <input name="currentPassword" type="password" required autocomplete="current-password"></label>
+      <label>Mật khẩu mới <input name="newPassword" type="password" minlength="8" required autocomplete="new-password"></label>
+      <button>Đổi mật khẩu</button>
+    </form>
+    <p class="msg" id="pwMsg"></p>
+  </section>
 </main>
 
 <footer style="text-align:center;padding:16px;color:#5d6b7a;font-size:.85rem">HiTechPOS · Phần mềm nguồn mở AGPL-3.0, dựa trên Posnic · <a href="/source">Mã nguồn</a></footer>
@@ -238,6 +247,16 @@ function renderSettings(s) {
   $('#methods').textContent = s.methods.length ? s.methods.map((m) => ({ vietqr: 'VietQR', payos: 'payOS', pay2s: 'Pay2S' }[m])).join(', ') : 'chưa cấu hình';
 }
 
+$('#pwForm').onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const r = await api('POST', '/api/me/password', Object.fromEntries(new FormData(e.target)));
+    token = r.token;
+    try { localStorage.setItem('hitechpos_token', token); } catch {}
+    e.target.reset();
+    say($('#pwMsg'), 'Đã đổi mật khẩu. Các phiên đăng nhập khác đã bị đăng xuất.', true);
+  } catch (err) { say($('#pwMsg'), err.message); }
+};
 $('#keyForm').onsubmit = async (e) => {
   e.preventDefault();
   try {

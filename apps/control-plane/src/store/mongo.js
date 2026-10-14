@@ -22,6 +22,7 @@ async function createMongoStore({ uri, dbName }) {
     tenants.createIndex({ hosts: 1 }),
     tenants.createIndex({ apiKeyHashes: 1 }),
     accounts.createIndex({ email: 1 }, { unique: true }),
+    accounts.createIndex({ resetTokenHash: 1 }, { sparse: true }),
     payments.createIndex({ orderCode: 1 }, { unique: true }),
     payments.createIndex({ reference: 1, createdAt: -1 }),
     einvoices.createIndex({ tenantId: 1, updatedAt: -1 }),
@@ -58,6 +59,8 @@ async function createMongoStore({ uri, dbName }) {
       },
       findByEmail: async (email) => out(await accounts.findOne({ email })),
       findById: async (v) => (id(v) ? out(await accounts.findOne({ _id: id(v) })) : null),
+      findOne: async (query) => out(await accounts.findOne(query)),
+      update: async (v, patch) => out(await accounts.findOneAndUpdate({ _id: id(v) }, { $set: patch }, { returnDocument: 'after' })),
     },
     /* Payment journal store contract from @hitechpos/payment-core. The status
        guard on update is what makes concurrent callbacks safe. */
