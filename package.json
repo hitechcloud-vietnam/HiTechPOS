@@ -12,5 +12,8 @@
   "scripts": {
     "test": "npm run test --workspaces --if-present",
     "start:control-plane": "npm run start -w @hitechpos/control-plane"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
   }
 }

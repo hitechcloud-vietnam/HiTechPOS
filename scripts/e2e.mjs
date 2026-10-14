@@ -129,7 +129,9 @@ try {
   check(/^htp_\d+$/.test(qr.id) && String(qr.image_url).startsWith('data:image/svg+xml'), 'till shows a HiTechPOS VietQR', qr);
   let status = await json('GET', `${shard}/api/sales/getQrStatus?id=${qr.id}`, undefined, till);
   check(status.data.data.payment !== 'captured', 'not paid before confirmation');
-  const confirm = await json('GET', `${shard}/api/sales/hitechQrConfirm?id=${qr.id}`, undefined, till);
+  /* POST (CSRF-protected for cookie sessions; Bearer calls are exempt). A GET must not confirm. */
+  check((await json('GET', `${shard}/api/sales/hitechQrConfirm?id=${qr.id}`, undefined, till)).status >= 400, 'a GET link cannot confirm a payment');
+  const confirm = await json('POST', `${shard}/api/sales/hitechQrConfirm`, { id: qr.id }, till);
   check(confirm.status === 200, 'cashier confirms the transfer', confirm.data);
   status = await json('GET', `${shard}/api/sales/getQrStatus?id=${qr.id}`, undefined, till);
   check(status.data.data.payment === 'captured' && status.data.data.qr_code === 'closed', 'till sees the payment captured', status.data);

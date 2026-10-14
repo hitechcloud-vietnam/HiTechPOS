@@ -96,7 +96,10 @@ function decryptSecret(blob, key) {
  */
 const byHost = new Map();
 let lastLoad = 0;
-const RELOAD_MS = 60_000;
+/* SHARD_RELOAD_MS shortens the refresh for end-to-end tests, which would
+   otherwise wait a minute for a secret written seconds ago. Unset (every
+   production shard) keeps the minute; it is never shorter than a second. */
+const RELOAD_MS = Math.max(1000, parseInt(process.env.SHARD_RELOAD_MS, 10) || 60_000);
 /* Long enough that a stream of requests for a hostname that will never exist
    cannot turn into a stream of control-database queries. */
 const MISS_BACKOFF_MS = 10_000;

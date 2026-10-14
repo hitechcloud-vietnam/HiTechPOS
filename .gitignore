@@ -8,3 +8,4 @@ coverage/
 
 # Build output of the Posnic web frontend (gulp build), served by the shard
 upstream/pos/frontend/public/
+scripts/.e2e-ui-out/
