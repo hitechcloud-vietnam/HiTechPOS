@@ -1,0 +1,25 @@
+# HiTechPOS reverse proxy. Wildcard certificates need a DNS challenge, so
+# Caddy must be built with the DNS provider module (e.g. Cloudflare):
+#   xcaddy build --with github.com/caddy-dns/cloudflare
+# and CLOUDFLARE_API_TOKEN in its environment.
+{
+	email {$ACME_EMAIL}
+}
+
+app.hitechpos.vn {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:4100
+}
+
+*.hitechpos.vn {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	}
+	encode zstd gzip
+	# Only the control plane (on localhost) may name a shop by header; strip
+	# it from the internet so nobody can address another shop with it.
+	request_header -X-Hitech-Shop
+	reverse_proxy 127.0.0.1:6000 {
+		header_up Host {host}
+	}
+}
