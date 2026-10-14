@@ -4840,5 +4840,14 @@
   "lang_paid_bill_use_return": "Als het oorspronkelijke geld daadwerkelijk is geïnd, gebruik dan Retourartikelen om de terugbetaling vast te leggen.",
   "lang_paid_bill_previous": "Eerder opgenomen",
   "lang_paid_bill_corrected": "Gecorrigeerde factuur",
-  "lang_reload_this_page_to_review_the_paid_bill_c": "Laad deze pagina opnieuw om de correctie van de betaalde factuur te bekijken."
+  "lang_reload_this_page_to_review_the_paid_bill_c": "Laad deze pagina opnieuw om de correctie van de betaalde factuur te bekijken.",
+  "lang_qr_customer_display": "Klantscherm",
+  "lang_qr_money_received": "Geld ontvangen",
+  "lang_based_on_posnic_agpl_source": "Gebaseerd op Posnic (AGPL-3.0) · Broncode",
+  "lang_app_name": "HiTechPOS",
+  "lang_app_title": "HiTechPOS",
+  "lang_about_hitechpos": "Over HiTechPOS",
+  "lang_hitechpos_company": "HiTechPOS · Phố Tuệ Software Solutions JSC (HiTechCloud-VN)",
+  "lang_already_have_a_hitechpos_account": "Heb je al een HiTechPOS-account?",
+  "lang_another_hitechpos_account": "Een ander HiTechPOS-account?"
 }
