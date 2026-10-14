@@ -41,7 +41,14 @@ npm test                                  # ~140 test, không cần mạng/CSDL
 STORE=memory npm run start:control-plane  # http://127.0.0.1:4100 – đăng ký, /account – quản lý cửa hàng
 ```
 
-Chạy đầy đủ (MongoDB + Posnic shard + control plane) xem [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+Kiểm thử toàn chuỗi (MongoDB + Posnic shard + control plane + màn hình bán hàng + hoá đơn điện tử):
+
+```sh
+(cd upstream/pos/api && npm ci --ignore-scripts)
+node scripts/e2e.mjs        # máy không có mạng: MONGOMS_SYSTEM_BINARY=/đường/dẫn/mongod
+```
+
+Triển khai thật xem [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Tài liệu
 

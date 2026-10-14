@@ -41,3 +41,23 @@ jobs:
           cache-dependency-path: upstream/pos/api/package-lock.json
       - run: npm ci --ignore-scripts --no-audit --no-fund --replace-registry-host=registry.npmmirror.com --registry=https://registry.npmjs.org/
       - run: npx jest -c jest.ci.config.js --ci --forceExit tests/unit
+
+  e2e:
+    # The whole stack: MongoDB replica set, Posnic shard, control plane.
+    # signup -> onboarding -> VietQR on the till -> sale -> e-invoice.
+    name: End-to-end (shard + control plane)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            upstream/pos/api/package-lock.json
+      - run: npm ci
+      - run: npm ci --ignore-scripts --no-audit --no-fund --replace-registry-host=registry.npmmirror.com --registry=https://registry.npmjs.org/
+        working-directory: upstream/pos/api
+      - run: node scripts/e2e.mjs
