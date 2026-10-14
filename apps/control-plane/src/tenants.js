@@ -5,6 +5,7 @@ const { fail } = require('@hitechpos/payment-core');
 const presets = require('@hitechpos/industry-presets');
 const { generateTenantSecrets, sealAll } = require('./secrets');
 const { getPlan } = require('./plans');
+const { nodeHttpTransport } = require('./http-transport');
 
 const RESERVED = new Set([
   'www', 'api', 'app', 'admin', 'administrator', 'root', 'mail', 'smtp', 'ftp', 'cdn', 'static', 'assets',
@@ -117,7 +118,7 @@ function createTenantService({ store, config, installer, now = () => new Date() 
  * through the shard. The shard picks the shop from SHARD_SHOP_HEADER, which
  * must be configured to the same header name on both sides.
  */
-function createHttpInstaller({ shardUrl, shopHeader, posnicKey, posnicSecret, baseDomain, transport = globalThis.fetch, timeoutMs = 60000, retryDelayMs = 11000 }) {
+function createHttpInstaller({ shardUrl, shopHeader, posnicKey, posnicSecret, baseDomain, transport = nodeHttpTransport, timeoutMs = 60000, retryDelayMs = 11000 }) {
   return {
     async install({ tenant, owner, industry }) {
       /* A 404 means the shard has not loaded the new registry row yet (it

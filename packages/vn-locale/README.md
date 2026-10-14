@@ -47,4 +47,4 @@ vn.findBank('vietcombank').bin;         // "970436"
 - **Tỉnh/thành**: 34 đơn vị theo Nghị quyết 202/2025/QH15 (6 thành phố trực thuộc trung ương +
   28 tỉnh). `id` là slug ổn định do HiTechPOS đặt, **không phải** mã đơn vị hành chính chính thức;
   `mergedFrom` liệt kê các tỉnh cũ được sáp nhập.
-- **Ngân hàng**: mã BIN theo danh sách NAPAS/VietQR; kiểm tra lại trước khi thêm mới.
+- **Ngân hàng**: 58 ngân hàng/tổ chức theo danh sách VietQR (api.vietqr.io/v2/banks, qua gói vietnam-qr-pay 1.5.1); tra cứu theo BIN, tên viết tắt, mã VietQR (`VCB`, `MBB`…) hoặc tên quen gọi.
