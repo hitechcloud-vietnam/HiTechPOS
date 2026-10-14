@@ -109,6 +109,33 @@ async function createMongoStore({ uri, dbName }) {
      * key/secret already stored on the branch are preserved.
      */
     shopBridge: {
+      /*
+       * Every collection of the shop's database as NDJSON lines
+       * {"collection", "doc"} in canonical Extended JSON, so ObjectIds and
+       * dates survive a re-import. Login secrets are stripped: they are no
+       * use outside this installation and dangerous in a downloaded file.
+       */
+      async *exportShop(tenant) {
+        const { EJSON } = require('mongodb').BSON;
+        const db = client.db(tenant.tenantDb);
+        const SECRET_KEYS = new Set(['password', 'passwordHash', 'apikey', 'userkey', 'api_key', 'token', 'jwt', 'secret', 'pin', 'pin_hash', 'reset_token']);
+        const scrub = (v) => {
+          if (Array.isArray(v)) return v.map(scrub);
+          if (v && typeof v === 'object' && v.constructor === Object) {
+            const out = {};
+            for (const [k, val] of Object.entries(v)) if (!SECRET_KEYS.has(k)) out[k] = scrub(val);
+            return out;
+          }
+          return v;
+        };
+        const names = (await db.listCollections({}, { nameOnly: true }).toArray()).map((c) => c.name).filter((n) => !n.startsWith('system.') && n !== 'sessions').sort();
+        yield { type: 'meta', shop: tenant.subdomain, exportedAt: new Date().toISOString(), collections: names };
+        for (const name of names) {
+          for await (const doc of db.collection(name).find({})) {
+            yield { type: 'doc', collection: name, doc: EJSON.serialize(scrub(doc), { relaxed: false }) };
+          }
+        }
+      },
       async setQrGateway(tenant, { enabled, method }) {
         const branches = client.db(tenant.tenantDb).collection('branches');
         for (const b of await branches.find({}, { projection: { payment_gateway: 1 } }).toArray()) {

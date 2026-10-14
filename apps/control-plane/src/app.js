@@ -53,6 +53,7 @@ const MESSAGES = {
   sale_already_paid: 'Hoá đơn này đã được thanh toán.',
   payment_not_in_review: 'Giao dịch không ở trạng thái cần đối soát.',
   rate_limited: 'Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút.',
+  export_unavailable: 'Chức năng xuất dữ liệu chưa sẵn sàng trên máy chủ này.',
   reset_token_invalid: 'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.',
   payment_not_found: 'Không tìm thấy giao dịch.',
   manual_confirm_not_allowed: 'Chỉ xác nhận thủ công được với VietQR chuyển khoản trực tiếp.',
@@ -245,6 +246,23 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   });
 
   /* ---- counter payments: owner settings ---- */
+  /* Data portability / self-held backup: the whole shop database as
+     gzipped NDJSON (store/mongo.js exportShop). */
+  app.get('/api/shop/export', auth, async (req, res) => {
+    if (!store.shopBridge || !store.shopBridge.exportShop) throw httpError('export_unavailable', 501);
+    const tenant = await store.tenants.findById(req.account.tenantId);
+    if (!tenant) throw httpError('tenant_not_found', 404);
+    const zlib = require('node:zlib');
+    const { Readable } = require('node:stream');
+    const { pipeline } = require('node:stream/promises');
+    const day = now().toISOString().slice(0, 10);
+    res.set({ 'content-type': 'application/gzip', 'content-disposition': `attachment; filename="hitechpos-${tenant.subdomain}-${day}.ndjson.gz"`, 'cache-control': 'no-store' });
+    const lines = Readable.from((async function* () {
+      for await (const row of store.shopBridge.exportShop(tenant)) yield JSON.stringify(row) + '\n';
+    })());
+    await pipeline(lines, zlib.createGzip(), res);
+    logger.info?.(`[export] ${tenant.subdomain} by ${req.account.sub}`);
+  });
   app.get('/api/shop/payment-settings', auth, async (req, res) => res.json(await counter.getSettings(req.account.tenantId)));
   app.put('/api/shop/payment-settings', auth, async (req, res) => res.json(await counter.updateSettings(req.account.tenantId, req.body || {})));
   app.get('/api/shop/api-keys', auth, async (req, res) => res.json(await counter.listApiKeys(req.account.tenantId)));

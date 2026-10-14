@@ -162,6 +162,13 @@
     <div class="wrap"><table><thead><tr><th>Thời gian</th><th>Gói</th><th>Số tiền</th><th>Cổng</th><th>Trạng thái</th></tr></thead><tbody id="subs"></tbody></table></div>
   </section>
   <section class="card">
+    <h2>Dữ liệu cửa hàng</h2>
+    <p class="muted">Tải toàn bộ dữ liệu bán hàng, hàng hoá, khách hàng… (định dạng NDJSON nén) để tự lưu trữ hoặc chuyển sang hệ thống khác. Mật khẩu và khoá đăng nhập không được xuất.</p>
+    <button class="ghost" id="exportBtn">Tải dữ liệu cửa hàng</button>
+    <p class="msg" id="exportMsg"></p>
+  </section>
+
+  <section class="card">
     <h2>Đổi mật khẩu</h2>
     <form id="pwForm" class="row">
       <label>Mật khẩu hiện tại <input name="currentPassword" type="password" required autocomplete="current-password"></label>
@@ -247,6 +254,15 @@ function renderSettings(s) {
   $('#methods').textContent = s.methods.length ? s.methods.map((m) => ({ vietqr: 'VietQR', payos: 'payOS', pay2s: 'Pay2S' }[m])).join(', ') : 'chưa cấu hình';
 }
 
+$('#exportBtn').onclick = async () => {
+  say($('#exportMsg'), 'Đang chuẩn bị tệp…', true);
+  const res = await fetch('/api/shop/export', { headers: { authorization: 'Bearer ' + token } });
+  if (!res.ok) return say($('#exportMsg'), ((await res.json().catch(() => ({}))).message) || 'Không xuất được dữ liệu');
+  const name = (/filename="([^"]+)"/.exec(res.headers.get('content-disposition') || '') || [])[1] || 'hitechpos.ndjson.gz';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(await res.blob()); a.download = name; a.click();
+  say($('#exportMsg'), 'Đã tải xong ' + name, true);
+};
 $('#pwForm').onsubmit = async (e) => {
   e.preventDefault();
   try {
