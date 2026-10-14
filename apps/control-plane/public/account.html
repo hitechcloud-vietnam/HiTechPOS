@@ -13,6 +13,7 @@
   main { max-width: 1000px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
   .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
   h2 { margin: 0 0 12px; font-size: 1.15rem; }
+  .row + .row { margin-top: 12px; }
   .row { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); align-items: end; }
   label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); }
   input, select, button { font: inherit; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--line); color: var(--ink); }
@@ -22,7 +23,7 @@
   th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); }
   .wrap { overflow-x: auto; }
   .pill { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: .8rem; background: #eef4fb; }
-  .paid, .active { background: #e5f6ef; color: var(--ok); }
+  .paid, .active, .issued { background: #e5f6ef; color: var(--ok); }
   .pending, .trialing { background: #fff4e0; color: var(--warn); }
   .cancelled, .expired, .failed, .review { background: #fbeaea; color: var(--err); }
   .muted { color: var(--muted); font-size: .85rem; }
@@ -123,6 +124,34 @@
   </section>
 
   <section class="card">
+    <h2>Hoá đơn điện tử</h2>
+    <p class="muted">Phát hành hoá đơn điện tử (kể cả hoá đơn khởi tạo từ máy tính tiền) qua hợp đồng của cửa hàng với nhà cung cấp.</p>
+    <form id="einvoiceForm">
+      <div class="row">
+        <label>Nhà cung cấp <select name="provider" id="eiProvider">
+          <option value="viettel">Viettel S-Invoice</option><option value="misa">MISA meInvoice</option><option value="matbao">Mắt Bão</option><option value="mock">Thử nghiệm (không gửi cơ quan thuế)</option></select></label>
+        <label>Môi trường <select name="environment"><option value="sandbox">Thử nghiệm (sandbox)</option><option value="production">Chính thức</option></select></label>
+        <label>Loại hoá đơn <select name="invoiceType"><option value="GTGT">Hoá đơn GTGT</option><option value="BANHANG">Hoá đơn bán hàng</option></select></label>
+        <label>Ký hiệu (VD 1C26MAA) <input name="series" required></label>
+      </div>
+      <div class="row" id="eiConn"></div>
+      <div class="row">
+        <label>MST đơn vị bán <input name="sellerTaxCode" required></label>
+        <label>Tên đơn vị bán <input name="sellerName" required></label>
+        <label>Địa chỉ <input name="sellerAddress" required></label>
+        <label>Điện thoại <input name="sellerPhone"></label>
+      </div>
+      <div class="row">
+        <label style="flex-direction:row;display:flex;gap:8px;align-items:center"><input type="checkbox" name="fromCashRegister" checked> Khởi tạo từ máy tính tiền</label>
+        <label style="flex-direction:row;display:flex;gap:8px;align-items:center"><input type="checkbox" name="autoIssue"> Tự động phát hành khi chốt đơn</label>
+        <button>Lưu cấu hình hoá đơn</button>
+      </div>
+    </form>
+    <p class="msg" id="eiMsg"></p>
+    <div class="wrap"><table><thead><tr><th>Thời gian</th><th>Đơn hàng</th><th>Số HĐ</th><th>Ký hiệu</th><th>Mã tra cứu</th><th>Trạng thái</th><th></th></tr></thead><tbody id="eiList"></tbody></table></div>
+  </section>
+
+  <section class="card">
     <h2>Giao dịch tại quầy gần đây</h2>
     <div class="wrap"><table><thead><tr><th>Thời gian</th><th>Hoá đơn</th><th>Phương thức</th><th>Số tiền</th><th>Trạng thái</th></tr></thead><tbody id="sales"></tbody></table></div>
   </section>
@@ -138,7 +167,7 @@
 const $ = (s) => document.querySelector(s);
 const vnd = (n) => new Intl.NumberFormat('vi-VN').format(n) + ' ₫';
 const dt = (s) => s ? new Date(s).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : '–';
-const STATUS = { paid: 'Đã thanh toán', pending: 'Chờ thanh toán', cancelled: 'Đã huỷ', expired: 'Hết hạn', failed: 'Thất bại', review: 'Cần đối soát', active: 'Đang hoạt động', trialing: 'Dùng thử' };
+const STATUS = { issued: 'Đã phát hành', paid: 'Đã thanh toán', pending: 'Chờ thanh toán', cancelled: 'Đã huỷ', expired: 'Hết hạn', failed: 'Thất bại', review: 'Cần đối soát', active: 'Đang hoạt động', trialing: 'Dùng thử' };
 const pill = (s) => `<span class="pill ${s}">${STATUS[s] || s}</span>`;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let token = null;
@@ -227,6 +256,55 @@ async function loadKeys() {
   });
 }
 
+const EI_FIELDS = { viettel: [['username', 'Tài khoản (thường là MST)'], ['password', 'Mật khẩu', 1], ['supplierTaxCode', 'MST người bán (nếu khác tài khoản)']],
+  misa: [['appId', 'AppID'], ['taxCode', 'MST'], ['username', 'Tài khoản'], ['password', 'Mật khẩu', 1]],
+  matbao: [['taxCode', 'MST'], ['username', 'Tài khoản'], ['password', 'Mật khẩu', 1]], mock: [] };
+const EI_STATE = { done: 'issued', pending: 'pending', unknown: 'review' };
+function renderEiConn(values = {}) {
+  const p = $('#eiProvider').value;
+  $('#eiConn').innerHTML = EI_FIELDS[p].map(([k, label, secret]) => `<label>${label} <input name="conn_${k}" ${secret ? 'type="password" autocomplete="new-password"' : ''} value="${esc(values[k] || '')}"></label>`).join('');
+}
+$('#eiProvider').onchange = () => renderEiConn();
+$('#einvoiceForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const connection = {};
+  for (const [k, v] of f.entries()) if (k.startsWith('conn_')) connection[k.slice(5)] = v;
+  try {
+    await api('PUT', '/api/shop/einvoice-settings', { provider: f.get('provider'), environment: f.get('environment'), invoiceType: f.get('invoiceType'), series: f.get('series'),
+      connection, seller: { taxCode: f.get('sellerTaxCode'), name: f.get('sellerName'), address: f.get('sellerAddress'), phone: f.get('sellerPhone') || undefined },
+      fromCashRegister: f.get('fromCashRegister') === 'on', autoIssue: f.get('autoIssue') === 'on' });
+    say($('#eiMsg'), 'Đã lưu cấu hình hoá đơn điện tử.', true);
+    loadEinvoices();
+  } catch (err) { say($('#eiMsg'), err.message); }
+};
+async function loadEinvoices() {
+  const s = await api('GET', '/api/shop/einvoice-settings');
+  const form = $('#einvoiceForm');
+  if (s) {
+    form.provider.value = s.provider; form.environment.value = s.environment; form.invoiceType.value = s.invoiceType; form.series.value = s.series;
+    form.sellerTaxCode.value = s.seller.taxCode; form.sellerName.value = s.seller.name; form.sellerAddress.value = s.seller.address; form.sellerPhone.value = s.seller.phone || '';
+    form.fromCashRegister.checked = s.fromCashRegister; form.autoIssue.checked = s.autoIssue;
+  } else if (!form.series.value) {
+    form.series.value = '1C' + String(new Date().getFullYear()).slice(2) + 'MAA';
+  }
+  renderEiConn(s ? s.connection : {});
+  const rows = await api('GET', '/api/shop/einvoices');
+  $('#eiList').innerHTML = rows.map((r) => `<tr><td>${dt(r.issuedAt || r.updatedAt)}</td><td>${esc(r.refId)}</td><td>${esc(r.invoiceNo || '')}</td><td>${esc((r.templateCode || '') + (r.series || ''))}</td>
+    <td>${r.lookupUrl ? `<a href="${esc(r.lookupUrl)}" target="_blank" rel="noopener">${esc(r.lookupCode || 'Tra cứu')}</a>` : esc(r.lookupCode || '')}</td>
+    <td>${pill(EI_STATE[r.state] || r.status || r.state)}</td>
+    <td>${r.state === 'unknown' ? `<button class="ghost" data-reconcile="${esc(r.refId)}">Đối soát</button>` : r.state === 'done' ? `<a href="#" data-pdf="${esc(r.refId)}">PDF</a>` : ''}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">Chưa có hoá đơn</td></tr>';
+  document.querySelectorAll('[data-reconcile]').forEach((b) => b.onclick = async () => {
+    try { await api('POST', `/api/shop/einvoices/${encodeURIComponent(b.dataset.reconcile)}/reconcile`); loadEinvoices(); } catch (err) { alert(err.message); }
+  });
+  document.querySelectorAll('[data-pdf]').forEach((a) => a.onclick = async (ev) => {
+    ev.preventDefault();
+    const res = await fetch(`/api/shop/einvoices/${encodeURIComponent(a.dataset.pdf)}/pdf`, { headers: { authorization: 'Bearer ' + token } });
+    if (!res.ok) return alert(((await res.json().catch(() => ({}))).message) || 'Không tải được PDF');
+    window.open(URL.createObjectURL(await res.blob()), '_blank');
+  });
+}
+
 async function load() {
   if (!token) return showLogin();
   const me = await api('GET', '/api/me');
@@ -242,6 +320,7 @@ async function load() {
     <td>${vnd(p.amount)}</td><td>${esc(p.provider)}</td><td>${pill(p.status)}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Chưa có giao dịch</td></tr>';
   renderSettings(await api('GET', '/api/shop/payment-settings'));
   loadKeys();
+  loadEinvoices().catch(() => {});
   const sales = await api('GET', '/api/shop/payments');
   $('#sales').innerHTML = sales.map((p) => `<tr><td>${dt(p.createdAt)}</td><td>${esc(p.metadata && p.metadata.saleRef)}</td><td>${esc(p.provider)}</td>
     <td>${vnd(p.amount)}</td><td>${pill(p.status)}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Chưa có giao dịch</td></tr>';
