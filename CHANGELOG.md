@@ -1,6 +1,6 @@
 # Nhật ký thay đổi
 
-Định dạng theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), phiên bản theo [SemVer](https://semver.org/lang/vi/). Phát hành: gắn tag `vX.Y.Z` trên `main`, workflow `.github/workflows/release.yml` tạo bản phát hành với nội dung mục tương ứng dưới đây.
+Định dạng theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), phiên bản theo [SemVer](https://semver.org/lang/vi/). Phát hành: gắn tag `vX.Y.Z` trên `main`, hoặc chạy tay workflow **Release** (Actions → Release → Run workflow, nhánh `main`, nhập phiên bản); workflow tạo tag và bản phát hành với nội dung mục tương ứng dưới đây.
 
 ## [0.2.0] - 2026-10-14
 
