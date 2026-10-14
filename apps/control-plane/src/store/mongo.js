@@ -54,7 +54,9 @@ async function createMongoStore({ uri, dbName }) {
       findById: async (v) => (id(v) ? out(await tenants.findOne({ _id: id(v) })) : null),
       findOne: async (query) => out(await tenants.findOne(query)),
       update: async (v, patch) => out(await tenants.findOneAndUpdate({ _id: id(v) }, { $set: patch }, { returnDocument: 'after' })),
-      list: async (query = {}) => (await tenants.find(query).sort({ createdAt: -1 }).limit(500).toArray()).map(out),
+      /* Every matching shop unless a limit is given: the periodic jobs
+         (expiry, reminders, e-invoice worker) must see all of them. */
+      list: async (query = {}, { limit = 0 } = {}) => (await tenants.find(query).sort({ createdAt: -1 }).limit(limit).toArray()).map(out),
     },
     accounts: {
       async insert(doc) {

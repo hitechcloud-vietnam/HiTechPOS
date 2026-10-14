@@ -24,6 +24,7 @@ services:
       SHARD_PORT: "6000"
       POSNIC_KEY: ${POSNIC_KEY:?set POSNIC_KEY}
       POSNIC_SECRET: ${POSNIC_SECRET:?set POSNIC_SECRET}
+      HITECH_PAY_URL: http://control-plane:4100
     depends_on: { mongo: { condition: service_healthy } }
 
   control-plane:
@@ -36,7 +37,10 @@ services:
       HOST: 0.0.0.0
       CONTROL_URI: mongodb://mongo:27017/?replicaSet=rs0
       SHARD_URL: http://shard:6000
-    ports: ["4100:4100"]
+    # Loopback only: the control plane trusts one proxy hop (X-Forwarded-For
+    # from Caddy). Published on all interfaces, any client could spoof its IP
+    # past the per-IP rate limits. Put Caddy (deploy/Caddyfile) in front.
+    ports: ["127.0.0.1:4100:4100"]
     depends_on: [shard]
 
 volumes:

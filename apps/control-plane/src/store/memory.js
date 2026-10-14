@@ -38,7 +38,10 @@ function createMemoryStore() {
         Object.assign(row, clone(patch));
         return clone(row);
       },
-      async list(query = {}) { return [...tenants.values()].filter((t) => matches(t, query)).map(clone); },
+      async list(query = {}, { limit = 0 } = {}) {
+        const rows = [...tenants.values()].filter((t) => matches(t, query)).sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+        return (limit > 0 ? rows.slice(0, limit) : rows).map(clone);
+      },
     },
     accounts: {
       async insert(doc) {

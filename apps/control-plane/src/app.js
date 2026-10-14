@@ -398,7 +398,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
     bankFeed: !!(t.paymentSettings && t.paymentSettings.bankFeed),
     einvoice: t.einvoiceSettings ? { provider: t.einvoiceSettings.provider, environment: t.einvoiceSettings.environment, autoIssue: !!t.einvoiceSettings.autoIssue } : null,
   };
-  app.get('/api/admin/tenants', admin, async (_req, res) => res.json((await store.tenants.list()).map(adminView)));
+  app.get('/api/admin/tenants', admin, async (_req, res) => res.json((await store.tenants.list({}, { limit: 500 })).map(adminView)));
   app.get('/api/admin/stats', admin, async (_req, res) => {
     const all = await store.tenants.list();
     const count = (f) => all.filter(f).length;
