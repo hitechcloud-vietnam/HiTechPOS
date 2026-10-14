@@ -20,3 +20,11 @@ test('bank feed: bearer token and normalisation', () => {
   assert.throws(() => parseBankFeed(BODY, { authorization: 'Bearer x', token: '' }), { code: 'pay2s_bank_feed_not_configured' });
   assert.throws(() => parseBankFeed('{"x":1}', { authorization: 'Bearer t', token: 't' }), { code: 'pay2s_bank_feed_invalid' });
 });
+
+test('bank feed: the token must match exactly (case and whitespace count)', () => {
+  const token = 'Ab3dEf-Qr';
+  assert.doesNotThrow(() => parseBankFeed(BODY, { authorization: `Bearer ${token}`, token }));
+  for (const given of ['AB3DEF-QR', 'ab3def-qr', `${token}  `, ` ${token}`, 'Ab3dEf-Q']) {
+    assert.throws(() => parseBankFeed(BODY, { authorization: `Bearer ${given}`, token }), { code: 'pay2s_bank_feed_unauthorized' }, given);
+  }
+});

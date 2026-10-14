@@ -84,6 +84,9 @@ function createBillingService({ store, providers, config, now = () => new Date()
     /* payOS's confirm-webhook test and callbacks for links this plane did
        not create are verified but unknown; acknowledge and ignore them. */
     if (!existing) return { acknowledged: true, ignored: 'unknown_order' };
+    /* HiTechCloud's own keys settle subscriptions only; shop till payments
+       are settled on the shop's webhook with the shop's keys. */
+    if (existing.purpose !== 'subscription' || existing.provider !== providerId) return { acknowledged: true, ignored: 'unknown_order' };
     const result = await journal.apply(event);
     if (result.changed && result.payment.status === PAYMENT_STATUS.PAID && result.payment.purpose === 'subscription') {
       await activate(result.payment);

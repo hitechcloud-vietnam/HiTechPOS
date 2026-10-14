@@ -1,6 +1,7 @@
 'use strict';
 
-const { safeEqual, fail } = require('@hitechpos/payment-core');
+const crypto = require('node:crypto');
+const { fail } = require('@hitechpos/payment-core');
 
 /*
  * Pay2S bank-transaction webhook ("biến động số dư"): Pay2S watches the
@@ -15,10 +16,18 @@ const { safeEqual, fail } = require('@hitechpos/payment-core');
  * This lets a plain VietQR transfer to the shop's account settle a counter
  * payment without the cashier confirming it by hand.
  */
+/* Exact, constant-time comparison. Unlike signatures (hex, case-free), the
+   token is a secret the shop chose: case and whitespace are significant.
+   Hashing first makes the comparison independent of the lengths. */
+function sameSecret(a, b) {
+  const h = (v) => crypto.createHash('sha256').update(String(v), 'utf8').digest();
+  return crypto.timingSafeEqual(h(a), h(b));
+}
+
 function verifyBearer(authorization, token) {
   if (typeof token !== 'string' || !token) fail('pay2s_bank_feed_not_configured', 422);
-  const given = String(authorization || '').replace(/^Bearer\s+/i, '');
-  if (!given || !safeEqual(token, given)) fail('pay2s_bank_feed_unauthorized', 401);
+  const given = String(authorization || '').replace(/^Bearer /i, '');
+  if (!given || !sameSecret(token, given)) fail('pay2s_bank_feed_unauthorized', 401);
 }
 
 function toAmount(value) {

@@ -294,7 +294,12 @@ function createCounterService({ store, config, now = () => new Date(), providerO
     const tenant = await tenantOrFail(tenantId);
     const event = await providerFor(tenant, method).verifyCallback(request);
     const existing = await journal.get(event.orderCode);
-    if (!existing || existing.reference !== String(tenant._id)) return { acknowledged: true, ignored: 'unknown_order' };
+    /* Only this shop's own till payments. Subscription rows share the journal
+       and the provider ids, and the shop chooses its own signing keys, so a
+       shop must never be able to settle anything but its own sales here. */
+    if (!existing || existing.reference !== String(tenant._id) || existing.purpose !== 'sale' || existing.provider !== method) {
+      return { acknowledged: true, ignored: 'unknown_order' };
+    }
     const r = await journal.apply(event);
     return { acknowledged: true, status: r.payment.status, ignored: r.ignored };
   }

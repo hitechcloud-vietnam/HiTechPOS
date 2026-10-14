@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const { createApp } = require('../src/app');
 const { createMemoryStore } = require('../src/store/memory');
 const { loadConfig } = require('../src/config');
-const { createProviderRegistry } = require('@hitechpos/payment-core');
+const { createProviderRegistry, createJournal } = require('@hitechpos/payment-core');
 const { dataSignature } = require('@hitechpos/payment-payos');
 const { decodeVietQR } = require('@hitechpos/vietqr');
 
@@ -141,4 +141,24 @@ test('Pay2S bank feed settles VietQR payments by order code', async (t) => {
   /* Same bank transaction delivered twice is applied once. */
   const again = await feed([{ id: 1, accountNumber: '0912345678', content: `${a.orderCode}`, transferType: 'IN', transferAmount: 85000 }]);
   assert.equal(again.json.matched[0].ignored, 'duplicate');
+});
+
+test("a shop's own webhook cannot settle its subscription payment", async (t) => {
+  const { call, server, store, signup } = await boot();
+  t.after(() => server.close());
+  const shop = await signup('tuthanhtoan');
+  await call('PUT', '/api/shop/payment-settings', { payos: { clientId: 'c', apiKey: 'k', checksumKey: SHOP_KEY } }, shop.token);
+  /* A pending subscription checkout of this shop, as billing.checkout opens it. */
+  const orderCode = 1791966752534999;
+  await createJournal({ store: store.payments }).open({ orderCode, provider: 'payos', amount: 8990000, purpose: 'subscription', reference: shop.id, metadata: {} });
+  for (const amount of [8990000, 8990001]) {
+    const data = { orderCode, amount, description: 'x', accountNumber: '0001', reference: 'FT-FAKE', transactionDateTime: '2026-10-14 12:00:00',
+      currency: 'VND', paymentLinkId: 'plx', code: '00', desc: 'Thành công' };
+    const r = await call('POST', `/webhooks/shop/${shop.id}/payos`, { code: '00', data, signature: dataSignature(data, SHOP_KEY) });
+    assert.equal(r.status, 200);
+    assert.equal(r.json.ignored, 'unknown_order');
+  }
+  const row = await store.payments.findByOrderCode(orderCode);
+  assert.equal(row.status, 'pending');
+  assert.equal(row.events.length, 0);
 });
