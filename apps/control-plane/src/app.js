@@ -12,11 +12,12 @@ const { createCounterService } = require('./counter');
 const { createEInvoiceService } = require('./einvoices');
 const { createNotifier } = require('./notify');
 const { createDomainService } = require('./domains');
-const { rateLimit, securityHeaders } = require('./security');
+const { rateLimit, securityHeaders, sharedCaller, credentialKey } = require('./security');
 const { isEmail } = require('@hitechpos/payment-core');
 const { hashPassword, verifyPassword } = require('./passwords');
 const { signToken, verifyToken } = require('./tokens');
 const { createOps } = require('./ops');
+const { createAdminConsoleRouter } = require('./admin-console');
 
 
 /* Error codes map to Vietnamese messages for the signup/billing UI. */
@@ -25,6 +26,7 @@ const MESSAGES = {
   subdomain_reserved: 'Tên miền này đã được hệ thống giữ chỗ.',
   subdomain_taken: 'Tên miền này đã có cửa hàng sử dụng.',
   business_name_invalid: 'Vui lòng nhập tên cửa hàng.',
+  industry_invalid: 'Ngành nghề không hợp lệ, vui lòng chọn lại.',
   email_invalid: 'Email không hợp lệ.',
   email_taken: 'Email này đã được đăng ký.',
   phone_invalid: 'Số điện thoại di động không hợp lệ.',
@@ -96,10 +98,13 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   const limits = config.rateLimits || {};
   /* Every route has a ceiling per client; sign-in, signup, admin and the
      POS API have their own, tighter or keyed, limits on top. */
-  app.use(rateLimit({ windowMs: 60000, max: limits.global ?? 600 }));
+  app.use(rateLimit({ windowMs: 60000, max: limits.global ?? 600, skip: sharedCaller }));
+  /* Providers' callbacks for every shop come from a few IPs: a separate,
+     wider per-IP ceiling; each one is still signature-checked. */
+  app.use('/webhooks', rateLimit({ windowMs: 60000, max: limits.webhooks ?? 6000 }));
   const loginLimit = rateLimit({ windowMs: 15 * 60000, max: limits.login ?? 20 });
   const signupLimit = rateLimit({ windowMs: 60 * 60000, max: limits.signup ?? 10 });
-  const posLimit = rateLimit({ windowMs: 60000, max: limits.pos ?? 300, key: (req) => String(req.headers.authorization || req.ip).slice(-24) });
+  const posLimit = rateLimit({ windowMs: 60000, max: limits.pos ?? 300, key: credentialKey });
   const adminLimit = rateLimit({ windowMs: 15 * 60000, max: limits.admin ?? 300 });
 
   /* Webhooks need the exact bytes the provider signed; mounted before the
@@ -188,6 +193,7 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
     if (typeof b.password !== 'string' || b.password.length < 8) throw httpError('password_weak', 422);
     const avail = await tenants.availability(b.subdomain);
     if (!avail.available) throw httpError(`subdomain_${avail.reason}`, avail.reason === 'taken' ? 409 : 422);
+    tenants.validate(b);
     let account;
     try {
       account = await store.accounts.insert({ email, name: String(b.ownerName || '').trim(), phone: normalizeVNPhone(b.phone), passwordHash: hashPassword(b.password), createdAt: now().toISOString() });
@@ -195,11 +201,19 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
       if (e.code === 'duplicate') throw httpError('email_taken', 409);
       throw e;
     }
-    const tenant = await tenants.signup(
-      { subdomain: b.subdomain, businessName: b.businessName, industry: b.industry, taxCode: b.taxCode, province: b.province,
-        owner: { email, name: account.name, phone: account.phone, password: b.password } },
-      { ownerAccountId: String(account._id) }
-    );
+    let tenant;
+    try {
+      tenant = await tenants.signup(
+        { subdomain: b.subdomain, businessName: b.businessName, industry: b.industry, taxCode: b.taxCode, province: b.province,
+          owner: { email, name: account.name, phone: account.phone, password: b.password } },
+        { ownerAccountId: String(account._id) }
+      );
+    } catch (e) {
+      /* No shop row was written (e.g. the subdomain was taken in between):
+         drop the account too, so the owner can simply try again. */
+      if (!(await store.tenants.findOne({ ownerAccountId: String(account._id) }))) await store.accounts.remove(account._id).catch(() => {});
+      throw e;
+    }
     const token = signToken({ sub: String(account._id), tenantId: String(tenant._id) }, config.sessionSecret, { now: now().getTime() });
     await notifier.send(tenant, 'welcome', 'welcome').catch((e) => logger.warn(`[notify] welcome: ${e.message}`));
     res.status(201).json({ token, tenant: view(tenant) });
@@ -413,6 +427,8 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   app.post('/api/admin/tenants/:id/resume', admin, async (req, res) => res.json(adminView(await tenants.setSuspended(req.params.id, false))));
   app.post('/api/admin/jobs/reminders', admin, async (_req, res) => res.json({ sent: await ops.trackJob('reminders', () => notifier.runReminders()) }));
   app.post('/api/admin/jobs/enforce-expiry', admin, async (_req, res) => res.json({ suspended: await ops.trackJob('expiry', () => billing.enforceExpiry()) }));
+  /* Operator console API (src/admin-console.js): search, detail, audited actions, revenue. */
+  app.use('/api/admin', admin, createAdminConsoleRouter({ store, config, billing, notifier, tenants, shopBridge: store.shopBridge || null, now, logger }));
 
   app.get('/vendor/qrcode.js', (_req, res) => res.type('js').sendFile(require.resolve('qrcode-generator/qrcode.js')));
   app.use(express.static(path.join(__dirname, '..', 'public'), { extensions: ['html'] }));

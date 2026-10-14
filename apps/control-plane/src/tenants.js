@@ -12,6 +12,16 @@ const RESERVED = new Set([
   'status', 'docs', 'help', 'support', 'billing', 'pay', 'payment', 'webhook', 'webhooks', 'dashboard',
   'console', 'portal', 'login', 'signup', 'register', 'auth', 'account', 'demo', 'test', 'staging', 'dev',
   'shard', 'control', 'hitech', 'hitechpos', 'hitechcloud', 'posnic',
+  /* Vietnamese words for the same pages, so a shop cannot pose as the platform */
+  'trangchu', 'dangnhap', 'dangky', 'taikhoan', 'matkhau', 'thanhtoan', 'hoadon', 'hotro', 'trogiup', 'quantri', 'banggia', 'doitac', 'daily',
+  /* payment, e-invoice and tax providers the platform talks to */
+  'payos', 'pay2s', 'vietqr', 'napas', 'momo', 'zalopay', 'vnpay', 'misa', 'meinvoice', 'viettel', 'sinvoice', 'matbao', 'thue', 'gdt', 'tongcucthue',
+  /* banks */
+  'vietcombank', 'vcb', 'vietinbank', 'bidv', 'agribank', 'techcombank', 'tcb', 'mbbank', 'mb', 'acb', 'vpbank', 'tpbank', 'sacombank', 'hdbank',
+  'vib', 'shb', 'msb', 'ocb', 'seabank', 'eximbank', 'lpbank', 'namabank', 'bacabank', 'abbank', 'pvcombank', 'kienlongbank', 'vikki', 'cake', 'timo',
+  /* mail, identity and well-known service names */
+  'webmail', 'email', 'imap', 'pop', 'pop3', 'mx', 'mta-sts', 'autodiscover', 'autoconfig', 'sso', 'id', 'oauth', 'secure', 'security', 'ns1', 'ns2',
+  'vpn', 'git', 'blog', 'news', 'shop', 'store', 'pos', 'metrics', 'grafana', 'monitor', 'backup', 'internal', 'static1', 'media', 'files', 'upload',
 ]);
 
 /* DNS label, lower case, 3-30 chars, no leading/trailing hyphen. It becomes
@@ -50,12 +60,21 @@ function createTenantService({ store, config, installer, onboarding = null, now 
     return { available: !taken, subdomain: n.subdomain, reason: taken ? 'taken' : undefined };
   }
 
-  async function signup(input, { ownerAccountId }) {
+  /* Everything signup() would reject on its own, checked before the owner
+     account is created so a rejected signup leaves nothing behind. */
+  function validate(input) {
     const n = normalizeSubdomain(input.subdomain);
     if (!n.ok) fail(`subdomain_${n.reason}`, 422);
-    const industry = presets.getPreset(input.industry || 'khac');
+    const industryId = input.industry || 'khac';
+    if (!presets.hasPreset(industryId)) fail('industry_invalid', 422);
     const businessName = String(input.businessName || '').trim();
     if (businessName.length < 2 || businessName.length > 120) fail('business_name_invalid', 422);
+    return { subdomain: n.subdomain, industry: presets.getPreset(industryId), businessName };
+  }
+
+  async function signup(input, { ownerAccountId }) {
+    const { subdomain, industry, businessName } = validate(input);
+    const n = { subdomain };
 
     const trial = getPlan('trial');
     const created = now();
@@ -134,7 +153,7 @@ function createTenantService({ store, config, installer, onboarding = null, now 
     return tenant;
   }
 
-  return { availability, signup, hostsOf, setSuspended };
+  return { availability, validate, signup, hostsOf, setSuspended };
 }
 
 /*

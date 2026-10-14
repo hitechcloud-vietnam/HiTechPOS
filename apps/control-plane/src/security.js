@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('node:crypto');
 const { rateLimit: expressRateLimit } = require('express-rate-limit');
 
 /*
@@ -8,18 +9,35 @@ const { rateLimit: expressRateLimit } = require('express-rate-limit');
  * message of the error handler, with standard RateLimit-* and Retry-After
  * headers.
  */
-function rateLimit({ windowMs, max, key, code = 'rate_limited' }) {
+function rateLimit({ windowMs, max, key, skip, code = 'rate_limited' }) {
   return expressRateLimit({
     windowMs,
     limit: max,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
     ...(key ? { keyGenerator: key } : {}),
-    /* the key may be an API key or IP; validations about IPv6 subnets do
-       not apply to the former */
-    validate: { keyGeneratorIpFallback: false },
+    ...(skip ? { skip } : {}),
     handler: (req, res, next) => next(Object.assign(new Error(code), { code, status: 429 })),
   });
+}
+
+/* Callers that are not one client per IP: every shop's till reaches
+   /pos/v1 through the shard on loopback, providers send all shops'
+   webhooks from a few IPs, and Caddy asks about certificates from
+   loopback. They have their own keyed limits or authentication; counting
+   them in the per-IP bucket would let one busy (or hostile) shop starve
+   all the others. */
+const SHARED_CALLER_PATHS = /^\/(?:pos\/v1\/|webhooks\/|internal\/tls-ask(?:$|\?))/;
+function sharedCaller(req) {
+  return SHARED_CALLER_PATHS.test(req.originalUrl || req.url || '');
+}
+
+/* Rate-limit key for a bearer credential: a digest, so neither the key nor
+   a suffix of it sits in the limiter's memory, and distinct keys never
+   collide on a shared suffix. */
+function credentialKey(req) {
+  const auth = req.headers.authorization;
+  return auth ? `k:${crypto.createHash('sha256').update(String(auth)).digest('base64url')}` : `ip:${req.ip}`;
 }
 
 /* Baseline headers. The pages are self-contained (inline script/style, the
@@ -37,4 +55,4 @@ function securityHeaders(req, res, next) {
   next();
 }
 
-module.exports = { rateLimit, securityHeaders };
+module.exports = { rateLimit, securityHeaders, sharedCaller, credentialKey };
