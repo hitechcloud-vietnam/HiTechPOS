@@ -1,0 +1,1342 @@
+/* assets/order-history/style.css */
+:root {
+    --primary-color: #e74c3c;
+    --secondary-color: #34495e;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --light-bg: #f8f9fa;
+    --border-color: #dee2e6;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--light-bg);
+    margin: 0;
+    padding: 0;
+}
+
+.modal-backdrop.show {
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+#orderDetailsModal.modal-behind {
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+#editOrderModal.modal-behind {
+    filter: blur(3px) !important;
+    -webkit-filter: blur(3px) !important;
+    opacity: 0.6 !important;
+    transition: all 0.3s ease !important;
+    pointer-events: none !important;
+}
+
+#removeItemConfirmModal {
+    z-index: 1060 !important;
+}
+
+.modal-backdrop:nth-of-type(2) {
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Page Loader */
+#page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loader {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Header */
+.mobile-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 15px 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.back-btn,
+.refresh-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: var(--secondary-color);
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+    cursor: pointer;
+}
+
+.back-btn:hover,
+.refresh-btn:hover {
+    background-color: var(--light-bg);
+}
+
+.store-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+/* Content */
+.content-wrapper {
+    margin-top: 70px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 70px);
+    overflow: hidden;
+}
+
+/* Section Block - Full Width */
+.section-block {
+    width: 100%;
+    margin: 0;
+    padding: 20px 20px 0 20px;
+    background: var(--light-bg);
+    flex-shrink: 0;
+}
+
+/* Search and Filter */
+.search-filter-container {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.search-box {
+    position: relative;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.search-box i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+    font-size: 12px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 8px 12px 8px 36px;
+    border: 2px solid var(--border-color);
+    border-radius: 25px;
+    font-size: 14px;
+    transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 8px rgba(231, 76, 60, 0.15);
+}
+
+.filter-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.filter-btn {
+    padding: 6px 12px;
+    border: 1px solid #e0e0e0;
+    background: white;
+    border-radius: 25px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    color: #333;
+    white-space: nowrap;
+}
+
+.filter-btn.active {
+    background: #e74c3c;
+    border-color: #e74c3c;
+    color: white;
+    box-shadow: 0 2px 6px rgba(231, 76, 60, 0.25);
+}
+
+.filter-btn:hover:not(.active) {
+    background: #f8f9fa;
+    border-color: #d0d0d0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Table Filter Header */
+.table-filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 10px 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    user-select: none;
+}
+
+.table-filter-header:hover {
+    background: #e9ecef;
+}
+
+.filter-header-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.table-filter-header i {
+    font-size: 18px;
+    color: #007bff;
+    transition: transform 0.3s;
+}
+
+.table-filter-header i.rotated {
+    transform: rotate(180deg);
+}
+
+/* All Filters Container - Collapsible */
+.all-filters-container {
+    max-height: 2000px;
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.4s ease, margin-top 0.3s ease;
+    opacity: 1;
+}
+
+.all-filters-container.collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+}
+
+/* Table Filter Buttons */
+.table-filter-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    padding-top: 10px;
+    max-height: 500px;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease, padding-top 0.3s ease;
+    opacity: 1;
+}
+
+.table-filter-buttons.collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.table-filter-btn {
+    flex: 1;
+    min-width: 50px;
+    padding: 4px 10px;
+    border: 2px solid #007bff;
+    background: white;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #007bff;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1);
+}
+
+.table-filter-btn.active {
+    background: #007bff;
+    border-color: #007bff;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.table-filter-btn:hover:not(.active) {
+    background: #e7f3ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+}
+
+/* Orders List */
+.orders-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    background: var(--light-bg);
+}
+
+.order-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.order-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.order-info h5 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.table-number {
+    font-size: 14px;
+    color: #666;
+    background: var(--light-bg);
+    padding: 4px 8px;
+    border-radius: 12px;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-completed {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-cancelled {
+    background: #f8d7da;
+    color: #fbfbfb;
+}
+
+.order-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #666;
+}
+
+.order-meta i {
+    margin-right: 5px;
+}
+
+.order-items-preview {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.item-preview {
+    background: var(--light-bg);
+    padding: 2px 6px;
+    border-radius: 8px;
+    margin-right: 5px;
+}
+
+.order-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.edit-btn {
+    background: #4A90E2;
+    color: white;
+}
+
+.edit-btn:hover {
+    background: #357ABD;
+}
+
+.cancel-btn {
+    background: #E74C3C;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background: #C0392B;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn i {
+    font-size: 16px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+    background: var(--light-bg);
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+/* Modal Styles */
+#editOrderModal .modal-dialog {
+    max-width: 500px;
+}
+
+#editOrderModal .modal-header {
+    border-bottom: 1px solid #e0e0e0;
+    padding: 20px;
+}
+
+#editOrderModal .modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+#editOrderModal .modal-body {
+    padding: 20px;
+}
+
+#editOrderModal h6 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.order-items-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.order-item-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #e9ecef;
+}
+
+/*
+ * THE TEXT TAKES THE ROOM, THE BUTTONS TAKE WHAT THEY NEED.
+ *
+ * Neither side was told what to do with the space, so the flex default left
+ * the name in a column narrow enough to break "Chicken Tikka 1 plate" over
+ * three lines and the catalogue description over eight - one item filling the
+ * panel - while the quantity buttons were squeezed until the row scrolled
+ * sideways.
+ *
+ * min-width: 0 is the half that is easy to miss: a flex item will not shrink
+ * below its longest word without it, which is what pushed the controls out.
+ */
+.item-info {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.item-controls {
+    flex: 0 0 auto;
+}
+
+/*
+ * The description, clamped.
+ *
+ * This is the dish's catalogue text - "Chicken Tikka sold as 1 plate,
+ * configured for a INR Restaurant Demo Dataset POS demo" - which is written
+ * for a menu, not for somebody changing a quantity. Two lines is enough to
+ * recognise a note somebody added; the rest is noise on this screen.
+ */
+.item-info .item-notes {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 4px 0 0;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.item-info h6 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 4px 0;
+}
+
+.item-info .item-price {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+}
+
+.item-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.qty-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #d0d0d0;
+    background: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.qty-btn:hover {
+    background: #f0f0f0;
+    border-color: #999;
+}
+
+.qty-display {
+    min-width: 40px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 16px;
+    color: #333;
+}
+
+.remove-btn {
+    background: #E74C3C;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.remove-btn:hover {
+    background: #C0392B;
+}
+
+.remove-btn i {
+    font-size: 16px;
+}
+
+.product-search-container {
+    margin-bottom: 20px;
+}
+
+#product-search {
+    padding: 12px 16px;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+#product-search:focus {
+    outline: none;
+    border-color: #4A90E2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.product-suggestions {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 2px dotted #cbced0;
+    border-radius: 8px;
+    background: white;
+    margin-top: 10px;
+}
+
+.product-suggestion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.product-suggestion:hover {
+    background-color: var(--light-bg);
+}
+
+.product-suggestion:last-child {
+    border-bottom: none;
+}
+
+.add-product-btn {
+    background: var(--success-color);
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+}
+
+.order-toast {
+    position: fixed;
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    top: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: none;
+    max-width: calc(100vw - 32px);
+}
+
+.order-toast-content {
+    min-width: 220px;
+    max-width: 320px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.order-toast-success .order-toast-content {
+    background: #198754;
+    /* Bootstrap success */
+}
+
+.order-toast-error .order-toast-content {
+    background: #dc3545;
+    /* Bootstrap danger */
+}
+
+.order-card-cancelled {
+    background: #ebebeb;
+    /* light red (Bootstrap danger bg) */
+    border: 1px solid #f5c2c7;
+    opacity: 0.9;
+}
+
+.order-card-cancelled .status-badge {
+    background: #dc3545;
+    /* red badge */
+}
+
+/* Table chips like discount.html */
+.table-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.table-item {
+    display: inline-block;
+}
+
+.table-radio {
+    display: none;
+}
+
+.table-label {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    font-size: 14px;
+    background-color: #fff;
+    color: #333;
+}
+
+/* active state */
+.table-radio:checked+.table-label {
+    background-color: #ff8800;
+    /* same as Save Changes */
+    color: #fff;
+    border-color: #ff8800;
+}
+
+/* --- Edit Order: Item Notes modal (match products notes design) --- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Buttons row → same as products notes modal */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Edit Order Modal Footer */
+#editOrderModal .modal-footer {
+    border-top: 1px solid #e0e0e0;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+#editOrderModal .modal-footer .close-btn {
+    flex: 1;
+    padding: 14px 24px;
+    border: none;
+    background: #f0f0f0;
+    color: #333;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#editOrderModal .modal-footer .close-btn:hover {
+    background: #e0e0e0;
+}
+
+#editOrderModal .modal-footer .edit-btn {
+    flex: 2;
+    padding: 14px 24px;
+    border: none;
+    background: #4A90E2;
+    color: white;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#editOrderModal .modal-footer .edit-btn:hover {
+    background: #357ABD;
+}
+
+/* Order Type Toggle Buttons */
+#editOrderModal .btn-group {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#editOrderModal .btn-outline-secondary {
+    padding: 10px 24px;
+    font-size: 15px;
+    font-weight: 500;
+    border-color: #d0d0d0;
+    color: #666;
+}
+
+#editOrderModal .btn-check:checked + .btn-outline-secondary {
+    background: #495057;
+    border-color: #495057;
+    color: white;
+}
+
+/* Mobile fine‑tune */
+@media (max-width: 600px) {
+
+
+
+
+
+
+    #editOrderModal .modal-dialog {
+        max-width: 95%;
+        margin: 10px auto;
+    }
+}
+
+/* dialog full‑height flex → always center */
+
+
+
+
+
+
+.order-items-table .order-item-notes {
+    font-size: 12px;
+    color: #666;
+    margin-top: 2px;
+    white-space: pre-wrap;
+}
+
+/* Manual table in Edit Order */
+
+.table-item.manual-table {
+    display: inline-block;
+}
+
+/* label height = normal table pill height, content center */
+.table-item.manual-table .manual-label {
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    /* need என்றால் 30–34 இடத்தில் adjust பண்ணலாம் */
+}
+
+/* inputே தான் text handle பண்ணும்; background/border remove */
+.table-item.manual-table .manual-table-input {
+    border: none;
+    background: transparent;
+    width: 60px;
+    font-weight: 600;
+    outline: none;
+    text-align: center;
+    text-transform: uppercase;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.edit-person-container {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.edit-person-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.edit-person-btn {
+    min-width: 36px;
+    height: 32px;
+    border-radius: 999px;
+    border: 1px solid #ff8800;
+    background: #fff;
+    color: #ff8800;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.edit-person-btn.active {
+    background: #ff8800;
+    color: #fff;
+}
+
+.edit-person-input {
+    width: 40px;
+    height: 32px;
+    border-radius: 999px;
+    border: 1px dashed #ff8800;
+    background: #fff7ee;
+    color: #ff8800;
+    font-size: 14px;
+    text-align: center;
+    outline: none;
+}
+
+.edit-person-input.active {
+    background: #ff8800;
+    color: #fff;
+    border-color: #ff8800;
+}
+
+.edit-person-input:focus {
+    border-color: #ff8800;
+    box-shadow: 0 0 0 2px rgba(255, 136, 0, 0.25);
+}
+
+.person-hero {
+    width: 160px;
+    height: 160px;
+    margin: 0 auto 16px auto;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #fce8d9 0%, #f5d5c0 100%);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    align-content: center;
+    gap: 6px;
+    padding: 12px;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(92, 45, 31, 0.1);
+}
+
+.person-hero-icon {
+    font-size: 40px;
+    color: #5c2d1f;
+    margin: 4px;
+    filter: drop-shadow(0 2px 3px rgba(92, 45, 31, 0.15));
+}
+
+#edit_person_hero .person-hero-icon {
+    margin: 4px;
+}
+
+.person-plus-indicator {
+    display: inline-block;
+    font-weight: 700;
+    font-size: 36px;
+    color: #5c2d1f;
+    margin: 4px 0 0 6px;
+    opacity: 0.9;
+}
+/* ============================================ adding from the real menu */
+
+/*
+ * "+ Add items from the menu" — the way into the picker.
+ *
+ * Outlined and full width rather than a filled accent button: the filled one
+ * on this screen is "Update the order", which is the thing that actually
+ * reaches the till. Two filled buttons on one form is two primary actions,
+ * and a waiter would have to read both to find out which one commits.
+ */
+.add-items-btn {
+    width: 100%;
+    min-height: var(--touch, 48px);
+    margin-bottom: var(--s3, 12px);
+    border: 1px dashed var(--line-strong, #cbd5e1);
+    border-radius: var(--radius, 12px);
+    background: var(--surface, #fff);
+    color: var(--ink, #0f172a);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+.add-items-btn:hover {
+    border-color: var(--accent, #4f46e5);
+    color: var(--accent, #4f46e5);
+}
+
+/*
+ * THE MENU, OVER EVERYTHING, WHILE ADDING.
+ *
+ * Full screen on purpose. The complaint was that adding was squeezed in beside
+ * the order, the discount, the dine type, the table and the cover count - so
+ * the answer is not a slightly bigger box in the same place, it is the whole
+ * screen doing one thing, which is what the menu screen already does.
+ */
+.item-picker {
+    position: fixed;
+    inset: 0;
+    z-index: 1080;
+    display: flex;
+    flex-direction: column;
+    background: var(--ground, #f1f5f9);
+}
+.item-picker[hidden] {
+    display: none !important;
+}
+/* The form underneath must not scroll while this is up. */
+body.picker-open {
+    overflow: hidden;
+}
+
+.item-picker-head {
+    display: flex;
+    align-items: center;
+    gap: var(--s3, 12px);
+    padding: calc(var(--s3, 12px) + env(safe-area-inset-top, 0px)) var(--s4, 16px) var(--s3, 12px);
+    background: var(--surface, #fff);
+    border-bottom: 1px solid var(--line, #e2e8f0);
+}
+.item-picker-back {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--ink, #0f172a);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+.item-picker-title {
+    font-weight: 700;
+    font-size: var(--t-lg, 17px);
+    color: var(--ink, #0f172a);
+}
+
+/*
+ * THE SEARCH BOX, the same one the ordering screen has.
+ *
+ * Owner: "i want whole UI as same in new order search box, center menu button
+ * with categories, efective search and list of items."
+ *
+ * The inner markup and its classes come straight from products.html, so the
+ * icon, the clear cross and the focus ring are the ones a waiter already
+ * knows. Only the outer padding is written here, because in the sheet it sits
+ * under a title bar rather than under the app header.
+ */
+.item-picker-search {
+    padding: var(--s3, 12px) var(--s4, 16px);
+    background: var(--surface, #fff);
+    border-bottom: 1px solid var(--line, #e2e8f0);
+}
+.item-picker-search .product-search-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--s2, 8px);
+    background: var(--surface-2, #f1f5f9);
+    border: 1px solid var(--line, #e2e8f0);
+    border-radius: 12px;
+    padding: 0 var(--s3, 12px);
+    min-height: var(--touch, 48px);
+}
+.item-picker-search .product-search-inner:focus-within {
+    border-color: var(--accent, #2563eb);
+    background: var(--surface, #fff);
+}
+.item-picker-search .product-search-icon {
+    color: var(--ink-soft, #64748b);
+    font-size: 15px;
+    flex: 0 0 auto;
+}
+.item-picker-search input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: none;
+    font-size: var(--t-md, 16px); /* 16px or iOS zooms the page on focus */
+    color: var(--ink, #0f172a);
+    padding: 0;
+}
+.item-picker-search .product-search-clear {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--line, #e2e8f0);
+    color: var(--ink-soft, #64748b);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+/*
+ * The MENU button, floating over the list.
+ *
+ * menu.css already styles `.menu-index-btn` and that stylesheet is loaded
+ * here, so this only lifts it above the sheet. The sheet is `position: fixed`
+ * with its own stacking context, so the button's own z-index is measured
+ * against the sheet rather than the page.
+ */
+.picker-index-btn {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    z-index: 3;
+}
+.picker-index-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+}
+.picker-index-scrim .ui-sheet { display: flex; flex-direction: column; max-height: 85%; overflow: hidden; }
+.picker-index-scrim .ui-sheet-head { flex: 0 0 auto; }
+.picker-index-scrim .ui-sheet-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+
+.item-picker-rail {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    min-width: 0;
+    background: var(--surface, #fff);
+    border-bottom: 1px solid var(--line, #e2e8f0);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+}
+.item-picker-rail::-webkit-scrollbar { display: none; }
+.item-picker-rail > .menu-chip { flex: 0 0 auto; white-space: nowrap; min-height: 40px; padding: 8px 14px; border-radius: 20px; font-size: 13px; }
+/* Hidden while searching: a jump index over a result list is a lie about what
+   you are moving through. */
+.item-picker-rail[hidden] {
+    display: none;
+}
+
+/* The one part that scrolls, so the head and the way out never leave. */
+.item-picker-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding-bottom: var(--s4, 16px);
+}
+
+.item-picker-foot {
+    padding: var(--s3, 12px) var(--s4, 16px)
+        calc(var(--s3, 12px) + env(safe-area-inset-bottom, 0px));
+    background: var(--surface, #fff);
+    border-top: 1px solid var(--line, #e2e8f0);
+}
+/*
+ * "Done" and not "Add". Nothing is added by pressing it - the dishes went onto
+ * the order as they were tapped, and this only puts the menu away. A button
+ * that says Add here would read as the moment the order changes, and the
+ * moment the order changes is "Update the order" on the screen behind.
+ */
+.item-picker-done {
+    width: 100%;
+    min-height: var(--touch, 48px);
+    border: none;
+    border-radius: var(--radius, 12px);
+    background: var(--accent, #4f46e5);
+    color: var(--accent-ink, #fff);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/*
+ * A CANCELLED LINE IS STRUCK THROUGH.
+ *
+ * Owner: "whenever order cancel or item cancel those line item name should be
+ * strick in the middle. it symbolic that we cancelled it. i want that."
+ *
+ * The line itself, not a badge at the top of the card: a waiter reading down
+ * an order wants to see which dish is off without holding a status in their
+ * head, and a rule through the name is what that has meant on paper for as
+ * long as there have been kitchens.
+ *
+ * The NAME carries the rule, not the whole row. Striking the price and the
+ * quantity as well makes the numbers hard to read at exactly the moment
+ * somebody is checking what is still owed.
+ */
+.item-preview.is-cancelled,
+.order-item-card.is-cancelled .line-name,
+tr.is-cancelled .line-name {
+    text-decoration: line-through;
+    /* Through the middle of the glyphs rather than under them. */
+    text-decoration-thickness: 2px;
+    text-decoration-color: var(--danger, #dc2626);
+    color: var(--ink-soft, #64748b);
+}
+
+/* The rest of a cancelled row steps back without disappearing: it still has
+   to be countable when somebody asks what was taken off. */
+.order-item-card.is-cancelled,
+tr.is-cancelled {
+    opacity: 0.72;
+}
+
+/* The word for what happened, where the counter used to be. */
+.item-cancelled-mark {
+    font-size: var(--t-xs, 12px);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--danger, #dc2626);
+}
+
+/*
+ * MOVING AN ORDER TO ANOTHER TABLE.
+ *
+ * Table numbers are read at arm's length by somebody already walking, so the
+ * number is the whole button and everything else on it is a footnote.
+ */
+.move-table-now {
+  font-size: 0.9rem;
+  opacity: 0.75;
+  margin-bottom: 10px;
+}
+
+.move-table-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 8px;
+}
+
+.move-table {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 60px;
+  padding: 8px 4px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  background: #fff;
+  color: inherit;
+}
+
+.move-table-no {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.move-table-note {
+  font-size: 0.8125rem;
+  opacity: 0.7;
+  text-align: center;
+}
+
+/* Already working. Allowed, and said out loud before the tap rather than
+   after it. */
+.move-table.is-busy {
+  border-color: #e0a800;
+  background: #fffaf0;
+}
+
+/* Where the order is now: shown so the waiter can see they have the right
+   order in front of them, and not tappable, because moving a table to itself
+   is a kitchen ticket for nothing. */
+.move-table.is-here {
+  opacity: 0.55;
+}
+
+.move-table.is-chosen {
+  border-color: #0d6efd;
+  border-width: 2px;
+  background: #eef5ff;
+}
+
+.move-table-primary {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  margin-top: 8px;
+}
+#moveTableModal .move-table-primary select {
+  min-height: 48px !important;
+  width: 100%;
+  font-size: 1rem;
+}
+.move-table {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+#moveTableModal .move-table:disabled { opacity: .5; cursor: not-allowed; }

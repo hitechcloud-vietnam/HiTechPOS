@@ -1,0 +1,29 @@
+def releaseSigningProperties = new Properties()
+def releaseSigningFile = System.getenv('CAPTAIN_SIGNING_PROPERTIES')
+        ? file(System.getenv('CAPTAIN_SIGNING_PROPERTIES'))
+        : new File(System.getProperty('user.home'), '.posnic/captain-signing/release-signing.properties')
+def releaseBuildRequested = gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }
+
+if (releaseSigningFile.exists()) {
+    releaseSigningFile.withInputStream { releaseSigningProperties.load(it) }
+} else if (releaseBuildRequested) {
+    throw new GradleException('Release signing is not configured. Run: npm.cmd run setup:release-signing')
+}
+
+android {
+    signingConfigs {
+        release {
+            if (releaseSigningFile.exists()) {
+                storeFile file(releaseSigningProperties['storeFile'])
+                storePassword releaseSigningProperties['storePassword']
+                keyAlias releaseSigningProperties['keyAlias']
+                keyPassword releaseSigningProperties['keyPassword']
+            }
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+        }
+    }
+}

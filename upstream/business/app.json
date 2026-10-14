@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "Posnic Business",
+    "slug": "posnic-business",
+    "scheme": "com.posnic.business",
+    "version": "0.1.0",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.posnic.business",
+      "supportsTablet": true,
+      "buildNumber": "1"
+    },
+    "android": {
+      "package": "com.posnic.business",
+      "versionCode": 14,
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "name": "Posnic Business"
+    },
+    "plugins": [
+      "expo-web-browser",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "Use Face ID to unlock your Posnic Business account on this phone."
+        }
+      ]
+    ],
+    "icon": "./assets/posnic-icon.png"
+  }
+}

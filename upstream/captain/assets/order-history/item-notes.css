@@ -1,0 +1,27 @@
+/* Item notes use the approved order typography and actions; keep the order visible. */
+#editItemNotesModal{--surface:#fff;--ink:#172335;--ink-soft:#626f81;--line:#e2e7ee;--surface-sunk:#f4f6fa;--accent:#2458dc;--accent-ink:#fff;--accent-soft:#edf3ff;font-family:Inter,system-ui,sans-serif;color:var(--ink,#172335)}
+#editItemNotesModal .edit-notes-dialog{width:calc(100% - 24px);max-width:480px;min-height:calc(100dvh - 24px);margin:12px auto;display:flex;align-items:center}
+#editItemNotesModal .edit-notes-content{padding:0;max-height:calc(100dvh - 24px);border:1px solid var(--line,#e2e7ee);border-radius:16px;background:var(--surface,#fff);color:var(--ink,#172335);overflow:hidden;box-shadow:0 12px 40px #17233526}
+#editItemNotesModal .edit-notes-header{padding:18px 20px 12px;border:0;align-items:flex-start}
+#editItemNotesModal .modal-title{font-size:21px;font-weight:650;line-height:1.25;margin:0;color:inherit}
+#edit-notes-product-name{font-size:13px;line-height:1.4;color:var(--ink-soft,#626f81);margin:4px 0 0;overflow-wrap:anywhere}
+#editItemNotesModal button{min-height:44px!important;font-weight:600!important}
+#editItemNotesModal .btn-close{width:44px;min-width:44px;height:44px;padding:0;margin:-6px -10px 0 8px;background-size:14px}
+#editItemNotesModal .edit-notes-body{padding:0 20px 18px;overflow:auto;min-height:0}
+#editItemNotesModal .edit-notes-label{font-size:13px;color:var(--ink-soft,#626f81);margin:0}
+#editItemNotesModal .edit-notes-textarea{display:block;width:100%;min-height:130px!important;resize:vertical;border:1px solid var(--line,#e2e7ee);border-radius:12px!important;background:var(--surface,#fff);color:var(--ink,#172335);font:inherit;font-size:15px;padding:14px;margin:8px 0 14px;box-sizing:border-box}
+#editItemNotesModal .edit-notes-textarea:focus{outline:2px solid var(--accent,#2458dc);outline-offset:2px;box-shadow:none}
+#editItemNotesModal .editor-note-suggestions{gap:8px;margin:0}
+#editItemNotesModal .editor-note-suggestions button{font-size:13px;padding:8px 12px;border-radius:10px!important}
+#editItemNotesModal .edit-notes-footer{display:flex;gap:10px;border-top:1px solid var(--line,#e2e7ee);padding:14px 20px;flex-shrink:0;background:var(--surface,#fff)}
+#editItemNotesModal .notes-btn{margin:0;border:1px solid var(--line,#e2e7ee);border-radius:11px!important;font:inherit;font-size:14px;padding:12px 16px;cursor:pointer}
+#editItemNotesModal .notes-btn-primary{flex:1;background:var(--accent,#2458dc);border-color:transparent;color:var(--accent-ink,#fff)}
+#editItemNotesModal .notes-btn-secondary{background:var(--surface,#fff);color:var(--ink,#172335)}
+
+#editItemNotesModal{font-weight:400;line-height:1.4}
+#editItemNotesModal .editor-note-suggestions button{font-weight:400!important;background:var(--surface-sunk,#f4f6fa)}
+#editItemNotesModal .editor-note-suggestions button[aria-pressed=true]{background:var(--accent-soft,#edf3ff);border-color:var(--accent,#2458dc);color:var(--accent,#2458dc)}
+#editItemNotesModal .edit-notes-help{font-size:13px;line-height:1.5;color:var(--ink-soft,#626f81);margin:14px 0 0}
+html[data-color-scheme="dark"] #editItemNotesModal .btn-close{filter:invert(1);opacity:.8}
+
+html[data-color-scheme="dark"] #editItemNotesModal{--surface:#151c27;--ink:#eef3fa;--ink-soft:#aebbd0;--line:#354154;--surface-sunk:#212d3f;--accent:#8bb3ff;--accent-ink:#102343;--accent-soft:#263a5b}

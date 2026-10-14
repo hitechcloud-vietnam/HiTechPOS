@@ -1,0 +1,35 @@
+'use strict';
+
+module.exports = {
+  id: 'karaoke-bida',
+  name: 'Karaoke / Bida',
+  description: 'Tính tiền phòng hát, bàn bida theo giờ với block làm tròn, kèm bán đồ uống và đồ ăn vặt.',
+  icon: 'music',
+  posnicBusinessType: 'cafe',
+  features: ['tables', 'mergeSplitTables', 'hourlyBilling', 'services', 'quickSale', 'kitchen', 'serviceCharge', 'loyalty', 'einvoice'],
+  units: [
+    { code: 'gio', name: 'Giờ' },
+    { code: 'phut', name: 'Phút' },
+    { code: 'lon', name: 'Lon' },
+    { code: 'chai', name: 'Chai' },
+    { code: 'dia', name: 'Đĩa' },
+    { code: 'thung', name: 'Thùng', conversions: [{ unit: 'lon', factor: 24 }] },
+  ],
+  categories: ['Giờ phòng karaoke', 'Giờ bàn bida', 'Bia', 'Nước ngọt', 'Đồ ăn vặt', 'Trái cây'],
+  sampleItems: [
+    { name: 'Phòng karaoke thường (1 giờ)', unit: 'gio', price: 150000, vatRate: 10 },
+    { name: 'Phòng karaoke VIP (1 giờ)', unit: 'gio', price: 300000, vatRate: 10 },
+    { name: 'Bàn bida lỗ (1 giờ)', unit: 'gio', price: 60000, vatRate: 8 },
+    { name: 'Bàn bida phăng (1 giờ)', unit: 'gio', price: 50000, vatRate: 8 },
+    { name: 'Bia Heineken lon 330ml', unit: 'lon', price: 30000, vatRate: 10 },
+    { name: 'Nước suối Lavie 500ml', unit: 'chai', price: 10000, vatRate: 8 },
+    { name: 'Đĩa trái cây thập cẩm', unit: 'dia', price: 120000, vatRate: 8 },
+    { name: 'Khô bò', unit: 'dia', price: 80000, vatRate: 8 },
+  ],
+  settings: { hourlyBlockMinutes: 15, minimumMinutes: 60 },
+  receipt: { template: 'k80', showVatBreakdown: true, footer: 'Cảm ơn quý khách! Chúc quý khách vui vẻ.' },
+  payments: ['cash', 'vietqr', 'payos', 'card', 'momo'],
+  vatDefault: 10,
+  recommendedPlan: 'pro',
+  recommendedApps: ['pos-web', 'mobile-pos', 'business'],
+};

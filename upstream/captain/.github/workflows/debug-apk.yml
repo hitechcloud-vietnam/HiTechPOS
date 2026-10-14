@@ -1,0 +1,94 @@
+# EVERY PULL REQUEST BUILDS AN APK SOMEBODY CAN INSTALL.
+#
+# This workflow exists for two reasons, and the second one is the urgent one.
+#
+# WHAT IT IS FOR. A handset app is not reviewable by reading it. Half of what
+# goes wrong here - a gesture that fights a tap, a sheet that opens under a
+# thumb, a screen that is unreadable in a kitchen - is only visible on a phone.
+# A branch that produces an installable build is a branch somebody can try on
+# the shop floor before it reaches a waiter mid-service.
+#
+# WHAT IT UNBLOCKS. `main` is protected by a required status check named
+# "Debug APK", and until this file existed nothing in the repository produced a
+# check by that name. `release.yml` builds Android, but it runs on tags, so it
+# never runs for a pull request. The result was that EVERY pull request sat
+# BLOCKED for ever, waiting on a check that could not arrive, and the only way
+# to merge anything was an administrator overriding the rule by hand - which
+# means the protection was not protecting anything, it was just a step somebody
+# learned to skip.
+#
+# A rule that can only ever be bypassed teaches people to bypass rules. Either
+# the check exists or the requirement should not, and of the two, a build on
+# every pull request is worth having anyway.
+#
+# It is deliberately UNSIGNED. Signing keys belong to a tag and a release. A
+# debug APK cannot be updated in place by a signed one later, because Android
+# treats a different signature as a different app, so this is named so that
+# nobody mistakes one for the other.
+name: Debug APK
+
+on:
+  pull_request:
+    branches: [main]
+
+# A pull request that is pushed to twice in a minute does not need two builds.
+# The older one is cancelled, because what anybody wants to install is the
+# newest one.
+concurrency:
+  group: debug-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    # This name is the one `main` requires. Changing it re-blocks every pull
+    # request in the repository, so it is not a label - it is an interface.
+    name: Debug APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          # CAPACITOR 8 REQUIRES NODE >= 22, and says so by failing without a
+          # message of its own. Kept in step with release.yml deliberately: a
+          # pull request that builds on a Node the release cannot use is a
+          # green tick that means nothing.
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          # Capacitor 8's Android library is compiled for Java 21. On 17 the
+          # build dies inside :capacitor-android with `invalid source release:
+          # 21`, which reads as a problem with this app rather than the JDK.
+          java-version: 21
+
+      # The `tools` package no longer exists in the SDK repository, and asking
+      # for it kills the job before any of our code runs. The runner image
+      # carries the SDK; Gradle fetches what it needs.
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: ''
+
+      - run: npm ci
+
+      # The same script the release uses, without --release. One code path for
+      # both, so a pull request cannot pass through a build the release does
+      # not perform.
+      - name: Build
+        run: |
+          node build-apk.js
+          cp android/app/build/outputs/apk/debug/app-debug.apk captain-debug.apk
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: captain-debug-apk
+          path: captain-debug.apk
+          if-no-files-found: error
+          # A fortnight is longer than any review here takes, and short enough
+          # that the storage does not quietly grow for ever.
+          retention-days: 14

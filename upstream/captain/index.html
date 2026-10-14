@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="assets/common/appearance.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Captain · Sign in</title>
+    <link href="assets/bootstrap.min.css" rel="stylesheet">
+    <!--
+        THE ICONS ON THIS PAGE ARE INLINE SVG, NOT A FONT.
+
+        The connect sheet used `fas fa-qrcode` and its kin, and this page has
+        never loaded Font Awesome - so all three choices showed an empty box
+        where their icon should be. Nothing errors when an icon font is
+        missing; the glyph simply is not there.
+
+        Inline rather than adding the stylesheet: this is the first screen,
+        often on a bad connection, and pulling a whole icon font for three
+        glyphs is a request that buys nothing. They take currentColor, so they
+        follow the theme like everything else.
+    -->
+    <!-- The decisions every screen shares, made once. -->
+    <link href="assets/common/design.css" rel="stylesheet">
+    <link href="assets/common/requests-ui.css" rel="stylesheet">
+    <script src="assets/common/i18n.js"></script>
+    <script src="assets/common/languages.js"></script>
+    <script src="assets/jquery-3.6.0.min.js"></script>
+    <!-- Written at build time by build-version.js. Absent at a desk, where
+         the app simply says "dev" - which is true. -->
+    <script src="app-build.js" onerror="this.remove()"></script>
+    <script src="assets/common/access.js"></script>
+    <script src="assets/common/money.js"></script>
+    <link rel="stylesheet" href="assets/common/service-details.css">
+    <link rel="stylesheet" href="assets/common/confirm.css">
+<script src="assets/common/confirm.js"></script>
+<script src="assets/common/service-details.js"></script>
+    <script src="assets/common/order-actions.js"></script>
+    <script src="assets/common/phone-preferences.js"></script>
+    <script src="config.js"></script>
+    <!-- What this phone can say about itself, sent once at sign-in so the
+         shop can see its handsets. See assets/common/this-device.js. -->
+    <script src="assets/common/this-device.js"></script>
+    <!-- A PIN unlocks, a password authenticates. See assets/common/lock.js. -->
+    <script src="assets/common/lock.js"></script>
+    <script src="assets/common/order-queue.js"></script>
+    <!-- What a customer has asked for, where the waiter already is. -->
+    <script src="assets/common/requests.js"></script>
+    <script src="assets/common/item-localization.js"></script>
+    <script src="assets/common/item-language.js"></script>
+    <script src="indexedDB.js"></script>
+    <script src="assets/common/account.js"></script>
+    <script src="assets/common/order-queue-ui.js"></script>
+    <script src="assets/common/requests-ui.js"></script>
+    <script src="assets/common/popup.js"></script>
+    <!-- Bundled, not fetched: setting up a handset has to work in a shop with
+         no internet, which is the whole point of scanning the till's code. -->
+    <script src="assets/vendor/jsqr/jsQR.js"></script>
+    <script src="assets/common/connect.js"></script>
+    <script src="assets/common/sign-in-memory.js"></script>
+    <script src="assets/common/onboarding.js"></script>
+    <!-- Can this handset reach that server, and if not what stopped it. Runs
+         only when the URL asks; see assets/common/self-test.js. -->
+    <script src="assets/common/self-test.js"></script>
+    <link href="assets/index/style.css" rel="stylesheet">
+    <link href="assets/common/ui-theme.css" rel="stylesheet">
+    <link href="assets/index/setup.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/common/i18n.css">
+    <link rel="stylesheet" href="assets/common/connection-page.css">
+    <link rel="stylesheet" href="assets/common/app-design.css">
+    <link rel="stylesheet" href="assets/common/appearance.css">
+    <link rel="stylesheet" href="assets/common/chef-loading.css">
+    <script src="assets/common/chef-loading.js" defer></script>
+</head>
+
+<body>
+    <!-- Page Loader -->
+    <div id="loader" class="page-loader" style="display:none;">
+        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Server Settings Modal -->
+    <!--
+      Choosing how to connect, not just where.
+
+      This was a text box, which assumes the person holding the phone knows the
+      shop code. The owner does. A waiter handed a phone on their first shift
+      does not, and had no way to find out. So the three ways in are offered as
+      three choices, in the order a shop will use them.
+    -->
+    <div id="scanSheet" hidden style="position:fixed;inset:0;z-index:10000;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <video id="scanVideo" muted playsinline style="width:100%;max-width:520px;max-height:70vh;object-fit:cover;"></video>
+        <div id="scanNote" style="color:#e5e7eb;font-size:14px;text-align:center;padding:16px 24px;font-family:system-ui,-apple-system,sans-serif;"></div>
+        <button onclick="POSNIC_CONNECT.stopScan()" style="margin-bottom:28px;padding:12px 26px;border:none;border-radius:10px;background:#fff;color:#111827;font-weight:700;font-size:15px;cursor:pointer;">Cancel</button>
+    </div>
+
+    <div class="auth-page">
+        <div class="auth-header">
+            <div class="brand-circle">
+                <img src="assets/common/posnic-mark.svg" alt="Posnic" width="36" height="36">
+            </div>
+            <div class="brand-text">
+                <h1 class="brand-title">Captain</h1>
+                <p class="brand-subtitle">By Posnic</p>
+            </div>
+            <label class="setup-language"><span class="visually-hidden">Language</span><select id="setup-language" data-language-picker aria-label="Language"></select></label>
+            <button type="button" class="setup-settings" onclick="openServerModal()" aria-label="Connection settings" title="Connection settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="var(--surface)"/><circle cx="15" cy="17" r="3" fill="var(--surface)"/></svg></button>
+        </div>
+
+        <!-- Device limit banner (shown via JS) -->
+        <div id="limit-banner" style="display:none;margin-bottom:18px;background:#1c1206;border:1.5px solid #f59e0b;border-radius:14px;padding:18px 22px;text-align:center;position:relative;">
+            <button onclick="document.getElementById('limit-banner').style.display='none'" title="Dismiss"
+                style="position:absolute;top:10px;right:12px;background:none;border:none;color:#fbbf24;font-size:18px;cursor:pointer;line-height:1;padding:0;">✕</button>
+            <div style="font-size:28px;margin-bottom:6px;">⚠️</div>
+            <div style="font-weight:700;font-size:16px;color:#fbbf24;margin-bottom:6px;">Device Limit Reached</div>
+            <div style="font-size:13px;color:#fde68a;line-height:1.6;">Maximum 6 devices are allowed to connect.<br>Please <strong style="color:#fff;">contact your administrator</strong> to free up a slot.</div>
+        </div>
+
+        <!-- Blocked by admin banner (shown via JS) -->
+        <div id="blocked-banner" style="display:none;margin-bottom:18px;background:#1a0505;border:1.5px solid #dc2626;border-radius:14px;padding:18px 22px;text-align:center;position:relative;">
+            <button onclick="document.getElementById('blocked-banner').style.display='none'" title="Dismiss"
+                style="position:absolute;top:10px;right:12px;background:none;border:none;color:#f87171;font-size:18px;cursor:pointer;line-height:1;padding:0;">✕</button>
+            <div style="font-size:28px;margin-bottom:6px;">🚫</div>
+            <div style="font-weight:700;font-size:16px;color:#f87171;margin-bottom:6px;">Device Blocked by Administrator</div>
+            <div style="font-size:13px;color:#fca5a5;line-height:1.6;">This device has been restricted from accessing the app.<br>Please <strong style="color:#fff;">contact your administrator</strong> to restore access.</div>
+        </div>
+
+        <div class="auth-card container">
+            <!-- Login Section -->
+            <div id="login-section" data-auth-step="server">
+                <ol class="setup-steps"><li id="setup-server-step" aria-current="step"><span aria-hidden="true">1</span>Connect to your shop</li><li id="setup-signin-step"><span aria-hidden="true">2</span>Staff sign-in</li></ol>
+                <section id="captain-onboarding" aria-label="Connect to your shop">
+                    <nav class="connection-navigation" aria-label="Connection navigation"><button id="connection-back" type="button" class="setup-link setup-back" hidden><span aria-hidden="true">←</span> <span>Back</span></button><button id="connection-orders" type="button" hidden><span>Back to orders</span> <span aria-hidden="true">→</span></button></nav>
+                    <h2 id="setup-heading" class="setup-title" tabindex="-1">Connect to your shop</h2>
+                    <div id="setup-address-entry">
+                    <label class="setup-label" for="captain-server">Shop code or server address</label>
+                    <div class="setup-address">
+                        <input id="captain-server" type="text" inputmode="url" enterkeyhint="go" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off" placeholder="azure.posnic.io" aria-describedby="setup-wifi-hint">
+                    </div>
+                    <p id="setup-wifi-hint" class="setup-hint"><strong>Shop Wi-Fi is fastest.</strong> Use a domain address when connecting over the internet.</p>
+                    </div>
+                    <p id="setup-results-hint" class="setup-hint" hidden>Choose your shop server first.</p>
+                    <div id="captain-results" class="setup-results" aria-label="Choose your shop server first."></div>
+                    <button id="captain-connect" type="button" class="setup-primary" disabled>Continue</button>
+                    <div id="setup-methods">
+<button id="captain-search" type="button" aria-label="Find shop on Wi-Fi" title="Find shop on Wi-Fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 8a16 16 0 0 1 20 0M5 12a11 11 0 0 1 14 0M8.5 16a5.5 5.5 0 0 1 7 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg><span aria-hidden="true">Find shop on Wi-Fi</span></button>
+                        <p id="setup-start-hint" class="setup-hint">Shop Wi-Fi is fastest.</p>
+                    <div class="connection-cloud"><button id="captain-cloud-login" type="button" class="setup-primary">Sign in with your account</button><button id="captain-cloud-signup" type="button" hidden>Create account</button></div>
+                        <button id="captain-address-toggle" class="setup-link" type="button">Shop code or server address</button>
+                        <p class="setup-alternatives">Choose another way</p>
+                        <div class="setup-tools">
+                            <button id="captain-scan" type="button" aria-label="Scan shop QR code" title="Scan shop QR code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M7 7h3v3H7zm7 0h3v3h-3zM7 14h3v3H7zm7 0h3v3h-3z"/></svg><span aria-hidden="true">Scan shop QR code</span></button>
+                            <button id="captain-code-toggle" type="button" aria-label="Enter pairing code" title="Enter pairing code" aria-expanded="false" aria-controls="captain-code-options"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 10h2m2 0h2m2 0h2M7 14h10"/></svg><span aria-hidden="true">Enter pairing code</span></button>
+                        </div>
+                    <button id="connection-settings" type="button" class="setup-link">Connection settings</button>
+                    </div>
+                    <button id="captain-search-again" type="button" class="setup-primary" hidden>Search this Wi-Fi</button>
+                    <p id="captain-note" role="status" aria-live="polite"></p>
+                    <button id="captain-cancel" type="button" class="setup-link" hidden>Cancel</button>
+                    <a id="captain-open-browser" class="setup-link" hidden target="_blank" rel="noopener noreferrer">Open browser</a>
+                    <details id="captain-code-options" hidden>
+                        <summary>Pair this phone</summary>
+                        <p>Enter the code from Captain settings on your shop’s POS.</p>
+                        <label for="captain-code">Pairing code</label>
+                        <input id="captain-code" class="ui-field" autocomplete="off" autocapitalize="characters" placeholder="12-character code">
+                        <label class="setup-confirm"><input id="captain-confirm" type="checkbox"> I confirmed this shop address with my manager</label>
+                        <button id="captain-pair" type="button" class="setup-primary">Pair phone</button>
+                    </details>
+
+                    <details id="connection-addresses" hidden><summary>Connection settings</summary><p class="setup-hint">Shop Wi-Fi is fastest.</p><label class="setup-label" for="connection-lan">Local server</label><input id="connection-lan" class="ui-field" type="url" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="http://192.168.0.12:5555/api"><label class="setup-label" for="connection-cloud">Internet server</label><input id="connection-cloud" class="ui-field" type="url" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="https://azure.posnic.io/api"><button id="connection-save" type="button" class="setup-primary">Save</button><p id="connection-message" role="status"></p></details>
+                    <button id="connection-done" type="button" class="setup-primary" hidden>Back to orders</button>
+                </section>
+                <section id="captain-legacy" hidden aria-label="Staff sign-in">
+                <form id="staff-signin-form" method="post" autocomplete="on" onsubmit="event.preventDefault(); doLogin();">
+                <h2 class="setup-title">Sign in</h2>
+                <p class="setup-intro">Use your staff account to start taking orders.</p>
+                <div class="setup-shop"><div><span>SHOP</span><strong id="captain-selected-shop"></strong></div><button id="captain-change-shop" type="button" class="setup-link">Change server</button></div>
+                <div class="mb-3">
+                    <label for="username" id="saved-signin-label" class="form-label">Username / Email</label>
+                    <input type="text" id="username" name="username" class="form-control auth-input" autocomplete="username" list="saved-usernames" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next"
+                        placeholder="Enter your username">
+                    <datalist id="saved-usernames"></datalist>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-control auth-input" autocomplete="current-password" enterkeyhint="go"
+                        placeholder="Enter your password">
+                </div>
+
+                <button id="login-btn" type="submit" class="btn btn-login w-100">
+                    Continue
+                </button>
+
+                <button id="captain-login-help" class="setup-link" type="button">Help</button>
+
+                <div id="login-message" class="mt-3 text-danger text-center" style="display:none;"></div>
+                </form>
+                </section>
+            </div>
+
+            <!-- Branch Selection Section -->
+            <div id="branch-section" class="mt-3" style="display:none;">
+                <h3 class="section-title text-center mb-3">Select Branch</h3>
+                <p class="section-help text-center mb-3">
+                    Choose a branch to start taking orders.
+                </p>
+                <div id="branch-list-container" class="row g-3 justify-content-center">
+                    <!-- Branch cards injected by JS -->
+                </div>
+                <div id="branch-message" class="mt-3 text-danger text-center" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Bottom bar for branch screen -->
+        <div id="branch-footer" class="branch-footer" style="display:none;">
+            <button type="button" class="btn btn-outline-light w-100" onclick="logoutKiosk()">
+                Logout
+            </button>
+        </div>
+    </div>
+    <div id="error-popup-overlay" style="display:none;">
+        <div id="error-popup">
+            <div id="error-popup-title">Error</div>
+            <div id="error-popup-message">Something went wrong.</div>
+            <button type="button" id="error-popup-close" onclick="closeErrorPopup()">OK</button>
+        </div>
+    </div>
+    <script src="assets/index/script.js"></script>
+    <script src="assets/common/connection-page.js"></script>
+</body>
+
+</html>

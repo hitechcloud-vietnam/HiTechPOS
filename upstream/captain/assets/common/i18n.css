@@ -1,0 +1,10 @@
+.setup-language { margin-inline-start:auto; }
+.setup-language select { max-width:128px; min-height:44px; padding:8px 28px 8px 10px; border:1px solid #dbe3ed; border-radius:10px; background:#fff; color:#172334; font:inherit; font-size:14px; }
+html[dir="rtl"] body { text-align:right; }
+html[dir="rtl"] input[type="url"], html[dir="rtl"] input[type="email"], html[dir="rtl"] input[type="password"], html[dir="rtl"] #captain-server, html[dir="rtl"] #captain-code { direction:ltr; text-align:left; }
+html[dir="rtl"] .text-start { text-align:right !important; }
+html[dir="rtl"] .text-end { text-align:left !important; }
+html[dir="rtl"] .ms-auto { margin-left:0 !important; margin-right:auto !important; }
+html[dir="rtl"] .me-chevron, html[dir="rtl"] .fa-chevron-right, html[dir="rtl"] .fa-arrow-left { transform:scaleX(-1); }
+[translate="no"] { unicode-bidi:plaintext; }
+[data-language-picker], #app-language, #me-language { max-width:100%; }

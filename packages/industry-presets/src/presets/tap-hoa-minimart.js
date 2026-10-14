@@ -1,0 +1,37 @@
+'use strict';
+
+module.exports = {
+  id: 'tap-hoa-minimart',
+  name: 'Tạp hóa / Minimart / Siêu thị mini',
+  description: 'Bán lẻ hàng tiêu dùng nhanh: quét mã vạch, cân điện tử, quy đổi thùng/lốc/chai, ghi công nợ khách quen.',
+  icon: 'store',
+  posnicBusinessType: 'supermarket',
+  features: ['barcode', 'quickSale', 'unitConversion', 'weighing', 'debtLedger', 'loyalty', 'returns', 'batchExpiry', 'wastage', 'einvoice'],
+  units: [
+    { code: 'cai', name: 'Cái' },
+    { code: 'chai', name: 'Chai' },
+    { code: 'lon', name: 'Lon' },
+    { code: 'goi', name: 'Gói' },
+    { code: 'hop', name: 'Hộp' },
+    { code: 'kg', name: 'Kg' },
+    { code: 'loc', name: 'Lốc', conversions: [{ unit: 'lon', factor: 6 }] },
+    { code: 'thung', name: 'Thùng', conversions: [{ unit: 'lon', factor: 24 }, { unit: 'loc', factor: 4 }] },
+  ],
+  categories: ['Đồ uống', 'Bia & nước có cồn', 'Mì, cháo, phở ăn liền', 'Bánh kẹo', 'Gia vị', 'Sữa & chế phẩm', 'Hóa mỹ phẩm', 'Đồ gia dụng', 'Thực phẩm tươi'],
+  sampleItems: [
+    { name: 'Nước suối Aquafina 500ml', unit: 'chai', price: 5000, vatRate: 8, barcode: '2000000000015' },
+    { name: 'Coca-Cola lon 320ml', unit: 'lon', price: 10000, vatRate: 8, barcode: '2000000000022' },
+    { name: 'Bia Sài Gòn Lager lon 330ml', unit: 'lon', price: 14000, vatRate: 10 },
+    { name: 'Thùng bia Sài Gòn Lager 24 lon', unit: 'thung', price: 320000, vatRate: 10 },
+    { name: 'Mì Hảo Hảo tôm chua cay 75g', unit: 'goi', price: 4500, vatRate: 8, barcode: '2000000000039' },
+    { name: 'Sữa tươi Vinamilk 180ml có đường', unit: 'hop', price: 8000, vatRate: 8 },
+    { name: 'Nước mắm Nam Ngư 500ml', unit: 'chai', price: 42000, vatRate: 8 },
+    { name: 'Dầu ăn Tường An 1 lít', unit: 'chai', price: 55000, vatRate: 8 },
+    { name: 'Bột giặt OMO 800g', unit: 'goi', price: 48000, vatRate: 8 },
+  ],
+  receipt: { template: 'k80', showVatBreakdown: false, footer: 'Cảm ơn quý khách! Hẹn gặp lại.' },
+  payments: ['cash', 'vietqr', 'payos', 'momo', 'zalopay', 'debt'],
+  vatDefault: 8,
+  recommendedPlan: 'basic',
+  recommendedApps: ['pos-web', 'mobile-pos', 'business'],
+};

@@ -1,0 +1,75 @@
+name: Native PIN qualification
+on:
+  push:
+    branches: [codex/business-pin-reliability]
+    paths:
+      - .github/workflows/pin-qa.yml
+      - tests/native/**
+      - src/platform/pinCrypto.native.ts
+      - package-lock.json
+  workflow_dispatch:
+    inputs:
+      pin:
+        description: Synthetic test PIN (not an account credential)
+        default: "8264"
+        type: string
+permissions:
+  contents: read
+jobs:
+  pin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - name: Isolate the native PIN test from release builds and production
+        run: |
+          node - <<'JS'
+          const fs = require('fs');
+          const c = JSON.parse(fs.readFileSync('app.json'));
+          c.expo.android.package = 'com.posnic.business.pinqa';
+          c.expo.name = 'Business PIN QA';
+          fs.writeFileSync('app.json', JSON.stringify(c));
+          fs.writeFileSync('index.ts', 'import {registerRootComponent} from "expo"; import App from "./tests/native/PinQa"; registerRootComponent(App);');
+          fs.writeFileSync('src/platform/network.ts', 'export {businessFetch} from "../../tests/native/network";');
+          JS
+      - run: npx expo prebuild --no-install --platform android
+      - run: ./gradlew assembleRelease --no-daemon --max-workers=2 -PreactNativeArchitectures=x86_64
+        working-directory: android
+      - name: Start Android
+        run: |
+          sudo chmod 666 /dev/kvm
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platform-tools' 'emulator' 'system-images;android-35;google_apis;x86_64'
+          export PATH="$ANDROID_HOME/platform-tools:$PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+          export ANDROID_USER_HOME="$RUNNER_TEMP/android-user"
+          export ANDROID_EMULATOR_HOME="$ANDROID_USER_HOME"
+          export ANDROID_AVD_HOME="$ANDROID_USER_HOME/avd"
+          mkdir -p "$ANDROID_AVD_HOME"
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n pin-test -k 'system-images;android-35;google_apis;x86_64' -p "$ANDROID_AVD_HOME/pin-test.avd" --force
+          "$ANDROID_HOME/emulator/emulator" -avd pin-test -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > emulator.log 2>&1 &
+          timeout 180 adb wait-for-device
+          timeout 300 bash -c 'until [[ "$(adb shell getprop sys.boot_completed | tr -d "\r")" == 1 ]]; do sleep 2; done'
+          adb shell input keyevent 82
+          adb install android/app/build/outputs/apk/release/app-release.apk
+      - name: Save, restart, unlock and exhaust wrong-PIN budget
+        env:
+          QA_PIN: ${{ inputs.pin || '8264' }}
+        run: |
+          python3 scripts/android-pin-qa.py
+          QA_PIN=826493 python3 scripts/android-pin-qa.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-pin-evidence
+          path: |
+            pin-evidence/
+            emulator.log

@@ -1,0 +1,10 @@
+{
+  "name": "@hitechpos/vn-locale",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tiện ích thị trường Việt Nam cho HiTechPOS: định dạng VND, đọc số thành chữ, thuế GTGT, kiểm tra SĐT/MST/CCCD, ngày giờ, tỉnh thành, ngân hàng",
+  "license": "AGPL-3.0-only",
+  "main": "src/index.js",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test" }
+}

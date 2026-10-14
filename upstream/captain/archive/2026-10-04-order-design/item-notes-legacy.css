@@ -1,0 +1,110 @@
+#editItemNotesModal .edit-notes-dialog {
+    max-width: 420px;
+    margin: 0 auto;
+    /* horizontal center */
+    display: flex;
+    align-items: center;
+    min-height: 100vh;
+}
+#editItemNotesModal .edit-notes-content {
+    border-radius: 14px;
+    padding: 18px 18px 16px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+#editItemNotesModal .edit-notes-header {
+    border: none;
+    padding: 0 0 8px;
+}
+#editItemNotesModal .edit-notes-header .modal-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #222;
+    margin: 0;
+    line-height: 1.35;
+}
+#editItemNotesModal .edit-notes-body {
+    padding: 0 0 10px;
+}
+#editItemNotesModal .edit-notes-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #666;
+}
+#editItemNotesModal .edit-notes-textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 80px;
+    padding: 8px 9px;
+    font-size: 13px;
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    outline: none;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+#editItemNotesModal .edit-notes-textarea:focus {
+    border-color: #ff7a1a;
+    box-shadow: 0 0 0 1px rgba(255, 122, 26, 0.25);
+}
+#editItemNotesModal .edit-notes-footer {
+    border: none;
+    padding: 0;
+    margin-top: 4px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+#editItemNotesModal .notes-btn {
+    border: none;
+    padding: 9px 0;
+    font-size: 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.08s ease;
+}
+#editItemNotesModal .notes-btn-primary {
+    background: #ff7a1a;
+    color: #fff;
+}
+#editItemNotesModal .notes-btn-primary:hover {
+    background: #ff831f;
+}
+#editItemNotesModal .notes-btn-secondary {
+    background: #f1f1f1;
+    color: #333;
+}
+#editItemNotesModal .notes-btn-secondary:hover {
+    background: #e3e3e3;
+}
+#editItemNotesModal .notes-btn:active {
+    transform: scale(0.98);
+}
+#editItemNotesModal .edit-notes-content {
+        padding: 16px 14px 14px;
+        border-radius: 12px;
+        margin-left: 4px;
+        margin-right: 5px;
+    }
+#editItemNotesModal .edit-notes-header .modal-title {
+        font-size: 13px;
+    }
+#editItemNotesModal .notes-btn {
+        font-size: 13px;
+        padding: 9px 0;
+    }
+#editItemNotesModal .modal-dialog {
+    margin: 0;
+    /* Bootstrap default margin remove */
+    display: flex;
+    align-items: center;
+    min-height: 100vh;
+    /* full viewport height */
+}
+#editItemNotesModal .modal-content {
+    background-color: #fff;
+}
+#editItemNotesModal .modal-body {
+    padding-top: 0;
+}

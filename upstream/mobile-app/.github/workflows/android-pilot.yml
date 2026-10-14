@@ -1,0 +1,58 @@
+name: Android pilot APK
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/android-pilot.yml
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - run: npm ci
+      - run: npm run check
+      - name: Generate native project
+        run: npx expo prebuild --platform android --no-install
+      - name: Build pilot APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --max-workers=2
+      - name: Verify update compatibility
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/previous artifacts/android
+          gh release download v0.3.0-beta.16 --pattern '*.apk' --dir artifacts/previous
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
+          test -n "$APKSIGNER"
+          "$APKSIGNER" verify --print-certs artifacts/previous/*.apk > artifacts/previous/certificate.txt
+          "$APKSIGNER" verify --print-certs android/app/build/outputs/apk/release/app-release.apk > artifacts/android/certificate.txt
+          cat artifacts/previous/certificate.txt artifacts/android/certificate.txt
+          sed -n 's/^.*Signer.*certificate SHA-256 digest: //p' artifacts/previous/certificate.txt | sort -u > /tmp/previous-cert
+          sed -n 's/^.*Signer.*certificate SHA-256 digest: //p' artifacts/android/certificate.txt | sort -u > /tmp/current-cert
+          test -s /tmp/previous-cert
+          test -s /tmp/current-cert
+          diff /tmp/previous-cert /tmp/current-cert
+          VERSION=$(node -p 'require("./package.json").version')
+          cp android/app/build/outputs/apk/release/app-release.apk "artifacts/android/posnic-mobile-$VERSION-arm64.apk"
+          cd artifacts/android
+          sha256sum *.apk > SHA256SUMS.txt
+          printf '%s\n' "$GITHUB_SHA" > SOURCE-COMMIT.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: posnic-mobile-android-pilot
+          path: artifacts/android/
+          if-no-files-found: error

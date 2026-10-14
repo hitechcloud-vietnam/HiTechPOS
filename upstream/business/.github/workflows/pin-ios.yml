@@ -1,0 +1,34 @@
+name: Compile native PIN module on iOS
+on:
+  push:
+    branches: [codex/business-pin-reliability]
+    paths:
+      - modules/**
+      - src/platform/pinCrypto.native.ts
+      - package-lock.json
+      - .github/workflows/pin-ios.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx expo prebuild --platform ios --no-install
+      - run: pod install --project-directory=ios
+      - name: Compile simulator app without signing or uploading
+        run: |
+          set -o pipefail
+          xcodebuild -workspace ios/PosnicBusiness.xcworkspace -scheme PosnicBusiness -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build > ios-pin-build.log 2>&1 || { tail -n 90 ios-pin-build.log; exit 1; }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-pin-compile-log
+          path: ios-pin-build.log

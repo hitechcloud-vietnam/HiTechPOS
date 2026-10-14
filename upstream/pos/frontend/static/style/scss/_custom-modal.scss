@@ -1,0 +1,86 @@
+/* 
+------------------------------
+    : Custom - Modal css :
+------------------------------
+*/
+.example-modal {
+  position: relative;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  z-index: 1;
+  display: block;
+}
+.modal-content {
+    border: none;
+    background-color: $card-bg;
+}
+.modal-header {
+    background-color: $primary;
+    border: 1px solid $primary;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    .close {
+      color: $white;
+    }
+}
+.modal-title {
+    color: $white;
+    font-size: 18px;
+}
+.modal-body {
+    border-right: 1px solid $border-color;
+    border-left: 1px solid $border-color;
+}
+.modal-footer {
+    border: 1px solid $border-color;
+}
+#session-timeout-dialog {
+  .modal-header {
+    display: block;
+  }
+}
+#restock_modal {
+  .modal-dialog {
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+    width: calc(100% - 32px);
+  }
+  .table th,
+  .table td {
+    vertical-align: middle;
+  }
+  .restock-qty {
+    width: 96px;
+    min-height: 52px;
+    text-align: center;
+    appearance: textfield;
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+      appearance: none;
+      margin: 0;
+    }
+  }
+  .restock-stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .restock-step {
+    min-width: 52px;
+    min-height: 52px;
+    font-size: 24px;
+    padding: 4px;
+  }
+  .select2-container .select2-selection--single {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+  }
+  .select2-selection__arrow {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}

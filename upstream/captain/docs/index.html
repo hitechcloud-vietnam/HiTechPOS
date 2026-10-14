@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install Captain</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    max-width: 34rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem;
+  }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+  .sub { color: #6b7280; margin: 0 0 2rem; }
+  h2 { font-size: 1.05rem; margin: 2.25rem 0 .5rem; }
+  a.button {
+    display: block; text-align: center; text-decoration: none;
+    padding: .9rem 1rem; border-radius: 10px; font-weight: 700;
+    background: #2563eb; color: #fff; margin: .75rem 0;
+  }
+  a.button.secondary { background: #f3f4f6; color: #111827; border: 1px solid #d1d5db; }
+  @media (prefers-color-scheme: dark) {
+    a.button.secondary { background: #1f2937; color: #f9fafb; border-color: #374151; }
+    .sub, .note { color: #9ca3af; }
+    .box { background: #111827; border-color: #374151; }
+  }
+  .note { color: #6b7280; font-size: .9rem; }
+  .box {
+    background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px;
+    padding: .9rem 1rem; margin: 1rem 0;
+  }
+  code { font-size: .9em; }
+</style>
+</head>
+<body>
+
+<h1>Captain</h1>
+<p class="sub">Order-taking app for restaurant floor staff.</p>
+
+<h2>iPhone</h2>
+<a class="button" href="itms-services://?action=download-manifest&amp;url=https://posnic.github.io/captain/manifest.plist">Install on this iPhone</a>
+<p class="note">
+  Open this page in <strong>Safari on the iPhone itself</strong>. The button does
+  nothing in Chrome, on a Mac, or on a PC, because only iOS understands it.
+</p>
+
+<div class="box">
+  <p style="margin:0 0 .5rem"><strong>This build only installs on registered devices.</strong></p>
+  <p style="margin:0" class="note">
+    It is an ad-hoc build, tied to specific iPhones by their device id. On any
+    other iPhone the install fails with "Unable to Install". That is the build
+    working as intended, not a fault: ask for the device to be added.
+  </p>
+</div>
+
+<p class="note">
+  After installing, iOS may refuse to open it until the developer is trusted:
+  <strong>Settings &rarr; General &rarr; VPN &amp; Device Management</strong>, pick
+  <em>Posnic Innovations Private Limited</em>, then Trust.
+</p>
+
+<h2>Android</h2>
+<a class="button secondary" href="https://github.com/Posnic/captain/releases/latest">Download the APK</a>
+<p class="note">
+  Open it on the phone. Android asks permission to install from this source the
+  first time.
+</p>
+
+<h2>Choosing a server</h2>
+<p>
+  On the shop Wi-Fi, open Server settings (the gear on the sign-in screen) and
+  tap <strong>Find server on this Wi-Fi</strong>. Otherwise type the shop code,
+  for example <code>azure</code>, tap Test, then Save &amp; Use.
+</p>
+
+<p class="note" style="margin-top:2.5rem">
+  <a href="https://github.com/Posnic/captain">Source</a> &middot;
+  <a href="https://github.com/Posnic/captain/releases">All releases</a> &middot;
+  AGPL-3.0
+</p>
+
+</body>
+</html>

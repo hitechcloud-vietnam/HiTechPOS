@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script src="assets/common/appearance.js"></script>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <title>Message kitchen</title>
+    <link rel="stylesheet" href="assets/common/design.css" />
+    <link rel="stylesheet" href="assets/common/ui-theme.css" />
+    <link rel="stylesheet" href="assets/me/style.css" />
+    <link rel="stylesheet" href="assets/common/i18n.css" />
+    <link rel="stylesheet" href="assets/common/app-design.css" />
+    <link rel="stylesheet" href="assets/common/mobile-gestures.css" />
+    <link rel="stylesheet" href="assets/common/kitchen-message.css" />
+    <script src="assets/common/i18n.js"></script>
+    <script src="assets/common/languages.js"></script>
+    <script src="assets/common/access.js"></script>
+    <script src="config.js"></script>
+    <script src="assets/common/lock.js"></script>
+    <script src="assets/common/mobile-gestures.js" defer></script>
+    <script src="assets/common/voice-recorder.js" defer></script>
+    <script src="assets/common/kitchen-message.js" defer></script>
+      <link rel="stylesheet" href="assets/common/appearance.css">
+</head>
+  <body data-offline-page>
+    <header class="me-head">
+      <a class="me-back" href="kot-management.html" aria-label="Back">←</a>
+      <h1 class="me-title">Message kitchen</h1>
+    </header>
+    <main class="me-body kitchen-message">
+      <section class="voice-compose">
+        <h2>General message</h2>
+        <p>No table or order required</p>
+        <p id="voice-status" role="status" aria-live="polite"></p>
+        <div id="voice-composer" class="voice-composer">
+          <audio id="voice-preview" hidden></audio>
+          <div class="voice-track">
+            <button
+              id="voice-play"
+              type="button"
+              hidden
+              aria-label="Play recording"
+            ></button>
+            <canvas
+              id="voice-wave"
+              width="240"
+              height="40"
+              aria-hidden="true"
+            ></canvas>
+            <span id="voice-duration" dir="ltr">0:00</span>
+          </div>
+          <div class="voice-actions">
+            <button
+              id="voice-discard"
+              type="button"
+              hidden
+              aria-label="Discard recording"
+            ></button>
+            <button
+              id="voice-record"
+              type="button"
+              aria-label="Record voice note"
+            ></button>
+            <button
+              id="voice-send"
+              type="button"
+              hidden
+              aria-label="Send to kitchen"
+            ></button>
+          </div>
+        </div>
+        <p>Tap to record, or hold and release to preview. Slide left to cancel or up to lock.</p>
+        <p>Voice notes play after the current kitchen announcement.</p>
+        <p id="voice-error" role="alert"></p>
+      </section>
+      <section class="voice-messages">
+        <header>
+          <h2>Kitchen messages</h2>
+          <button
+            class="ui-btn-quiet"
+            id="voice-refresh"
+            type="button"
+            data-mobile-refresh
+          >
+            Refresh
+          </button>
+        </header>
+        <p class="voice-history-help">Saved recordings are available for 7 days.</p>
+        <div id="voice-history" aria-live="polite"></div>
+      </section>
+    </main>
+  </body>
+</html>

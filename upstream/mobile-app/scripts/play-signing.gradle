@@ -1,0 +1,19 @@
+gradle.beforeProject { app ->
+    app.pluginManager.withPlugin('com.android.application') {
+        app.androidComponents.finalizeDsl { android ->
+            def location = System.getenv('POSNIC_MOBILE_SIGNING_PROPERTIES')
+            if (!location) throw new GradleException('Set POSNIC_MOBILE_SIGNING_PROPERTIES for the Play upload key')
+            def properties = new Properties()
+            new File(location).withInputStream { properties.load(it) }
+            ['storeFile', 'storePassword', 'keyAlias', 'keyPassword'].each {
+                if (!properties.getProperty(it)) throw new GradleException('Incomplete Play signing configuration')
+            }
+            def signing = android.signingConfigs.maybeCreate('playUpload')
+            signing.storeFile = new File(properties.getProperty('storeFile'))
+            signing.storePassword = properties.getProperty('storePassword')
+            signing.keyAlias = properties.getProperty('keyAlias')
+            signing.keyPassword = properties.getProperty('keyPassword')
+            android.buildTypes.release.signingConfig = signing
+        }
+    }
+}

@@ -1,0 +1,22 @@
+/* Approved one-screen entry: tables first, guests visually distinct. */
+.seat-screen{font-family:Inter,system-ui,sans-serif}
+.seat-screen .discount-container{display:flex;flex-direction:column;gap:0;width:100%;max-width:960px;padding:18px;box-sizing:border-box}
+.seat-screen .table-section-center,.seat-screen .person-count-section{width:100%;margin:0;padding:0;border:0}
+.seat-screen .section-title{display:flex;align-items:center;gap:8px;color:var(--ink);font-size:17px;font-weight:650;padding:18px 0 12px}
+.seat-screen .section-title i{color:var(--accent);font-size:16px}
+.seat-screen .table-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
+.seat-screen .table-label{min-height:63px;border-radius:11px;font-size:17px;font-weight:600;padding:10px 4px}
+.seat-screen .person-count-section{margin-top:20px;padding-top:4px;border-top:1px solid var(--line)}
+.seat-screen .person-icon-container{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 14px}
+.seat-screen .person-icon-btn.has-number{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:46px;border-radius:24px;background:var(--surface-sunk,#f4f6fa);font-size:14px;font-weight:500;color:var(--ink);border:1px solid var(--line)}
+.seat-screen .person-icon-btn.active{background:var(--accent-soft,#edf3ff);color:var(--accent);border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.seat-screen .person-icon-btn i{font-size:13px;color:var(--ink-soft)}
+.seat-screen .pax-stepper{order:2;max-width:220px;margin:0 auto 12px;padding:6px;border-radius:12px}
+.seat-screen .pax-number{font-size:22px}
+.seat-screen .pax-stepper button{width:44px;height:44px;min-height:44px}
+.seat-screen .person-count-section{display:flex;flex-direction:column}
+.seat-screen .person-count-section[hidden],.seat-screen .table-section-center[hidden]{display:none}
+.seat-screen .btn-footer{width:100%}
+@media(min-width:768px){.seat-screen .table-list{grid-template-columns:repeat(6,minmax(0,1fr))}.seat-screen .person-icon-container{grid-template-columns:repeat(6,minmax(0,1fr))}.seat-screen .discount-container{padding:24px}}
+
+.seat-screen .entry-help{font-size:13px;color:var(--ink-soft);margin:0 0 14px}.seat-screen .section-title{padding-bottom:6px}.seat-screen .table-label{font-size:15px;font-weight:500}.seat-screen .person-icon-btn i{display:none}

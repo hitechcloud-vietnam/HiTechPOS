@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="assets/common/appearance.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>KOT Management</title>
+    <link rel="stylesheet" href="assets/common/paper-order.css">
+    <script src="assets/common/paper-order.js" defer></script>
+    <link href="assets/bootstrap.min.css" rel="stylesheet">
+    <script src="assets/common/i18n.js"></script>
+    <script src="assets/common/languages.js"></script>
+    <script src="assets/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="assets/common/confirm.css">
+<script src="assets/common/confirm.js"></script>
+<script src="assets/common/access.js"></script>
+    <script src="assets/common/money.js"></script>
+    <script src="assets/common/table-details.js"></script>
+    <link rel="stylesheet" href="assets/common/service-details.css">
+    <script src="assets/common/service-details.js"></script>
+    <script src="assets/common/order-actions.js"></script>
+    <script src="assets/common/kitchen-send-feedback.js"></script>
+    <script src="assets/common/group-move.js"></script>
+    <script src="assets/common/guest-update.js"></script>
+    <script src="assets/common/item-transfer.js"></script>
+    <script src="assets/common/transfer-screen.js"></script>
+    <link rel="stylesheet" href="assets/common/transfer-screen.css">
+    <script src="assets/common/phone-preferences.js"></script>
+    <link rel="stylesheet" href="assets/common/kitchen-notices.css">
+    <script src="assets/common/kitchen-notices.js" defer></script>
+    <script src="config.js"></script>
+    <script src="assets/common/connection-signals.js"></script>
+    <script src="assets/common/popup.js"></script>
+    <script src="assets/common/order-queue.js"></script>
+    <!-- What a customer has asked for, where the waiter already is. -->
+    <script src="assets/common/requests.js"></script>
+    <!-- Written at build time by build-version.js; absent at a desk, where
+         the app says "dev" - which is true. Loaded here so the sheet can
+         answer "which version am I on" without signing out to read it off
+         the sign-in screen. -->
+    <script src="app-build.js" onerror="this.remove()"></script>
+    <script src="assets/common/this-device.js"></script>
+    <script src="assets/common/floor-view.js"></script>
+    <!-- The same ranked search the menu uses, so "cb" finds Chicken
+         Biryani here too. sounds-like.js first: item-search picks it up. -->
+    <script src="assets/common/sounds-like.js"></script>
+    <script src="assets/common/item-search.js"></script>
+    <!-- Today's price, for a dish the card cannot carry one for. Shared, so
+         the ordering screen and the add-to-an-order sheet ask the same
+         question in the same words. -->
+    <script src="assets/common/ask-price.js"></script>
+    <script src="assets/common/quick-sale.js"></script>
+    <script src="assets/common/ask-options.js"></script>
+    <script src="assets/common/ask-run-out.js"></script>
+    <!-- The same renderer the menu screen uses. The picker's own code arrives
+         with order-history/script.js, which this page already loads. -->
+    <script src="assets/common/menu-view.js"></script>
+    <!-- A PIN unlocks, a password authenticates. See assets/common/lock.js. -->
+    <script src="assets/common/lock.js"></script>
+    <script src="assets/common/item-localization.js"></script>
+    <script src="assets/common/item-language.js"></script>
+    <script src="indexedDB.js"></script>
+    <script src="assets/common/account.js"></script>
+    <script src="assets/common/order-queue-ui.js"></script>
+    <script src="assets/common/requests-ui.js"></script>
+    <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
+    <!-- The decisions every screen shares, made once. -->
+    <link href="assets/common/design.css" rel="stylesheet">
+    <link href="assets/common/requests-ui.css" rel="stylesheet">
+    <link href="assets/products/menu.css" rel="stylesheet">
+    <link href="assets/kot/style.css" rel="stylesheet">
+    <!-- After style.css, which it replaces for the table cards. -->
+    <link href="assets/kot/floor.css" rel="stylesheet">
+    <link href="assets/order-history/style.css" rel="stylesheet">
+    <link href="assets/common/ui-theme.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/common/i18n.css">
+    <link rel="stylesheet" href="assets/order-history/editor.css">
+    <link rel="stylesheet" href="assets/order-history/item-notes.css">
+    <link href="assets/common/guest-bills.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/common/mobile-gestures.css">
+    <script src="assets/common/mobile-gestures.js" defer></script>
+    <link rel="stylesheet" href="assets/common/order-photos.css">
+    <script src="assets/common/order-photos.js" defer></script>
+    <link rel="stylesheet" href="assets/common/service-rounds.css">
+    <script src="assets/common/service-rounds.js" defer></script>
+    <script src="assets/kot/dashboard.js" defer></script>
+    <link rel="stylesheet" href="assets/common/app-design.css">
+<script src="assets/common/navigation.js" defer></script>
+    <link rel="stylesheet" href="assets/common/appearance.css">
+    <link rel="stylesheet" href="assets/common/chef-loading.css">
+    <script src="assets/common/chef-loading.js" defer></script>
+</head>
+
+<body class="floor-screen">
+    <div class="kot-page">
+        <!--
+            FOUR BUTTONS OF EQUAL WEIGHT became three icons and one action.
+
+            Change Branch, Refresh, KOT History and Add KOT were the same size,
+            the same colour and the same shape, so the one thing somebody came
+            here to do looked exactly like the three they did not. Starting an
+            order is now the only button with a name on it, and it sits where a
+            thumb already is.
+        -->
+        <div class="floor-head">
+            <!--
+                YOU ARE HOME, AND THIS IS YOUR SHOP.
+
+                Owner, relaying a client: "due to empty stuff, he try to go back
+                and close the app. i tink he dont have feeling he is in main page
+                dashboard."
+
+                The screen said "Tables" over an empty box. Nothing on it named
+                the shop, greeted anybody, or suggested this was the place you
+                were meant to end up - so a quiet morning looked like a screen
+                that had failed to load, and the way out of a screen that has
+                failed to load is the back button.
+
+                A greeting and the branch's own name cost one line each and
+                answer "where am I" before anybody has to ask it.
+            -->
+            <div class="floor-greet">
+                <span class="floor-hello" id="floor-hello">Welcome back</span>
+                <h1 class="floor-title" id="floor-shop">Your shop</h1>
+            </div>
+            <!-- Hidden until there is more than one branch to change to.
+                 A shop with a single branch was offered a button that
+                 takes them to a list with one card on it: not a choice,
+                 and one more thing on a screen a waiter reads at speed. -->
+            <button class="floor-icon" id="kot-change-branch" hidden onclick="changeBranch()"
+                aria-label="Change branch" title="Change branch">
+                <i class="fas fa-store"></i>
+            </button>
+            <!--
+                EVERYTHING THAT IS NOT AN ORDER, IN ONE PLACE.
+
+                Owner: "arrange profile update, logout, app setting or
+                preferences and etc make it professional arrangements" and
+                "mobile app make it more professional, menu and options".
+
+                Signing out was on this screen and only on a one-branch shop;
+                the preferences were in a sheet behind a server icon, which is
+                where somebody goes to change an ADDRESS; the version was on
+                the sign-in screen. Each was reachable and none of them was
+                anywhere a person would look.
+            -->
+            <div class="floor-header-controls">
+                <div class="connection-signals" role="group" aria-label="Connection settings">
+                <button type="button" class="route-signal" data-route-signal="local" aria-label="Wi-Fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 8a16 16 0 0 1 20 0M5 12a11 11 0 0 1 14 0M8.5 16a5.5 5.5 0 0 1 7 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg></button>
+                <button type="button" class="route-signal" data-route-signal="remote" aria-label="Internet server"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg></button>
+                </div>
+                <span class="floor-control-divider" aria-hidden="true"></span>
+                <button type="button" class="route-signal" id="appearance-toggle" aria-label="Switch to dark mode" title="Switch to dark mode"><svg data-theme-moon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20.5 14A9 9 0 0 1 10 3.5 9 9 0 1 0 20.5 14Z"/></svg><svg data-theme-sun hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4 19 5"/></svg></button>
+            </div>
+        </div>
+
+
+
+
+        <!--
+            WHICH SHOP THIS PHONE IS POINTED AT.
+
+            The server icon used to navigate straight back to the sign-in
+            screen, which read as the app reloading itself for no reason.
+
+            Most of the time the question is "which shop am I on", and that
+            costs nothing to answer here. Actually CHANGING it is a different
+            thing: the cached branch, menu, tables and cart all belong to the
+            shop being left, so it does have to go back - and now that is a
+            button somebody presses, with the consequence written beside it,
+            rather than something that happens to them.
+        -->
+        <div class="ui-scrim" id="server-sheet" hidden>
+            <div id="server-scrim" style="position:absolute;inset:0;"></div>
+            <div class="ui-sheet" style="position:relative;">
+                <div class="ui-sheet-head">
+                    <h2 class="ui-sheet-title">This shop</h2>
+                    <p class="ui-sheet-sub" id="server-where">&nbsp;</p>
+                </div>
+                <div class="ui-sheet-body">
+                    <!--
+                        Straight to the Wi-Fi search, because that is the
+                        common reason for opening this: the till moved, or the
+                        phone is on a different network, and the address in the
+                        line above is stale. Three taps otherwise - change,
+                        then find, then wait.
+                    -->
+                    <button type="button" class="ui-btn" id="server-find">Find the till on this Wi-Fi</button>
+                    <div style="height:var(--s2)"></div>
+                    <button type="button" class="ui-btn" id="server-change"
+                        style="background:var(--surface);color:var(--ink);border:1px solid var(--line-strong)">
+                        Choose another way
+                    </button>
+                    <div class="ui-note">
+                        Changing shop signs you out and clears the menu and tables
+                        cached for this one.
+                    </div>
+
+                    <!--
+                        Owner: "its better two copies from captain itself...
+                        configuration change reequired pos guy wont have
+                        permission. lets keep in app itself."
+
+                        The person who wants a second copy is the one holding
+                        this phone. It sits here rather than on the till's
+                        settings page because that is who needs it, and it is
+                        on the same screen as the button it changes.
+                    -->
+                    <div style="height:var(--s3)"></div>
+                    <label class="ui-label" for="bill-copies">Copies of a printed bill</label>
+                    <select id="bill-copies" class="ui-field">
+                        <option value="">As the shop is set</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
+                    <div class="ui-note">
+                        How many come out of the counter printer when you ask for a
+                        bill from this phone. One for the guest and one for the shop,
+                        if you keep a copy. This phone only.
+                    </div>
+                    <!--
+                        THE WAITER'S LANGUAGE, on the phone rather than on the
+                        till. The till is set once by whoever owns the shop;
+                        the phone is held by whoever is on shift, and two
+                        waiters on the same floor can want different answers.
+                    -->
+                    <div style="height:var(--s3)"></div>
+                    <label class="ui-label" for="app-language">Language</label>
+                    <select id="app-language" class="ui-field">
+                        <option value="en">English</option>
+                        <option value="ta">தமிழ்</option>
+                    </select>
+                    <div class="ui-note">
+                        What this phone shows. Dish names stay as the shop typed
+                        them. This phone only.
+                    </div>
+
+                    <!--
+                        THE LOCK, REACHABLE FROM A PHONE ALREADY SIGNED IN.
+
+                        Setting one is offered after a sign-in, which is
+                        the only moment somebody has proved they may. But a
+                        handset now stays signed in for thirty days, so on
+                        every phone in service today that offer is a month
+                        away, and until then there was nowhere to go and
+                        ask for it.
+
+                        Here, because this sheet is already where the
+                        things belonging to this phone rather than to the
+                        shop live.
+                    -->
+                    <div style="height:var(--s3)"></div>
+                    <label class="ui-label">Screen lock</label>
+                    <div style="display:flex;gap:var(--s2);flex-wrap:wrap">
+                        <button type="button" class="ui-btn-quiet" id="lock-set">Set a PIN</button>
+                        <button type="button" class="ui-btn-quiet" id="lock-off" hidden>Turn it off</button>
+                    </div>
+                    <div class="ui-note">
+                        Four digits to get back in after the phone has been
+                        put down. Your password still works if you forget
+                        them. This phone only.
+                    </div>
+
+                    <!--
+                        Owner: "self manage number. app user itself auto assign
+                        1 to 200 for 200 items. if enter 33 then it shows..."
+
+                        Two of the three answers to that live behind the search
+                        box. The third is paper: the same numbers, on a wall,
+                        where nobody has to search at all. It sits here because
+                        it is printed once by whoever sets the phone up, not
+                        something a waiter opens mid-service.
+                    -->
+                    <div style="height:var(--s3)"></div>
+                    <a class="ui-btn-quiet" id="open-number-card" href="number-card.html"
+                       style="display:inline-block;text-decoration:none">Number card for the wall</a>
+                    <div class="ui-note">
+                        Every dish with the number you type into Add item. Print it
+                        and stick it up. Reprint when the shop changes its menu,
+                        because the numbers move with it.
+                    </div>
+
+                    <!--
+                        A WAY OUT, ON EVERY SHOP.
+
+                        Owner: "no way to change my password or logout? is the
+                        way to develop app? no general stuff?"
+
+                        There was a Sign Out, and it appeared on the floor only
+                        when the shop had exactly ONE branch - the button is
+                        Change Branch otherwise. So on a two-branch shop nobody
+                        could sign out at all, and on a one-branch shop it was
+                        hidden behind a button named after something else.
+
+                        Here, with who is signed in written beside it, because
+                        a handset gets passed around and the first question is
+                        whose account is on it.
+                    -->
+                    <div style="height:var(--s3)"></div>
+                    <label class="ui-label">Signed in</label>
+                    <div style="display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap">
+                        <span id="signed-in-as" class="ui-note" style="flex:1 1 auto;margin:0"></span>
+                        <button type="button" class="ui-btn-quiet" data-account-change="staff">Switch staff</button>
+                        <button type="button" class="ui-btn-quiet" data-account-change="cloud">Use another cloud account</button>
+                        <button type="button" class="ui-btn-quiet" id="sign-out">Sign out</button>
+                    </div>
+                    <div class="ui-note">
+                        Signing out clears this phone's menu, tables and cart, and
+                        asks for the shop password next time.
+                    </div>
+
+                    <div style="height:var(--s3)"></div>
+                    <div class="ui-note" id="app-version-line">&nbsp;</div>
+
+                    <div style="display:flex;justify-content:flex-end;margin-top:var(--s3)">
+                        <button type="button" class="ui-btn-quiet" id="server-close">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="kot-container">
+            <!-- Tables Section - Full Width -->
+            <div class="kot-tables-section">
+                <!--
+                    Owner: "when you show table mention text like active order
+                    or active tables or some suitable name."
+
+                    A grid of numbered boxes under no heading is a grid of
+                    numbered boxes. Saying what they ARE turns them into the
+                    answer to a question somebody already had.
+                -->
+                <div class="floor-section">
+                    <span class="floor-section-name">Orders</span>
+                    <span class="floor-count" id="floor-count"></span>
+                </div>
+                <div class="floor-primary-actions"><button id="paper-order-open" type="button" hidden aria-label="Scan paper order" title="Scan paper order"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3H4a1 1 0 0 0-1 1v3m14-4h3a1 1 0 0 1 1 1v3M3 17v3a1 1 0 0 0 1 1h3m10 0h3a1 1 0 0 0 1-1v-3"/><rect x="7" y="5" width="10" height="14" rx="1.5"/><path d="M10 9h4m-4 3h4m-4 3h2"/></svg></button><button type="button" class="floor-create floor-new" onclick="goToAddKot()"><i class="fas fa-plus" aria-hidden="true"></i> New order</button><button type="button" data-floor-filter="ready" aria-pressed="false"><i class="far fa-bell" aria-hidden="true"></i> Ready</button></div>
+                <div class="floor-tools">
+                <a class="floor-kitchen-message" href="kitchen-message.html"><i class="fas fa-microphone" aria-hidden="true"></i><span>Message kitchen</span></a>
+
+                    <label class="floor-area-label" hidden><span>Dining area</span><select id="floor-area"><option value="">All</option></select></label>
+                    <button type="button" id="floor-refresh" data-mobile-refresh aria-label="Refresh" title="Refresh"><i class="fas fa-rotate" aria-hidden="true"></i></button>
+                </div>
+                <div class="floor-filters" role="group" aria-label="Tables">
+                    <button type="button" data-floor-filter="active" aria-pressed="true">All</button>
+                    <button type="button" data-floor-filter="all" aria-pressed="false"><i class="fas fa-chair" aria-hidden="true"></i> Tables</button>
+                    <button type="button" data-floor-filter="takeaway" aria-pressed="false"><i class="fas fa-bag-shopping" aria-hidden="true"></i> Takeaway</button>
+
+                </div>
+                <p id="floor-filter-status" role="status" hidden></p>
+                <div class="floor-grid" id="tables-list">
+                    <!-- Cards are drawn by loadTables in assets/kot/script.js,
+                         oldest wait first. -->
+                </div>
+                <!--
+                    Nothing open is GOOD NEWS and should read as good news. The
+                    old empty state was a grey clipboard and "No Active
+                    Orders", which on the screen somebody opens first reads
+                    like a failure to load.
+                -->
+                <div class="floor-empty" id="no-orders-message" style="display:none;">
+                    <div class="floor-empty-face">&#9749;</div>
+                    <div class="floor-empty-said">Nothing open right now</div>
+                    <div class="floor-empty-why">
+                        Every table is settled. Tap <strong>New order</strong> when the next one sits down.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Overlay -->
+        <div class="kot-panel-overlay" id="kot-panel-overlay" onclick="closeSlidingPanel()"></div>
+
+        <!-- Sliding Panel - Right to Left -->
+        <div class="kot-sliding-panel" id="kot-sliding-panel">
+            <div class="sliding-panel-header">
+                <button class="panel-close-btn" onclick="closeSlidingPanel()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="panel-title" id="panel-title">Table Details</h3>
+            </div>
+            <div class="sliding-panel-content" id="sliding-panel-content">
+                <!-- KOT details will be shown here when a table is selected -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Loader -->
+    <div id="loader" class="page-loader" style="display:none;">
+        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Error Popup -->
+    <div id="error-popup-overlay" style="display:none;">
+        <div id="error-popup">
+            <div id="error-popup-title">Error</div>
+            <div id="error-popup-message">Something went wrong.</div>
+            <button type="button" id="error-popup-close" onclick="closeErrorPopup()">OK</button>
+        </div>
+    </div>
+
+    <!-- Modify Order Modal -->
+    <div class="modal fade" id="editOrderModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modify order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <section id="order-editor-items">
+                        <button type="button" id="order-editor-details-open" class="editor-summary">
+                            <span><strong id="order-editor-context"></strong><small id="order-editor-meta"></small></span>
+                            <span class="editor-summary-action"><span>Order Details</span> <i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+                        </button>
+                        <div class="editor-items-heading">
+                            <h6>On this order</h6>
+                            <button type="button" class="btn add-items-btn" id="open-item-picker"><i class="fas fa-plus" aria-hidden="true"></i> <span>Add items</span></button>
+                        </div>
+                        <div id="current-order-items" class="order-items-list"></div>
+                        <div class="product-search-container" hidden><input type="text" id="product-search" placeholder="Search the menu"><div id="product-suggestions"></div></div>
+                        <div id="new-items-list" hidden></div>
+                    </section>
+                    <section id="order-editor-details" hidden>
+                        <button type="button" class="editor-back" data-editor-view="items"><i class="fas fa-arrow-left" aria-hidden="true"></i> <span>Back to the order</span></button>
+                        <h6>Order Details</h6>
+                        <div class="editor-detail-actions">
+                            <button type="button" data-editor-setting="table"><span>Move table</span><strong id="editor-table-value" translate="no"></strong><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+                            <button type="button" data-editor-setting="guests"><span>Guests</span><strong id="editor-guests-value" translate="no"></strong><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+                            <button type="button" data-editor-setting="type"><span>Order Type</span><strong id="editor-type-value"></strong><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+                            <button type="button" data-editor-setting="discount"><span>Discount</span><strong id="editor-discount-value" translate="no"></strong><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+                        </div>
+                    </section>
+                    <section id="order-editor-settings" hidden>
+                        <button type="button" class="editor-back" id="editor-setting-back"><i class="fas fa-arrow-left" aria-hidden="true"></i> <span>Back</span></button>
+                        <h6 id="editor-setting-title"></h6>
+                        <div id="edit-type-section"><div class="row mt-3">
+                        <div class="col-12 text-center">
+                            <label class="form-label d-block mb-2">Order Type</label>
+                            <div class="d-flex justify-content-center">
+                                <div class="btn-group" role="group">
+                                    <input type="radio" class="btn-check" name="edit_dine_type" id="edit-dinein" value="Dine-in" checked>
+                                    <label class="btn btn-outline-secondary" for="edit-dinein">Dine-in</label>
+                                    <input type="radio" class="btn-check" name="edit_dine_type" id="edit-takeaway" value="Take away">
+                                    <label class="btn btn-outline-secondary" for="edit-takeaway">Take away</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                        <div class="row mt-3" id="edit-table-section">
+                        <div class="col-12 text-center">
+                            <div class="section-title mb-2">Select Table</div>
+                            <div id="edit-table-list" class="table-list"></div>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="edit-pax-section">
+                        <div class="col-12 text-center">
+                            <div class="section-title mb-2">Guests</div>
+                            <div id="edit_person_hero" class="person-hero"></div>
+                            <div class="edit-person-container">
+                                <div class="edit-person-buttons">
+                                    <button type="button" class="edit-person-btn" data-person="1">1</button>
+                                    <button type="button" class="edit-person-btn" data-person="2">2</button>
+                                    <button type="button" class="edit-person-btn" data-person="3">3</button>
+                                    <button type="button" class="edit-person-btn" data-person="4">4</button>
+                                    <button type="button" class="edit-person-btn" data-person="5">5</button>
+                                    <button type="button" class="edit-person-btn" data-person="6">6</button>
+                                </div>
+                                <input id="edit_person_input" type="text" inputmode="numeric" maxlength="2" class="edit-person-input" placeholder="Other...">
+                            </div>
+                        </div>
+                    </div>
+
+                        <button type="button" id="editor-setting-apply" class="editor-apply">Apply</button>
+                    </section>
+                    <div class="row mt-3" style="display: none;">
+                        <div class="col-12">
+                            <label class="form-label">Discount</label>
+                            <div class="d-flex">
+                                <input type="number" step="0.01" min="0" id="edit-discount-value" class="form-control" placeholder="e.g. 10">
+                                <div class="ms-2 d-flex align-items-center">
+                                    <div class="btn-group" role="group">
+                                        <input type="radio" class="btn-check" name="edit_discount_type" id="edit-discount-percent" value="percent" checked>
+                                        <label class="btn btn-outline-warning" for="edit-discount-percent">%</label>
+                                        <input type="radio" class="btn-check" name="edit_discount_type" id="edit-discount-amount" value="amount">
+                                        <label class="btn btn-outline-warning" for="edit-discount-amount">₹</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-2" style="display: none;">
+                        <div class="col-12">
+                            <label class="form-label">Discount Description</label>
+                            <textarea id="edit-discount-description" class="form-control" rows="2" placeholder="Reason for discount (optional)"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer editor-footer">
+                    <div class="editor-total"><span id="editor-item-count"></span><strong id="editor-total-value" translate="no"></strong></div>
+                    <div class="editor-footer-actions"><button type="button" id="cancel-order-changes" class="editor-cancel">Close</button><button type="button" class="btn action-btn edit-btn" id="save-order-changes">Send only these changes</button></div>
+                    <p class="editor-save-help">Changes are sent when you update the order.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- the add-item sheet lives inside the modal so Bootstrap's focus
+             trap does not steal focus back from its search box; see
+             the comment on the sheet itself -->
+        <!--
+            THE MENU, FULL SCREEN, WHILE ADDING TO AN ORDER.
+
+            Drawn by MenuView - the same module behind products.html - so a waiter
+            adding a second round to a table sees the screen they already know.
+        -->
+        <div id="item-picker" class="item-picker" hidden>
+            <div class="item-picker-head">
+                <button type="button" class="item-picker-back" id="item-picker-close" aria-label="Back to the order">&larr;</button>
+                <span class="item-picker-title" id="item-picker-title">Add to the order</span>
+            </div>
+            <!--
+                THE SAME SEARCH THE ORDERING SCREEN HAS.
+
+                Owner: "i want whole UI as same in new order search box, center menu
+                button with categories, efective search and list of items."
+
+                Same markup, same classes, and the ranking behind it is
+                ItemSearch - the module the ordering screen uses - so "cb" finds
+                Chicken Biryani here exactly as it does there. A second, simpler
+                search written for this sheet would have been the thing that drifts.
+            -->
+            <div class="item-picker-search">
+                <div class="product-search-inner">
+                    <span class="product-search-icon"><i class="fas fa-search"></i></span>
+                    <input type="text" id="picker-search-input" name="menu-search" placeholder="Search the menu" autocomplete="on"
+                        autocorrect="on" autocapitalize="none" spellcheck="true" />
+                    <button type="button" id="picker-search-clear" class="product-search-clear" hidden
+                        aria-label="Clear">&times;</button>
+                    <!--
+                        Owner: "inside menu pop up menu add + button or some
+                        symbol to do quick sales."
+
+                        The menu screen has one and this sheet did not, so a
+                        waiter adding to an order that is already on a table -
+                        which is most of them - had no way to put something on
+                        it that the menu has not got.
+                    -->
+                    <button type="button" id="picker-quick-sale" class="product-quick-sale"
+                        aria-label="Add an item that is not on the menu"
+                        title="Quick sale - something the menu does not have"><i class="fas fa-bolt" aria-hidden="true"></i><span>Quick sale</span></button>
+                </div>
+            </div>
+            <div class="item-picker-rail" id="item-picker-rail"></div>
+            <div class="item-picker-body" id="item-picker-body"></div>
+
+            <!--
+                Every category at once, with counts. The rail is fine for six
+                categories and useless for twenty-five, where the one you want is
+                always off the right-hand edge.
+            -->
+            <button type="button" class="menu-index-btn picker-index-btn" id="picker-index-btn" hidden>
+                <i class="fas fa-list-ul"></i> MENU
+            </button>
+            <div class="ui-scrim picker-index-scrim" id="picker-index" hidden>
+                <div id="picker-index-scrim" style="position:absolute;inset:0;"></div>
+                <div class="ui-sheet" style="position:relative;">
+                    <div class="ui-sheet-head" style="display:flex;align-items:center;justify-content:space-between;">
+                        <h2 class="ui-sheet-title">Menu</h2>
+                        <button type="button" class="ui-btn-quiet" id="picker-index-close"
+                            style="color:var(--ink-soft);font-size:20px;">&times;</button>
+                    </div>
+                    <div class="ui-sheet-body" id="picker-index-list"></div>
+                </div>
+            </div>
+
+            <div class="item-picker-foot"><small>Quantities here are new additions only.</small><div class="editor-total"><span id="picker-item-count"></span><strong id="picker-total-value" translate="no"></strong></div>
+                <button type="button" class="btn item-picker-done" id="item-picker-done">Review new items</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Item Notes Modal -->
+    <div class="modal fade" id="editItemNotesModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered edit-notes-dialog">
+            <div class="modal-content edit-notes-content">
+                <div class="modal-header edit-notes-header">
+                    <div><h5 class="modal-title">Item note</h5><p id="edit-notes-product-name" translate="no"></p></div>
+                    <button type="button" class="btn-close" aria-label="Close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body edit-notes-body">
+                    <label for="edit-item-notes-text" class="edit-notes-label">Instructions for the kitchen</label>
+                    <textarea id="edit-item-notes-text" class="edit-notes-textarea" rows="3" maxlength="300" placeholder="For example: less spicy, no onion"></textarea>
+                </div>
+                <div class="modal-footer edit-notes-footer">
+                    <button type="button" class="notes-btn notes-btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="notes-btn notes-btn-primary" id="edit-item-notes-apply">Save note</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remove Item Confirm Modal -->
+    <div class="modal fade" id="removeItemConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cancel item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="remove-item-message">Cancel this item already sent to the kitchen?</p>
+                    <p id="remove-item-name" translate="no" style="font-weight: 600; color: #E74C3C; margin-top: 8px;"></p><label for="cancel-item-reason">Reason for cancellation</label><textarea id="cancel-item-reason" class="form-control" rows="2" required minlength="3" maxlength="200"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-danger" id="confirm-remove-item-btn">
+                        Yes, Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Cancel Order Confirmation Modal -->
+    <div class="modal fade" id="cancelOrderModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title">Cancel Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <p class="mb-0">Are you sure you want to cancel this order?</p><label for="cancel-order-reason" class="form-label mt-3">Reason for cancellation</label><textarea id="cancel-order-reason" class="form-control" rows="3" minlength="3" maxlength="200" required placeholder="Why is this order being cancelled?"></textarea>
+                </div>
+                <div class="modal-footer border-0 pt-2">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-danger" id="confirm-cancel-order">Yes, Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="order-toast" class="order-toast">
+        <div class="order-toast-content">
+            <span id="order-toast-message"></span>
+        </div>
+    </div>
+
+    <!-- Local, not a CDN: the shop Wi-Fi works with the internet down, and every
+         modal on this page (KOT edit, order update, the confirmations) is Bootstrap
+         JS. Fetching it from the internet meant those buttons did nothing exactly
+         when the app is most needed. -->
+    <script src="assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="assets/order-history/script.js"></script>
+    <script src="assets/order-history/editor.js"></script>
+    <script src="assets/order-history/update-sliding-panel.js"></script>
+    <!--
+        Online orders that need a person: one held for approval, one a
+        customer has asked to cancel, one they have asked to change. The
+        person most likely to be holding a screen is the one on the floor.
+    -->
+    <script src="assets/common/online-approvals.js"></script>
+    <script src="assets/common/online-approvals-ui.js"></script>
+    <link rel="stylesheet" href="assets/kot/order-view.css">
+    <script src="assets/kot/order-view.js"></script>
+    <script src="assets/kot/script.js"></script>
+    <script src="assets/common/guest-bill-math.js"></script>
+    <script src="assets/common/guest-bills.js"></script>
+    <script src="assets/qrcode.min.js"></script>
+    <script src="assets/common/captain-payments.js"></script>
+    <script src="assets/common/bill-review.js"></script>
+<script src="assets/kot/inline-editor.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,804 @@
+body {
+    background-color: #f8f9fa;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Mobile Header */
+.mobile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+
+.store-title {
+    font-weight: bold;
+}
+
+.mobile-cart {
+    position: relative;
+    font-size: 20px;
+}
+
+.cart-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #ff4444;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ✅ This remains fixed inside content-wrapper */
+.fixed-categories {
+    flex: 0 0 auto;
+}
+
+/* ✅ This scrolls independently */
+.scrollable-products {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+
+/* Page Loader Styles */
+#page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loader {
+    width: 50px;
+    height: 50px;
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #ff7e5f;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+    .category-card {
+        min-width: 150px;
+        padding: 15px 20px;
+    }
+
+    .top-banner {
+        height: 150px;
+        font-size: 24px;
+    }
+
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+
+    .product-card img {
+        height: 120px;
+    }
+
+    .btn-home,
+    .checkout-btn {
+        padding: 15px 25px;
+        font-size: 16px;
+    }
+
+    .floating-cart {
+        padding: 12px 25px;
+        font-size: 18px;
+    }
+
+    .section-heading {
+        font-size: 1.8rem;
+        margin: 25px 0 20px;
+    }
+}
+
+/* Desktop screens */
+@media (min-width: 992px) {
+    .category-card {
+        min-width: 180px;
+    }
+
+    .top-banner {
+        font-size: 28px;
+    }
+
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+
+    .product-card img {
+        height: 150px;
+    }
+
+    .section-heading {
+        font-size: 2rem;
+        margin: 30px 0 25px;
+    }
+}
+
+.disabled {
+    pointer-events: none;
+    cursor: default;
+}
+
+#popup {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background-color: #f44336;
+    /* brighter red for better visibility */
+    border: 1px solid #d32f2f;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    font-weight: 500;
+    font-size: 14px;
+    max-width: 320px;
+    line-height: 1.5;
+    white-space: normal;
+    word-break: break-word;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(-10px);
+    /* subtle upward motion */
+    z-index: 1000;
+}
+
+#popup.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#popup button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-weight: bold;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    float: right;
+    margin-left: 12px;
+    padding: 0;
+    user-select: none;
+    transition: color 0.2s;
+}
+
+#popup button:hover {
+    color: #ffcccb;
+}
+
+@media (max-width: 480px) {
+#popup {
+        top: 12px;
+        right: 12px;
+        font-size: 13px;
+        padding: 8px 12px;
+        max-width: 90%;
+    }
+}
+
+.back-link {
+    color: #ff7a3c;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.product-search {
+    margin-top: 8px;
+    padding: 0 12px;
+    position: sticky;
+    top: 54px;
+    /* just under mobile-header; adjust if needed */
+    z-index: 5;
+    background: #f7f7f7;
+    /* same as page bg so it blends */
+}
+
+.product-search-inner {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    border-radius: 999px;
+    border: 1px solid #ddd;
+    padding: 4px 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.product-search-icon {
+    color: #999;
+    font-size: 14px;
+}
+
+.product-search input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 14px;
+    padding: 4px 2px;
+    background: transparent;
+}
+
+/* hide element helper */
+.hidden {
+    display: none !important;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.header-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #333;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+    cursor: pointer;
+}
+
+.header-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.frequent-items {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 12px 0 6px;
+}
+
+.frequent-card {
+    position: relative;
+    min-width: 260px;
+    background: #ffffff;
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 8px 14px;
+    display: flex;
+    align-items: stretch;
+    flex-shrink: 0;
+}
+
+.frequent-stock-badge {
+    position: absolute;
+    top: -8px;
+    left: 14px;
+    background: #000;
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.frequent-inner {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 10px;
+}
+
+.frequent-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f5f5f5;
+    flex-shrink: 0;
+}
+
+.frequent-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.frequent-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.frequent-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: #333;
+    line-height: 1.3;
+    max-width: 240px;
+    /* your requested width */
+    white-space: normal;
+    /* allow wrapping */
+    word-wrap: break-word;
+    /* break long words if needed */
+    overflow: visible;
+    /* show full text */
+}
+
+.frequent-price {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #ff6b00;
+    /* same orange as your price */
+}
+
+.frequent-add-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 6px 14px;
+    background: #ff6b00;
+    /* same ADD button color */
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.frequent-add-btn:hover {
+    background: #ff7f1a;
+}
+
+.frequent-section {
+    margin: 8px 0;
+    padding: 8px 12px 4px;
+    background: #ffffff;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.frequent-section h5 {
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.frequent-cart-empty {
+    display: flex;
+}
+
+.frequent-cart-controls {
+    display: none;
+    align-items: center;
+    gap: 6px;
+}
+
+.frequent-decrease,
+.frequent-increase {
+    border: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background: #ffe0c2;
+    color: #ff6b00;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+#frequent-qty- {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Base desktop/tablet */
+.notes-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: none;
+    /* JS flex-ஆ மாற்றும் */
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+
+/* --- Notes modal refinements --- */
+
+.notes-modal-content {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 18px 18px 16px;
+    max-width: 420px;
+    width: 92%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
+/* Product name line */
+.notes-title {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #222;
+    line-height: 1.35;
+    max-height: 3.6em;
+    /* 2–3 lines max */
+    overflow: hidden;
+}
+
+/* Notes label + box */
+.notes-body {
+    margin-bottom: 14px;
+}
+
+.notes-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #666;
+}
+
+.notes-textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 80px;
+    padding: 8px 9px;
+    font-size: 13px;
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    outline: none;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.notes-textarea:focus {
+    border-color: #ff7a1a;
+    box-shadow: 0 0 0 1px rgba(255, 122, 26, 0.25);
+}
+
+/*
+ * What is in the dish. Read-only, and above the box so it cannot be mistaken
+ * for something a person typed - which is exactly what happened while it was
+ * being written into the box itself.
+ */
+.notes-about {
+    margin: -4px 0 12px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #666;
+}
+
+/*
+ * THE COMMON ONES, ONE TAP EACH.
+ *
+ * Typing "less spicy" on a phone keyboard between two tables is the reason
+ * notes go unwritten. Wrapped rather than scrolled sideways: a row that
+ * scrolls hides most of itself, and the whole point is being able to see the
+ * choices without thinking of them yourself.
+ */
+.notes-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.notes-chip {
+    min-height: 34px;
+    padding: 0 11px;
+    border: 1px solid #d0d0d0;
+    border-radius: 999px;
+    background: #fff;
+    color: #333;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 32px;
+    cursor: pointer;
+    transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+
+/* On, and tappable again to take it back off - the commonest correction to a
+   tap is the same tap. */
+.notes-chip.is-on {
+    border-color: #ff7a1a;
+    background: #ff7a1a;
+    color: #fff;
+}
+
+/* Buttons row */
+.notes-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.notes-btn {
+    border: none;
+    padding: 9px 0;
+    font-size: 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.08s ease;
+}
+
+.notes-btn-primary {
+    background: #ff7a1a;
+    color: #fff;
+}
+
+.notes-btn-primary:hover {
+    background: #ff831f;
+}
+
+.notes-btn-secondary {
+    background: #f1f1f1;
+    color: #333;
+}
+
+.notes-btn-secondary:hover {
+    background: #e3e3e3;
+}
+
+.notes-btn:active {
+    transform: scale(0.98);
+}
+
+/* Mobile fine‑tune */
+@media (max-width: 600px) {
+    .notes-modal-content {
+        width: 94%;
+        padding: 16px 14px 14px;
+        border-radius: 12px;
+    }
+
+    .notes-title {
+        font-size: 13px;
+    }
+
+    .notes-btn {
+        font-size: 13px;
+        padding: 9px 0;
+    }
+}
+
+/* === Cart Summary Bottom Sheet (same as products) === */
+
+.cart-sheet {
+    position: fixed;
+    inset: 0;
+    display: none;
+    z-index: 1000;
+    pointer-events: none;
+    font-family: inherit;
+}
+
+.cart-sheet.open {
+    display: block;
+    pointer-events: auto;
+}
+
+.cart-sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(2px);
+}
+
+.cart-sheet-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #ffffff;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+    padding: 16px 16px 20px;
+    max-height: 70vh;
+    transform: translateY(100%);
+    animation: cart-sheet-slide-up 260ms ease-out forwards;
+}
+
+@keyframes cart-sheet-slide-up {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0%);
+        opacity: 1;
+    }
+}
+
+.cart-sheet-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: #ddd;
+    margin: 0 auto 12px;
+}
+
+.cart-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.cart-sheet-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.cart-sheet-subtitle {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.cart-sheet-close {
+    border: none;
+    background: #f3f4f6;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4b5563;
+}
+
+.cart-sheet-body {
+    margin-top: 8px;
+    overflow-y: auto;
+    max-height: calc(70vh - 70px);
+}
+
+/* Summary chips & total */
+
+.cart-summary-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cart-summary-chip-row {
+    display: flex;
+    gap: 10px;
+}
+
+.cart-summary-chip {
+    flex: 1;
+    background: #f9fafb;
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cart-summary-chip-label {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.cart-summary-chip-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.cart-summary-total {
+    margin-top: 8px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f97316, #fb923c);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #ffffff;
+}
+
+.cart-summary-total-label {
+    font-size: 13px;
+    opacity: 0.95;
+}
+
+.cart-summary-total-amount {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+
+/*
+ * SEARCHING IS A DIFFERENT SCREEN, and the keyboard has already taken half
+ * of it.
+ *
+ * A waiter types two letters and the soft keyboard covers the bottom half of
+ * the phone. What is left has to be results - but the page kept the header,
+ * the category strip, the frequently-ordered row and the repeat-last button,
+ * so a search for "cof" showed one and a half cards through a letterbox.
+ *
+ * Everything that is not a result steps aside while there is something in the
+ * box, and comes back the moment it is empty. Nothing is removed; a search is
+ * a temporary state, not a different page.
+ */
+body.is-searching .mobile-header,
+body.is-searching .fixed-categories,
+body.is-searching .frequent-section,
+body.is-searching #repeat-last {
+    display: none !important;
+}
+
+/* The search pill itself stays, tightened: it is the one thing being used. */
+body.is-searching .product-search {
+    padding-top: 6px;
+    padding-bottom: 2px;
+}
+
+/*
+ * The count, said quietly.
+ *
+ * "12 products found" had a heading's worth of space around it, which is a lot
+ * of a phone screen to spend telling somebody how many things they can already
+ * see. One small line, and it disappears when there is nothing to count.
+ */
+.search-count {
+    padding: 2px 14px 6px;
+    font-size: 12px;
+    color: #6b7280;
+}
+.search-count:empty {
+    display: none;
+    padding: 0;
+}

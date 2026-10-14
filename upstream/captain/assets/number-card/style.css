@@ -1,0 +1,152 @@
+/*
+ * A CARD THAT READS FROM ARM'S LENGTH, AND PRINTS.
+ *
+ * Two jobs on one page: something a waiter can scroll on a handset, and
+ * something a shop can put on A4 and stick by the pass. The screen rules are
+ * the phone's; @media print takes the furniture away and packs the columns,
+ * because paper has no scroll bar and a second sheet is a second thing to
+ * stick up.
+ */
+
+body {
+  margin: 0;
+  background: var(--bg, #f6f7f9);
+  color: var(--ink, #14181f);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.card-sheet {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--s3, 12px);
+  /* The app draws under the status bar on Android 15 and later, so the top of
+     the page has to step around the clock itself. */
+  padding-top: calc(var(--s3, 12px) + env(safe-area-inset-top, 0px));
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s3, 12px);
+  margin-bottom: var(--s3, 12px);
+}
+
+.card-head h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.card-sub {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+.card-group {
+  break-inside: avoid;
+  margin-bottom: var(--s3, 12px);
+}
+
+.card-group h2 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+  margin: 0 0 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  padding-bottom: 2px;
+}
+
+.card-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.card-group li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 0.95rem;
+  break-inside: avoid;
+}
+
+/* The number is the thing being looked up, so it is the thing that is bold
+   and the thing with a fixed width to scan down. */
+.card-group li .n {
+  flex: none;
+  min-width: 2.4em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.card-group li .d {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-empty {
+  opacity: 0.7;
+  padding: var(--s3, 12px) 0;
+}
+
+.card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: var(--s3, 12px);
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  font-size: 0.75rem;
+  opacity: 0.65;
+}
+
+@media print {
+  /* Buttons do not print, and a printed page that says "Back" on it is a
+     page somebody has to explain. */
+  .card-actions {
+    display: none;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .card-sheet {
+    max-width: none;
+    padding: 0;
+  }
+
+  .card-body {
+    column-count: 3;
+    column-gap: 18px;
+  }
+
+  .card-group li {
+    padding: 1px 0;
+    font-size: 9pt;
+  }
+
+  @page {
+    margin: 12mm;
+  }
+}
+
+/* A phone in landscape, and a desktop, both have room for two. */
+@media screen and (min-width: 640px) {
+  .card-body {
+    column-count: 2;
+    column-gap: 24px;
+  }
+}

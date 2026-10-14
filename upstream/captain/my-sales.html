@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="assets/common/appearance.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>My sales</title>
+    <link href="assets/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/common/design.css" rel="stylesheet">
+    <link href="assets/common/ui-theme.css" rel="stylesheet">
+    <link href="assets/me/style.css" rel="stylesheet">
+    <script src="assets/common/i18n.js"></script>
+    <script src="assets/common/languages.js"></script>
+    <script src="assets/jquery-3.6.0.min.js"></script>
+    <script src="assets/common/access.js"></script>
+    <script src="assets/common/money.js"></script>
+    <link rel="stylesheet" href="assets/common/service-details.css">
+    <link rel="stylesheet" href="assets/common/confirm.css">
+<script src="assets/common/confirm.js"></script>
+<script src="assets/common/service-details.js"></script>
+    <script src="assets/common/order-actions.js"></script>
+    <script src="assets/common/phone-preferences.js"></script>
+    <link rel="stylesheet" href="assets/common/kitchen-notices.css">
+    <script src="assets/common/kitchen-notices.js" defer></script>
+    <script src="config.js"></script>
+    <link rel="stylesheet" href="assets/common/i18n.css">
+<link rel="stylesheet" href="assets/common/mobile-gestures.css">
+    <script src="assets/common/mobile-gestures.js" defer></script>
+    <link rel="stylesheet" href="assets/common/app-design.css">
+    <link rel="stylesheet" href="assets/common/appearance.css">
+</head>
+
+<body data-offline-page class="sales-page">
+    <!--
+        WHAT THIS WAITER HAS SOLD, AND NOWHERE ELSE.
+
+        Owner: "total sales today current user done or some dashboard you can
+        give. but no on the first page. seperate page. sales history of own and
+        table wise seperate."
+
+        NOT ON THE FLOOR SCREEN, which is the whole point of the sentence. A
+        waiter opens the app to take an order, and a screen that opens on
+        figures is a screen that has decided money matters more than the table
+        waiting. This is a page somebody goes to.
+
+        The figures are the TILL'S, scoped to whoever the token names, so this
+        page cannot ask for anybody else's day however it is opened.
+    -->
+    <header class="me-head">
+        <button type="button" class="me-back" id="sales-back" aria-label="Back">&larr;</button>
+        <h1 class="me-title">My sales</h1><button type="button" class="route-signal" data-mobile-refresh aria-label="Refresh">↻</button>
+    </header>
+
+    <main class="me-body">
+        <p class="me-note" id="sales-status" role="status"></p>
+        <div class="sales-days">
+            <button type="button" class="sales-day is-on" data-day="today" aria-pressed="true">Today</button>
+            <button type="button" class="sales-day" data-day="yesterday" aria-pressed="false">Yesterday</button>
+        </div>
+
+        <section class="me-card sales-total">
+            <p class="sales-total-value" id="sales-total">&nbsp;</p>
+            <p class="sales-total-note" id="sales-count">&nbsp;</p>
+            <!--
+                Cancelled orders are COUNTED, never netted off. A day that
+                reads higher because four orders were cancelled is a day
+                nobody can trust.
+            -->
+            <p class="sales-total-note" id="sales-cancelled" hidden></p>
+            <p class="sales-paid" id="sales-paid-row" hidden><span>Paid</span><strong id="sales-paid" translate="no"></strong></p>
+        </section>
+
+        <div class="sales-breakdown"><section>
+        <h2 class="me-heading">By table</h2>
+        <section class="me-card" id="sales-tables">
+            <p class="me-note">Loading.</p>
+        </section>
+
+        </section><section>
+        <h2 class="me-heading">Orders</h2>
+        <section class="me-card" id="sales-recent">
+            <p class="me-note">Loading.</p>
+        </section>
+        </section></div>
+        <nav class="me-card sales-links">
+            <a class="me-row me-row-go" href="order-history.html"><span class="me-row-label">Order history</span></a>
+            <a class="me-row me-row-go" id="sales-pending" href="pending.html"><span class="me-row-label">Pending orders</span></a>
+        </nav>
+    </main>
+
+    <script src="assets/me/sales.js"></script>
+</body>
+
+</html>

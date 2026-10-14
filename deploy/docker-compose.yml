@@ -1,0 +1,43 @@
+# Reference topology for a single machine. Not exercised in CI yet - see
+# docs/DEPLOYMENT.md before using it for anything beyond a staging box.
+services:
+  mongo:
+    image: mongo:7
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    volumes: ["mongo-data:/data/db"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "try { rs.status().ok } catch (e) { rs.initiate().ok }"]
+      interval: 10s
+
+  shard:
+    image: node:22-bookworm-slim
+    working_dir: /srv/upstream/pos/api
+    command: sh -c "npm ci --omit=dev && node shard.js"
+    volumes: ["..:/srv"]
+    environment:
+      CONTROL_URI: mongodb://mongo:27017/?replicaSet=rs0
+      CONTROL_DB: hitechpos_control
+      TENANT_SECRET_KEY: ${TENANT_SECRET_KEY:?set TENANT_SECRET_KEY}
+      SHOP_BASE_DOMAINS: ${SHOP_BASE_DOMAINS:-hitechpos.vn}
+      SHARD_SHOP_HEADER: x-hitech-shop
+      SHARD_HOST: 0.0.0.0
+      SHARD_PORT: "6000"
+      POSNIC_KEY: ${POSNIC_KEY:?set POSNIC_KEY}
+      POSNIC_SECRET: ${POSNIC_SECRET:?set POSNIC_SECRET}
+    depends_on: { mongo: { condition: service_healthy } }
+
+  control-plane:
+    image: node:22-bookworm-slim
+    working_dir: /srv
+    command: sh -c "npm ci --omit=dev && node apps/control-plane/src/server.js"
+    volumes: ["..:/srv"]
+    env_file: ../apps/control-plane/.env
+    environment:
+      HOST: 0.0.0.0
+      CONTROL_URI: mongodb://mongo:27017/?replicaSet=rs0
+      SHARD_URL: http://shard:6000
+    ports: ["4100:4100"]
+    depends_on: [shard]
+
+volumes:
+  mongo-data:

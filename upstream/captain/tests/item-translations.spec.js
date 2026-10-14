@@ -1,0 +1,23 @@
+import {test,expect} from '@playwright/test';
+import {onTheMenu,item,SHOP_ORIGIN} from './support/shop.js';
+test('translated item names survive search, cart and offline submission without changing identity',async({page})=>{
+  await page.addInitScript(()=>{if(!localStorage.getItem('posnic.language'))localStorage.setItem('posnic.language','nl')});
+  await onTheMenu(page,'nothing',{menu:[{category_name:'Drinks',items:[item('coffee','Coffee',100,{default_language:'en',translations:[{locale:'nl',name:'Koffie'},{locale:'ar',name:'قهوة'}]})]}]});
+  await expect(page.locator('.dish-name')).toContainText('Koffie');
+  await page.locator('#product-search-input').fill('Koffie');
+  await expect(page.locator('.btn-add[data-id="coffee"]')).toHaveCount(1);
+  await page.locator('.btn-add[data-id="coffee"]').click();
+  await page.locator('#next-btn').click();
+  await expect(page.locator('.bill-name')).toHaveText('Koffie');
+  await page.evaluate(()=>I18N.use('ar'));
+  await expect(page.locator('.bill-name')).toHaveText('قهوة');
+  await page.reload();
+  await expect(page.locator('.bill-name')).toHaveText('قهوة');
+  await page.route(`${SHOP_ORIGIN}/**`,route=>route.abort());
+  await page.locator('#next-btn').click();
+  await expect(page).toHaveURL(/kot-management\.html$/);
+  await expect.poll(()=>page.evaluate(()=>window.OrderQueue?.count())).toBe(1);
+  const order=await page.evaluate(()=>OrderQueue.all()[0]);
+  expect(order.body.items[0].item_name).toBe('Coffee');
+  expect(order.body.items[0].item_id || order.body.items[0].id).toBe('coffee');
+});
