@@ -576,7 +576,7 @@ PosnicPro.dashboard = {
             var d = response.data || {};
             var cur = PosnicPro.local.get('currencySign') || '';
             var money = function (v) {
-                return cur + ' ' + (Number(v) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return cur + ' ' + (PosnicPro.money ? PosnicPro.money.number(Number(v) || 0) : (Number(v) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
             };
             var period = filter || 'month';
 
@@ -603,7 +603,7 @@ PosnicPro.dashboard = {
     // an INR shop must never see a dollar sign, least of all if the API fails.
     money: function (v) {
         var cur = PosnicPro.local.get('currencySign') || '';
-        return cur + ' ' + (Number(v) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return cur + ' ' + (PosnicPro.money ? PosnicPro.money.number(Number(v) || 0) : (Number(v) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     },
 
     /*

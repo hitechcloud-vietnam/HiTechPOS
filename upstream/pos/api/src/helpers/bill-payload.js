@@ -65,6 +65,33 @@ function num(value) {
   return Number.isFinite(n) ? n : 0;
 }
 
+/**
+ * How the shop writes a figure: 135.000 in Vietnam, 1.234,50 in Germany.
+ *
+ * Taken from the branch's country, because that is where the paper is read.
+ * Without a country nothing is sent and the printer keeps bare numbers.
+ */
+function moneyMarks(branch) {
+  const region = String((branch && branch.country_id) || '')
+    .trim()
+    .toUpperCase();
+  if (!/^[A-Z]{2}$/.test(region)) return {};
+  try {
+    const locale = new Intl.Locale('und', { region }).maximize().baseName;
+    const parts = new Intl.NumberFormat([locale, 'en'], { minimumFractionDigits: 1 }).formatToParts(
+      1234567.5
+    );
+    const part = (type) => (parts.find((p) => p.type === type) || {}).value;
+    const decimal = part('decimal');
+    const group = /\s/.test(part('group') || '') ? ' ' : part('group');
+    if (!/^[.,]$/.test(decimal || '') || !/^[.,' ]$/.test(group || '') || group === decimal)
+      return {};
+    return { currencyGroup: group, currencyDecimal: decimal };
+  } catch {
+    return {};
+  }
+}
+
 /** DD/MM/YYYY HH:mm, which is how a bill reads in the shops that use this. */
 function stamp(date) {
   const d = date ? new Date(date) : new Date();
@@ -557,6 +584,10 @@ function buildBillPayload(sale = {}, branch = {}, options = {}) {
      */
     currencyCode: require('../utils/currency').policy(branch || {}).currencyCode,
     currencyDigits: require('../utils/currency').policy(branch || {}).currencyDigits,
+    // Always present (undefined when the branch has no country) so the renderer's
+    // field contract stays visible; see the-shop-footer-reaches-the-bill.test.js.
+    currencyGroup: moneyMarks(branch).currencyGroup,
+    currencyDecimal: moneyMarks(branch).currencyDecimal,
     currency: String((branch && branch.currency) || '')
       .trim()
       .slice(0, 4),
@@ -729,4 +760,5 @@ function receiptDocument(sale, branch, bill) {
  * what counts as a number, a sale could be filed under a guest whose receipt
  * says there was no guest.
  */
-module.exports = { buildBillPayload, receiptDocument, isDialable, sessionName, taxRows, itemLines };
+module.exports = {
+  moneyMarks, buildBillPayload, receiptDocument, isDialable, sessionName, taxRows, itemLines };

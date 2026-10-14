@@ -9,8 +9,25 @@
         return new URL(PosnicPro.baseUrl || '.', document.baseURI).href;
     }
 
+    /*
+     * A cart figure read back off the page.
+     *
+     * Stripping commas is right only for "1,234.50". A browser in Vietnamese,
+     * German or Indonesian wrote the subtotal as "101.430,98", and stripping
+     * commas made it 101.43 - the preview's Sub Total then read 101.43 under
+     * a Grand Total of 110,000. When both marks appear the last one is the
+     * decimal point; a lone comma before exactly three digits groups them.
+     */
     function number(value) {
-        return parseFloat(String(value == null ? '' : value).replace(/,/g, '')) || 0;
+        if (PosnicPro.money && PosnicPro.money.parse) { return PosnicPro.money.parse(value) || 0; }
+        var t = String(value == null ? '' : value).replace(/[^\d.,-]/g, '');
+        var dot = t.lastIndexOf('.'), comma = t.lastIndexOf(',');
+        if (dot > -1 && comma > -1) {
+            t = dot > comma ? t.replace(/,/g, '') : t.replace(/\./g, '').replace(',', '.');
+        } else if (comma > -1) {
+            t = t.split(',').length === 2 && !/^\d{3}$/.test(t.slice(comma + 1)) ? t.replace(',', '.') : t.replace(/,/g, '');
+        }
+        return parseFloat(t) || 0;
     }
 
     function cartData(branch) {

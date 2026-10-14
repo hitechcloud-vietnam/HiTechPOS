@@ -1057,7 +1057,12 @@ PosnicPro.sales.view = {
         var transferredBill = name === 'sale' ? data.transferred_bill : null;
         var moneyDigits = transferredBill && Number.isInteger(transferredBill.currencyDigits)
             && transferredBill.currencyDigits >= 0 && transferredBill.currencyDigits <= 4
-            ? transferredBill.currencyDigits : 2;
+            ? transferredBill.currencyDigits : (PosnicPro.money ? PosnicPro.money.digits() : 2);
+        // A figure printed as text: the bill's precision and the shop's grouping.
+        var moneyText = function (value) {
+            var n = Number(value) || 0;
+            return PosnicPro.money ? PosnicPro.money.number(n, moneyDigits) : n.toFixed(moneyDigits);
+        };
         if (transferredBill) {
             // Keep the input immutable: the editor and subsequent reprints share it.
             data = jQuery.extend({}, data, {
@@ -1128,8 +1133,8 @@ PosnicPro.sales.view = {
                 if (!isKotPrint && data.partial_check === 'true' && data.sale_process !== 'PartialReturn' && data.sale_process !== 'FullReturn') {
                     // NOTE: This block matches the original behavior for this section.
                     $('.print-payment-status-hide').hide();
-                    $('.print-payment-balance').html(currency + '&nbsp;' + data.partial_balance.toFixed(moneyDigits));
-                    $('.print-payment-pending').html(currency + '&nbsp;' + data.payment_pending.toFixed(moneyDigits));
+                    $('.print-payment-balance').html(currency + '&nbsp;' + moneyText(data.partial_balance));
+                    $('.print-payment-pending').html(currency + '&nbsp;' + moneyText(data.payment_pending));
                     $('.print-payment-status').html(data.payment_status);
 
                     // Thermal (non-A4) receipts: show compact Payments/Credits and Balance Due
@@ -1170,14 +1175,14 @@ PosnicPro.sales.view = {
                         var cAmt = (Number(c.amount) || 0).toFixed(moneyDigits);
                         var cTax = Number(c.tax_amount) || 0;
                         var taxNote = cTax > 0
-                            ? ' <small>(+' + (c.tax_name ? $('<i>').text(c.tax_name).html() : 'tax') + ' ' + cTax.toFixed(moneyDigits) + ')</small>'
+                            ? ' <small>(+' + (c.tax_name ? $('<i>').text(c.tax_name).html() : 'tax') + ' ' + moneyText(cTax) + ')</small>'
                             : '';
                         chargesA4 += '<tr class="charge-print-row">' +
                             '<td class="print-deatils-size-family print-footer-align">' + cName + ':' + taxNote + ' &nbsp; &nbsp; </td>' +
                             '<td class="print-deatils-size-family print-footer-align">' + currency + '&nbsp;<span class="number">' + cAmt + '</span></td></tr>';
                         chargesStd += '<div class="row charge-print-row-std">' +
                             '<div class="col-md-8 col-sm-8 col-xs-6"><div class="invoice-footer-value">' + cName + taxNote + '</div></div>' +
-                            '<div class="col-md-4 col-sm-4 col-xs-6"><div class="invoice-footer-value invoice-payment text-dark">' + currency + '&nbsp;' + cAmt + '</div></div></div>';
+                            '<div class="col-md-4 col-sm-4 col-xs-6"><div class="invoice-footer-value invoice-payment text-dark">' + currency + '&nbsp;' + moneyText(c.amount) + '</div></div></div>';
                     });
                     $('#extra_disc_print_view').after(chargesA4);
                     $('#extra_disc_standard_print').after(chargesStd);
@@ -1201,7 +1206,7 @@ PosnicPro.sales.view = {
                             '<div class="invoice-footer-value"><lang class="lang_round_off_3">Round-Off</lang></div>' +
                             '</div>' +
                             '<div class="col-md-4 col-sm-4 col-xs-6">' +
-                            '<div class="invoice-footer-value invoice-payment text-dark">' + currency + sign + Math.abs(roundOffValue).toFixed(moneyDigits) +
+                            '<div class="invoice-footer-value invoice-payment text-dark">' + currency + sign + moneyText(Math.abs(roundOffValue)) +
                             '</div>' +
                             '</div>';
                     }
@@ -1261,7 +1266,7 @@ PosnicPro.sales.view = {
                             '<div class="invoice-footer-value"><lang class="lang_round_off_3">Round-Off</lang></div>' +
                             '</div>' +
                             '<div class="col-md-4 col-sm-4 col-xs-6">' +
-                            '<div class="invoice-footer-value invoice-payment text-dark">' + currency + sign + Math.abs(roundOffValue).toFixed(moneyDigits) + '</div>' +
+                            '<div class="invoice-footer-value invoice-payment text-dark">' + currency + sign + moneyText(Math.abs(roundOffValue)) + '</div>' +
                             '</div>';
                     }
                     $('#roundoff-value').html(roundOff);
@@ -1296,7 +1301,7 @@ PosnicPro.sales.view = {
                         var method = $('<span>').text(row.method).html();
                         return '<div class="payment-line" style="display:flex;justify-content:space-between;gap:12px">' +
                             '<span class="payment-method">' + method + '</span>' +
-                            '<span class="payment-amount">' + currency + ' ' + row.amount.toFixed(2) + '</span></div>';
+                            '<span class="payment-amount">' + currency + ' ' + moneyText(row.amount) + '</span></div>';
                     }).join('');
 
                     if (paymentHtml) {
@@ -1603,7 +1608,7 @@ PosnicPro.sales.view = {
                             let hsn = (data.items[i].tax_fields.length === 0 && data.items[i].tax > 0) ? data.items[i].tax_name : '--';
                             let rowHTMLLine = '<tr><td height="1" colspan="7" style="border:1px solid #e4e4e4"></td></tr><tr><td style="color: #506fe4;" class="article print-deatils-size-family print-details-align">' + PosnicPro.escapeHtml(PosnicPro.textOverflowPrintEllipsis(PosnicPro.printItemName ? PosnicPro.printItemName(data.items[i], 'receipt') : data.items[i].item_name, PosnicPro.local.get('printing_max_char'), true)) + '</td>' +
                                 '<td class="print-deatils-size-family print-details-align lineitem_hsn" style="color: #646a6e;">' + hsn + '</td>' +
-                                '<td class="print-deatils-size-family print-details-align lineitem_price" style="color: #646a6e;" align="center">' + price.toFixed(moneyDigits) + '</td>' +
+                                '<td class="print-deatils-size-family print-details-align lineitem_price" style="color: #646a6e;" align="center">' + moneyText(price) + '</td>' +
                                 '<td class="print-deatils-size-family print-details-align lineitem_qty" style="color: #646a6e;" align="center">' + PosnicPro.formatQuantity(data.items[i].item_quantity, item_unit) + ' ' + item_unit + ' </td>' +
                                 '<td class="print-deatils-size-family print-details-align lineitem_disc" style="color: #646a6e;" align="center">' + discount_percentage + '</td>' +
                                 '<td class="print-deatils-size-family print-details-align lineitem_tax" style="color: #646a6e;" align="center">' + tax + ' ' + taxSigns + '</td>' +
@@ -1667,8 +1672,8 @@ PosnicPro.sales.view = {
                         // payment summary / status block at all.
                         if (!isKotPrint && data.partial_check === 'true' && data.sale_process !== 'PartialReturn' && data.sale_process !== 'FullReturn') {
                             $('.print-payment-status-hide').show();
-                            $('.print-payment-balance').html(currency + '&nbsp;' + data.partial_balance.toFixed(moneyDigits));
-                            $('.print-payment-pending').html(currency + '&nbsp;' + data.payment_pending.toFixed(moneyDigits));
+                            $('.print-payment-balance').html(currency + '&nbsp;' + moneyText(data.partial_balance));
+                            $('.print-payment-pending').html(currency + '&nbsp;' + moneyText(data.payment_pending));
                             $('.print-payment-status').html(data.payment_status);
                         }
                     } else {
@@ -1761,7 +1766,7 @@ PosnicPro.sales.view = {
                                 '<div class="invoice-footer-value"><lang class="lang_round_off_3">Round-Off</lang></div>' +
                                 '</div>' +
                                 '<div class="col-md-4 col-sm-4 col-xs-6">' +
-                                '<div class="invoice-footer-value invoice-payment text-dark">' + currency + sign + Math.abs(roundOffValue).toFixed(moneyDigits) +
+                                '<div class="invoice-footer-value invoice-payment text-dark">' + currency + sign + moneyText(Math.abs(roundOffValue)) +
                                 '</div>' +
                                 '</div>';
                         }
@@ -1821,7 +1826,7 @@ PosnicPro.sales.view = {
                                 let hsn = (val.tax_fields.length === 0 && val.tax > 0) ? val.tax_name : '--';
                                 let rowHTMLLine = '<tr><td height="1" colspan="7" style="border-top:1px solid #e4e4e4"></td></tr><tr><td style="color: #506fe4;" class="article print-deatils-size-family print-details-align">' + PosnicPro.textOverflowPrintEllipsis(PosnicPro.printItemName ? PosnicPro.printItemName(val, 'receipt') : val.item_name, PosnicPro.local.get('printing_max_char'), true) + '</td>' +
                                     '<td class="print-deatils-size-family print-details-align lineitem_hsn" style="color: #646a6e;">' + hsn + '</td>' +
-                                    '<td class="print-deatils-size-family print-details-align lineitem_price" style="color: #646a6e;" align="center">' + price.toFixed(moneyDigits) + '</td>' +
+                                    '<td class="print-deatils-size-family print-details-align lineitem_price" style="color: #646a6e;" align="center">' + moneyText(price) + '</td>' +
                                     '<td class="print-deatils-size-family print-details-align lineitem_qty" style="color: #646a6e;" align="center">' + PosnicPro.formatQuantity(val.item_quantity, item_unit) + ' ' + item_unit + ' </td>' +
                                     '<td class="print-deatils-size-family print-details-align lineitem_disc" style="color: #646a6e;" align="center">' + discount_percentage + '</td>' +
                                     '<td class="print-deatils-size-family print-details-align lineitem_tax" style="color: #646a6e;" align="center">' + tax + ' ' + taxSigns + '</td>' +
@@ -1997,7 +2002,14 @@ PosnicPro.sales.view = {
 
                 $('.total-noof-item').html(itemTotalQty.toFixed(2));
                 $('.print-total').attr('data-currency-digits', moneyDigits);
-                $('span.number').number(true, moneyDigits);
+                if (PosnicPro.money) {
+                    // Tell the ESC/POS reader (receipt-data.js) how these figures are written.
+                    var printSeps = PosnicPro.money.separators();
+                    $('.print-total').attr({ 'data-currency-group': printSeps.group, 'data-currency-decimal': printSeps.decimal });
+                    PosnicPro.money.renumber($('span.number'), moneyDigits);
+                } else {
+                    $('span.number').number(true, moneyDigits);
+                }
 
                 // KOT History prints: temporarily hide plain 'Payment' / 'Payment Status' labels.
                 // Non-KOT prints: always restore these labels so Sales/Settlement prints are unaffected.

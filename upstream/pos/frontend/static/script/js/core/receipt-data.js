@@ -46,7 +46,21 @@
     function amountOf($el) {
         var t = textOf($el);
         if (!t) return null;
-        var m = t.replace(/,/g, '').match(/-?\d+(\.\d+)?/);
+        return figure(t);
+    }
+
+    /*
+     * How this receipt writes its figures. sales_view.js marks the total with
+     * the grouping and decimal marks it used; without the marks the receipt
+     * is in the old form, "1,234.50". A shop in Vietnam prints "135.000", and
+     * stripping commas from that read 135.
+     */
+    var marks = { group: ',', decimal: '.' };
+    function figure(text) {
+        var t = String(text);
+        if (marks.group) t = t.split(marks.group).join('');
+        if (marks.decimal !== '.') t = t.split('.').join('').split(marks.decimal).join('.');
+        var m = t.match(/-?\d+(\.\d+)?/);
         return m ? parseFloat(m[0]) : null;
     }
 
@@ -149,8 +163,7 @@
 
     function num(pair) {
         if (!pair) return null;
-        var m = String(pair.value).replace(/,/g, '').match(/-?\d+(\.\d+)?/);
-        return m ? parseFloat(m[0]) : null;
+        return figure(pair.value);
     }
 
 /*
@@ -396,6 +409,11 @@ PosnicPro.receiptLogo = function (paperWidth) {
         var $root = dropHidden($('<div></div>').html(html));
         var digits = Number($root.find('[data-currency-digits]').first().attr('data-currency-digits'));
         if (!Number.isInteger(digits) || digits < 0 || digits > 4) digits = 2;
+        var $marked = $root.find('[data-currency-decimal]').first();
+        var group = $marked.attr('data-currency-group');
+        var decimal = $marked.attr('data-currency-decimal');
+        var marked = !!(decimal && decimal.length === 1 && decimal !== group);
+        marks = marked ? { group: group == null ? '' : group, decimal: decimal } : { group: ',', decimal: '.' };
 
         var pairs = footerPairs($root);
 
@@ -496,6 +514,10 @@ PosnicPro.receiptLogo = function (paperWidth) {
             footerImageCaption: textOf($root.find('.footer-image-caption')),
             currency: currencyOf([total, subTotal, change]),
             currencyDigits: digits,
+            // Only a receipt that said how it writes figures asks the printer
+            // to group them; older templates print bare numbers as before.
+            currencyGroup: marked ? marks.group : undefined,
+            currencyDecimal: marked ? marks.decimal : undefined,
             storeName: textOf($root.find('.print_store_name')),
             storeAddress: address.join('\n'),
             storePhone: [phone, altPhone].filter(Boolean).join(' / '),

@@ -28,7 +28,7 @@
     };
     const money = (v) =>
         (P.local.get('currencySign') || '') +
-        Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        (P.money ? P.money.number(Number(v || 0)) : Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     const paymentTable = (s) =>
         /^take[\s_-]*away$/i.test(s.dine_type) ? 'takeaway:' + s._id : s.table_number;
     const time = (v) =>

@@ -68,7 +68,7 @@
         return { name: value('iv2-name'), price: details.family && details.prices.length ? Math.min.apply(null, details.prices) : value('iv2-price'), cost: value('iv2-cost'), quantity: details.family && details.quantities.length ? Math.min.apply(null, details.quantities) : value('iv2-quantity'), kind: selected('iv2-kind'), stock: selected('iv2-stock'), zeroStock: selected('iv2-zero-stock'), confirmZero: document.getElementById('iv2-confirm-zero').checked, openPrice: details.openPrice, family: details.family,
             taxId: taxReady && capabilities.tax ? value('iv2-tax') : '', taxName: capabilities.tax && tax && tax.dataset.name || '', taxRate: capabilities.tax && tax && tax.dataset.rate || 0, taxType: value('iv2-tax-type'), categoryId: value('iv2-category'), categoryName: category && category.dataset.name || '', barcode: value('iv2-barcode'), sku: value('iv2-sku'), description: value('iv2-description') };
     }
-    function money(n) { return (P.local.get('currencySign') || '') + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function money(n) { return (P.local.get('currencySign') || '') + (P.money ? P.money.number(Number(n || 0)) : Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })); }
     var previewTimer, previewKey = '', previewSequence = 0;
     function pricePreview(f, details) {
         var params = { price: Number(f.price), tax: details.hsn ? details.tax : Number(f.taxRate), tax_type: f.taxType,

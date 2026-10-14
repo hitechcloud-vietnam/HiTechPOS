@@ -1399,6 +1399,7 @@ PosnicPro.users = {
                         PosnicPro.local.set('timezone', response.data['branch_timezone']);
                         PosnicPro.local.set('timeformat', response.data['branch_timeformat']);
                         PosnicPro.local.set('currencySign', response.data['currency_type']);
+                        PosnicPro.local.set('currency_code', response.data['currency_code'] || '');
                         PosnicPro.local.set('userplan', response.data['plan']);
                         PosnicPro.users.insertLocalStorage(response);
                         PosnicPro.local.set('countryStateStorage', '');

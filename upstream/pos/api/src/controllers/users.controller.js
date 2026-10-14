@@ -589,6 +589,8 @@ class UsersController extends BaseController {
         branch_timezone: checkUserBranch.time_zone,
         branch_timeformat: checkUserBranch.time_format || 'enable',
         currency_type: checkUserBranch.currency_type,
+        // ISO code, so the till knows the dong has no decimals (utils/currency.js).
+        currency_code: require('../utils/currency').policy(checkUserBranch).currencyCode,
         branchCount: branchAccess.length,
         branchId: String(branchId),
         print_type: user.printing_design,
@@ -2478,6 +2480,8 @@ class UsersController extends BaseController {
         branch_timezone: checkUserBranch.time_zone,
         branch_timeformat: checkUserBranch.time_format || 'enable',
         currency_type: checkUserBranch.currency_type,
+        // ISO code, so the till knows the dong has no decimals (utils/currency.js).
+        currency_code: require('../utils/currency').policy(checkUserBranch).currencyCode,
         branchCount: branchLength,
         branchId: String(branchId),
         print_type: recordsFiltered.printing_design,

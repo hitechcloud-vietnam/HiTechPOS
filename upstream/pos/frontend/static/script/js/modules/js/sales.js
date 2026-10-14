@@ -889,7 +889,7 @@ PosnicPro.sales = {
        document in the product wears. */
     buildSaleSheet: function (d) {
         var esc = function (t) { return $('<span>').text(t == null ? '' : t).html(); };
-        var money = function (v) { return PosnicPro.local.get('currencySign') + '&nbsp;' + (Math.round((Number(v) || 0) * 100) / 100).toFixed(2); };
+        var money = function (v) { return PosnicPro.local.get('currencySign') + '&nbsp;' + (PosnicPro.money ? PosnicPro.money.number(Number(v) || 0) : (Number(v) || 0).toFixed(2)); };
         var real = function (v) { return v && v !== 'null' && v !== 'undefined' ? v : ''; };
         var unpaid = /partial|^unpaid$/i.test(String(d.payment_status || ''));
         var proc = String(d.sale_process || '');
@@ -1164,7 +1164,7 @@ PosnicPro.sales = {
                     + '<h6 class="mb-1">' + esc(g.name) + ' <small class="text-muted">(' + esc(rules) + ')</small></h6>';
                 g.options.forEach(function (o, oi) {
                     var d = Number(o.price_delta) || 0;
-                    var dLabel = d ? ' <small class="text-muted">(' + (d > 0 ? '+' : '−') + currency + Math.abs(d).toFixed(2) + ')</small>' : '';
+                    var dLabel = d ? ' <small class="text-muted">(' + (d > 0 ? '+' : '−') + currency + (PosnicPro.money ? PosnicPro.money.number(Math.abs(d)) : (Math.abs(d)).toFixed(2)) + ')</small>' : '';
                     body += '<div class="custom-control custom-checkbox">'
                         + '<input type="checkbox" class="custom-control-input mod-pick" id="modpick_' + gi + '_' + oi + '" data-name="' + esc(o.name) + '" data-delta="' + d + '">'
                         + '<label class="custom-control-label" for="modpick_' + gi + '_' + oi + '">' + esc(o.name) + dLabel + '</label>'
@@ -2019,7 +2019,7 @@ PosnicPro.sales = {
         $('#tendered_discount').text($('#discount_sale_amount').text());
         $('#tendered_tax').text($('#tax').text());
         $('.tendered_total,#tendered_payment').text(saleNewTot.toFixed(2));
-        $('#tendered_amount').val(saleNewTot.toFixed(2));
+        $('#tendered_amount').val((PosnicPro.money ? PosnicPro.money.fixed(saleNewTot) : (saleNewTot).toFixed(2)));
         $('#tendered_balance').text('0.00');
         $('#render_amount').html('');
         PosnicPro.sales.renderTenderReceiptPreview();
@@ -2052,7 +2052,7 @@ PosnicPro.sales = {
                         '<div style="position: relative;">' +
                             '<span id="count-' + denom + '" style="position: absolute; top: -4px; left: -4px; display: none; font-size: 11px; min-width: 20px; padding: 2px 5px; background: #34495e; color: #fff; border-radius: 10px; font-weight: 700; text-align: center; z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">0</span>' +
                             '<button id="denom-btn-' + denom + '" onclick="PosnicPro.sales.increaseDenom(' + denom + '); return false;" style="width: 100%; font-weight: 600; font-size: 13px; padding: 6px 4px; background: #fff; color: #3498db; border: 1.5px solid #3498db; border-radius: 4px; cursor: pointer; transition: all 0.2s;">' + 
-                                currency + ' ' + denom.toFixed(2) +
+                                currency + ' ' + (PosnicPro.money ? PosnicPro.money.number(denom) : (denom).toFixed(2)) +
                             '</button>' +
                         '</div>' +
                     '</div>' +
@@ -2210,7 +2210,7 @@ PosnicPro.sales = {
             $('.showhidewallet,.showhidDue').show();
             $('.partial_amount').removeAttr('disabled');
             if (PosnicPro.sales.SaleAction === 'add' || PosnicPro.sales.EditRecentSaleParams.sale_process === 'Hold') {
-                $('#Partial_amount').val(saleNewTot.toFixed(2));
+                $('#Partial_amount').val((PosnicPro.money ? PosnicPro.money.fixed(saleNewTot) : (saleNewTot).toFixed(2)));
                 if (wallet_balance > 0) {
                     $('#wallet_balance').attr('disabled', false);
                 } else {
@@ -2251,7 +2251,7 @@ PosnicPro.sales = {
         } else {
             $('.showhidewallet').hide();
             $('.partial_amount').attr('disabled', 'disabled');
-            $('.partial_amount').val(saleNewTot.toFixed(2));
+            $('.partial_amount').val((PosnicPro.money ? PosnicPro.money.fixed(saleNewTot) : (saleNewTot).toFixed(2)));
         }
 
         // In payment-only flow (Add Payment from Sales History), allow
@@ -2591,7 +2591,7 @@ PosnicPro.sales = {
         }
         
         // Update tender amount
-        $('#tendered_amount').val(total.toFixed(2));
+        $('#tendered_amount').val((PosnicPro.money ? PosnicPro.money.fixed(total) : (total).toFixed(2)));
         
         // Calculate return balance
         let billAmount = parseFloat($('#tendered_payment').text().replace(/,/g, '')) || 0;
@@ -2627,7 +2627,7 @@ PosnicPro.sales = {
 
         var currency = (PosnicPro.local.get('currencySign') || '').trim();
         var money = function (n) {
-            var v = Math.abs(n).toFixed(2);
+            var v = (PosnicPro.money ? PosnicPro.money.number(Math.abs(n)) : (Math.abs(n)).toFixed(2));
             return currency ? currency + ' ' + v : v;
         };
 
@@ -7844,7 +7844,7 @@ PosnicPro.sales.itemsMenu = {
                                 _tileHtml +
                                 '<div class="wsk-cp-text mt-3">' +
                                 '<div class="price-text-color">' +
-                                '<div class="text-center"><span class="price">' + currency + '&nbsp;' + price.toFixed(2) + '</span></div>' +
+                                '<div class="text-center"><span class="price">' + currency + '&nbsp;' + (PosnicPro.money ? PosnicPro.money.number(price) : (price).toFixed(2)) + '</span></div>' +
                                 '</div>' + _stockHtml +
                                 '</div>' +
                                 '</div>' +
@@ -7919,7 +7919,7 @@ PosnicPro.sales.itemsMenu = {
             '<div class="wsk-cp-text mt-3">' +
             '<div class="price-text-color">' +
             '<div class="text-center"><span class="price">' + (differ ? 'from ' : '') +
-            currency + '&nbsp;' + minPrice.toFixed(2) + '</span></div>' +
+            currency + '&nbsp;' + (PosnicPro.money ? PosnicPro.money.number(minPrice) : (minPrice).toFixed(2)) + '</span></div>' +
             '</div>' + stockHtml +
             '</div>' +
             '</div>' +
@@ -8133,7 +8133,7 @@ PosnicPro.sales.itemsMenu = {
                 return '<button type="button" class="vp-row" data-item-id="' + esc(r.id) + '">'
                     + '<span class="vp-label">' + esc(leaf.label) + stock + '</span>'
                     + '<span class="vp-price">' + esc(currency) + '&nbsp;'
-                    + (Number(r.selling_price) || 0).toFixed(2) + '</span>'
+                    + (PosnicPro.money ? PosnicPro.money.number(Number(r.selling_price) || 0) : (Number(r.selling_price) || 0).toFixed(2)) + '</span>'
                     + '</button>';
             }).join('');
         },
@@ -8618,7 +8618,7 @@ PosnicPro.sales.recentMenu = {
                             '<div class="rs-meta">' + meta.join(' &middot; ') + '</div>' +
                             '</div>' +
                             '<div class="rs-side">' +
-                            '<div class="rs-amt">' + currency + '&nbsp;' + Number(params.total_amount || 0).toFixed(2) + '</div>' + pill +
+                            '<div class="rs-amt">' + currency + '&nbsp;' + (PosnicPro.money ? PosnicPro.money.number(Number(params.total_amount || 0)) : (Number(params.total_amount || 0)).toFixed(2)) + '</div>' + pill +
                             '</div>' +
                             '<div class="rs-actions">' +
                             '<a data-module="sales" data-access="read" href="javascript:void(0)" onclick="PosnicPro.sales.peekSale(\'' + id + '\'); return false;" class="rs-act btn-primary-rgba" data-toggle="tooltip" title="View" data-t-title="lang_view"><i class="feather icon-eye"></i></a>' +
@@ -9044,7 +9044,7 @@ PosnicPro.sales.parkedMenu = {
                 html += '<tr>' +
                     '<td>' + esc(r.customer_name || 'Walk-in') + '<br><small class="text-muted">' + esc(r.sales_id || '') + '</small></td>' +
                     '<td class="text-center">' + esc(r.number_of_items) + '</td>' +
-                    '<td class="text-center">' + currency + '&nbsp;' + Number(r.total_amount || 0).toFixed(2) + '</td>' +
+                    '<td class="text-center">' + currency + '&nbsp;' + (PosnicPro.money ? PosnicPro.money.number(Number(r.total_amount || 0)) : (Number(r.total_amount || 0)).toFixed(2)) + '</td>' +
                     '<td class="text-center"><span class="parked-ago' + (waited.stale ? ' stale' : '') + '" title="' + esc(waited.exact) + '">' + esc(waited.text) + '</span></td>' +
                     '<td class="text-center"><a href="#/sales/' + esc(r.sales_document_id) + '/hold" class="btn btn-success-rgba btn-sm" title="Resume this sale" data-t-title="lang_resume_this_sale"><i class="feather icon-play"></i></a></td>' +
                     '</tr>';
@@ -9171,7 +9171,7 @@ PosnicPro.quotes = {
     _rows: [],
     _status: '',
     _esc: function (v) { return $('<i>').text(v == null ? '' : v).html(); },
-    _money: function (n) { return (PosnicPro.local.get('currencySign') || '') + '&nbsp;' + Number(n || 0).toFixed(2); },
+    _money: function (n) { return (PosnicPro.local.get('currencySign') || '') + '&nbsp;' + (PosnicPro.money ? PosnicPro.money.number(Number(n || 0)) : (Number(n || 0)).toFixed(2)); },
     showDataTablePage: function () {
         PosnicPro.HideSideBarModal();
         $('.nav-link-active,.tab-pane-active,.dropdown-item').removeClass('active');
@@ -10286,7 +10286,7 @@ PosnicPro.quotes = {
             .replace(/\s+/g, ' ').trim();
         };
         var money = function (n) {
-          return (txt(PosnicPro.local.get('currencySign') || '') + ' ' + Number(n || 0).toFixed(2)).trim();
+          return (txt(PosnicPro.local.get('currencySign') || '') + ' ' + (PosnicPro.money ? PosnicPro.money.number(Number(n || 0)) : (Number(n || 0)).toFixed(2))).trim();
         };
         var dmy = function (v) {
           if (!v) { return ''; }
@@ -11085,7 +11085,7 @@ PosnicPro.sales.chooseBarcodeItem = function (items) {
                 }));
         } else {
         $('<span class="d-block text-muted"></span>').text('Barcode: ' + (item.barcode_id || 'Not set') + ' | SKU: ' + (item.itemid || item.item_id) + ' | ' +
-            (item.supplier_name || '') + ' | ' + (PosnicPro.local.get('currencySign') || '') + price.toFixed(2) +
+            (item.supplier_name || '') + ' | ' + (PosnicPro.local.get('currencySign') || '') + (PosnicPro.money ? PosnicPro.money.number(price) : (price).toFixed(2)) +
             ' | Stock: ' + (Number(item.available_quantity) || 0)).appendTo(button);
         }
         button.on('click', function () { modal.modal('hide'); PosnicPro.sales.addScannedItem(item); });
@@ -11434,7 +11434,7 @@ PosnicPro.sales.renderRecentItems = function () {
         return '<div class="autocomplete-suggestion recent-item-row" data-i="' + i + '" style="cursor:pointer;">' +
             '<img loading="lazy" decoding="async" src="' + img + '" height="40" width="40" style="border-radius: 25%;" /> ' +
             '<div class="suggestion-name">' + $('<span>').text(it.name).html() + '</div>' +
-            '<span><span class="suggestion-price pull-right">' + currency + '&nbsp;' + (Number(it.price) || 0).toFixed(2) + '</span></span></div>';
+            '<span><span class="suggestion-price pull-right">' + currency + '&nbsp;' + (PosnicPro.money ? PosnicPro.money.number(Number(it.price) || 0) : (Number(it.price) || 0).toFixed(2)) + '</span></span></div>';
     }).join(''))
         .css({ top: off.top + input.outerHeight(), left: off.left, width: input.outerWidth() })
         .show();
@@ -11718,8 +11718,8 @@ PosnicPro.sugRow = function (d, nameHtml, o) {
         else { stock = '<span class="sug-stock in">In stock ' + q + '</span>'; }
     }
     var priceHtml = o.price != null
-        ? '<div class="sug-price">' + o.currency + '&nbsp;' + Number(o.price).toFixed(2)
-            + (o.was != null ? '<del>' + o.currency + '&nbsp;' + Number(o.was).toFixed(2) + '</del>' : '')
+        ? '<div class="sug-price">' + o.currency + '&nbsp;' + (PosnicPro.money ? PosnicPro.money.number(Number(o.price)) : (Number(o.price)).toFixed(2))
+            + (o.was != null ? '<del>' + o.currency + '&nbsp;' + (PosnicPro.money ? PosnicPro.money.number(Number(o.was)) : (Number(o.was)).toFixed(2)) + '</del>' : '')
             + '</div>'
         : '';
     if (!show('image')) thumb = '';
@@ -11999,7 +11999,7 @@ PosnicPro.sales.refreshCustomerAccount = function () {
         var balance = wallet < 0 && pending >= 0 ? pending + Math.abs(wallet) : pending;
         target.empty().show().append($('<span>').text(
             t('lang_previous_account_balance', 'Previous account balance') + ': ' +
-            (PosnicPro.local.get('currencySign') || '') + ' ' + balance.toFixed(2) + ' '
+            (PosnicPro.local.get('currencySign') || '') + ' ' + (PosnicPro.money ? PosnicPro.money.number(balance) : (balance).toFixed(2)) + ' '
         ));
         target.append($('<a>').attr('href', '#/customers/' + id).text(t('lang_view_details', 'View details')));
     }, failed);
@@ -12227,7 +12227,7 @@ $(function () {
             if (suggestion.data.partial_balance === true) {
                 let currency = PosnicPro.local.get('currencySign');
                 let balance = suggestion.data.balance;
-                partial_balance_span = '<span class="pull-left font-weight-bold">' + currency + '&nbsp;' + balance.toFixed(2) + '</span>';
+                partial_balance_span = '<span class="pull-left font-weight-bold">' + currency + '&nbsp;' + (PosnicPro.money ? PosnicPro.money.number(balance) : (balance).toFixed(2)) + '</span>';
             }
             return '<div>' +
                 $.Autocomplete.formatResult(suggestion) +
