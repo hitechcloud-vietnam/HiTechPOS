@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="assets/common/appearance.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <title>Order History - Restaurant</title>
+    <link href="assets/bootstrap.min.css" rel="stylesheet">
+    <script src="assets/common/i18n.js"></script>
+    <script src="assets/common/languages.js"></script>
+    <script src="assets/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="assets/common/confirm.css">
+<script src="assets/common/confirm.js"></script>
+<script src="assets/common/access.js"></script>
+    <script src="assets/common/money.js"></script>
+    <script src="assets/common/table-details.js"></script>
+    <link rel="stylesheet" href="assets/common/service-details.css">
+    <script src="assets/common/service-details.js"></script>
+    <script src="assets/common/order-actions.js"></script>
+    <script src="assets/common/kitchen-send-feedback.js"></script>
+    <script src="assets/common/group-move.js"></script>
+    <script src="assets/common/guest-update.js"></script>
+    <script src="assets/common/item-transfer.js"></script>
+    <script src="assets/common/transfer-screen.js"></script>
+    <link rel="stylesheet" href="assets/common/transfer-screen.css">
+    <script src="assets/common/phone-preferences.js"></script>
+    <link rel="stylesheet" href="assets/common/kitchen-notices.css">
+    <script src="assets/common/kitchen-notices.js" defer></script>
+    <script src="config.js"></script>
+    <script src="assets/common/popup.js"></script>
+    <script src="assets/common/order-queue.js"></script>
+    <script src="assets/common/this-device.js"></script>
+    <!-- The same ranked search the menu uses, so "cb" finds Chicken
+         Biryani here too. sounds-like.js first: item-search picks it up. -->
+    <script src="assets/common/sounds-like.js"></script>
+    <script src="assets/common/item-search.js"></script>
+    <!-- Today's price, for a dish the card cannot carry one for. Shared, so
+         the ordering screen and the add-to-an-order sheet ask the same
+         question in the same words. -->
+    <script src="assets/common/ask-price.js"></script>
+    <script src="assets/common/quick-sale.js"></script>
+    <script src="assets/common/ask-options.js"></script>
+    <script src="assets/common/ask-run-out.js"></script>
+    <!-- THE SAME RENDERER THE MENU SCREEN USES. Owner: "adding new item should
+         have button like add item and same as first scree menu item list". A
+         second, smaller menu written for this modal would drift from the real
+         one the week after it was made. -->
+    <script src="assets/common/menu-view.js"></script>
+    <script src="assets/common/item-localization.js"></script>
+    <script src="assets/common/item-language.js"></script>
+    <script src="indexedDB.js"></script>
+    <script src="assets/common/order-queue-ui.js"></script>
+    <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
+    <link href="assets/products/menu.css" rel="stylesheet">
+    <link href="assets/order-history/style.css" rel="stylesheet">
+    <link href="assets/order-history/table-selection.css" rel="stylesheet">
+    <link href="assets/common/design.css" rel="stylesheet">
+    <link href="assets/common/ui-theme.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/common/i18n.css">
+    <link rel="stylesheet" href="assets/order-history/editor.css">
+    <link rel="stylesheet" href="assets/order-history/item-notes.css">
+    <link rel="stylesheet" href="assets/common/mobile-gestures.css">
+    <script src="assets/common/mobile-gestures.js" defer></script>
+    <link rel="stylesheet" href="assets/common/order-photos.css">
+    <script src="assets/common/order-photos.js" defer></script>
+    <link rel="stylesheet" href="assets/common/service-rounds.css">
+    <script src="assets/common/service-rounds.js" defer></script>
+    <link href="assets/common/design.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/common/app-design.css">
+    <script src="assets/common/navigation.js" defer></script>
+    <link href="assets/order-history/theme.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/common/appearance.css">
+    <link rel="stylesheet" href="assets/common/chef-loading.css">
+    <script src="assets/common/chef-loading.js" defer></script>
+</head>
+
+<body class="history-screen">
+    <!-- Page Loader -->
+    <div id="page-loader">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Header -->
+    <div class="mobile-header">
+        <button class="back-btn" aria-label="Back" onclick="handleBackButton()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1 id="header-title">Order history</h1>
+        <button type="button" class="history-table-picker" onclick="showTableSelectionScreen()">Tables</button>
+        <button class="refresh-btn" data-mobile-refresh aria-label="Refresh" id="refresh-btn" style="display: none;">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+    </div>
+
+    <!-- Screen 1: Table Selection -->
+    <div class="content-wrapper" id="table-selection-screen">
+        <div class="screen-content">
+            <div class="screen-header">
+                <h2>Select Table</h2>
+                <p>Choose a table to view its order history</p>
+            </div>
+            <div class="table-grid" id="table-grid">
+                <!-- Table cards will be dynamically loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Screen 2: Order List -->
+    <div class="content-wrapper" id="order-list-screen" style="display: none;">
+        <!-- Search and Filter Section -->
+        <section class="section-block">
+            <div class="search-filter-container">
+                <div class="all-filters-container" id="all-filters-container">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="order-search" placeholder="Search by order ID..."
+                            autocomplete="off">
+                    </div>
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-status="all">All</button>
+                        <button class="filter-btn" data-status="pending">Pending</button>
+                        <button class="filter-btn" data-status="completed">Completed</button>
+                        <button class="filter-btn" data-status="cancelled">Cancelled</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Orders List -->
+        <div class="orders-container" id="orders-list">
+            <!-- Orders will be dynamically loaded here -->
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state" style="display: none;">
+            <i class="fas fa-receipt"></i>
+            <h3>No Orders Found</h3>
+            <p>No orders found for this table.</p>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div class="modal fade" id="orderDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Order Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="order-details-content">
+                    <!-- Order details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn close-btn" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn action-btn edit-btn" id="edit-order-btn">Modify</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modify Order Modal -->
+    <div class="modal fade" id="editOrderModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modify order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <section id="order-editor-items">
+                        <button type="button" id="order-editor-details-open" class="editor-summary">
+                            <span><strong id="order-editor-context"></strong><small id="order-editor-meta"></small></span>
+                            <span class="editor-summary-action"><span>Order Details</span> <i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+                        </button>
+                        <div class="editor-items-heading">
+                            <h6>On this order</h6>
+                            <button type="button" class="btn add-items-btn" id="open-item-picker"><i class="fas fa-plus" aria-hidden="true"></i> <span>Add items</span></button>
+                        </div>
+                        <div id="current-order-items" class="order-items-list"></div>
+                        <div class="product-search-container" hidden><input type="text" id="product-search" placeholder="Search the menu"><div id="product-suggestions"></div></div>
+                        <div id="new-items-list" hidden></div>
+                    </section>
+                    <section id="order-editor-details" hidden>
+                        <button type="button" class="editor-back" data-editor-view="items"><i class="fas fa-arrow-left" aria-hidden="true"></i> <span>Back to the order</span></button>
+                        <h6>Order Details</h6>
+                        <div class="editor-detail-actions">
+                            <button type="button" data-editor-setting="table"><span>Move table</span><strong id="editor-table-value" translate="no"></strong><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+                            <button type="button" data-editor-setting="guests"><span>Guests</span><strong id="editor-guests-value" translate="no"></strong><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+                            <button type="button" data-editor-setting="type"><span>Order Type</span><strong id="editor-type-value"></strong><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+                            <button type="button" data-editor-setting="discount"><span>Discount</span><strong id="editor-discount-value" translate="no"></strong><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+                        </div>
+                    </section>
+                    <section id="order-editor-settings" hidden>
+                        <button type="button" class="editor-back" id="editor-setting-back"><i class="fas fa-arrow-left" aria-hidden="true"></i> <span>Back</span></button>
+                        <h6 id="editor-setting-title"></h6>
+                        <div id="edit-type-section"><div class="row mt-3">
+                        <div class="col-12 text-center">
+                            <label class="form-label d-block mb-2">Order Type</label>
+                            <div class="d-flex justify-content-center">
+                                <div class="btn-group" role="group" aria-label="Dine Type">
+                                    <input type="radio" class="btn-check" name="edit_dine_type" id="edit-dinein"
+                                        value="Dine-in" autocomplete="off" checked>
+                                    <label class="btn btn-outline-secondary" for="edit-dinein">Dine-in</label>
+
+                                    <input type="radio" class="btn-check" name="edit_dine_type" id="edit-takeaway"
+                                        value="Take away" autocomplete="off">
+                                    <label class="btn btn-outline-secondary" for="edit-takeaway">Take away</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                        <div class="row mt-3" id="edit-table-section">
+                        <div class="col-12 text-center">
+                            <div class="section-title mb-2">Select Table</div>
+                            <div id="edit-table-list" class="table-list">
+                                <!-- tables will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="edit-pax-section">
+                        <div class="col-12 text-center">
+                            <div class="section-title mb-2">Guests</div>
+
+                            <!-- HERO ICON (same style as discount page) -->
+                            <div id="edit_person_hero" class="person-hero"></div>
+
+                            <div class="edit-person-container">
+                                <div class="edit-person-buttons">
+                                    <button type="button" class="edit-person-btn" data-person="1">1</button>
+                                    <button type="button" class="edit-person-btn" data-person="2">2</button>
+                                    <button type="button" class="edit-person-btn" data-person="3">3</button>
+                                    <button type="button" class="edit-person-btn" data-person="4">4</button>
+                                    <button type="button" class="edit-person-btn" data-person="5">5</button>
+                                    <button type="button" class="edit-person-btn" data-person="6">6</button>
+                                </div>
+
+                                <input id="edit_person_input" type="text" inputmode="numeric" maxlength="2"
+                                    class="edit-person-input" placeholder="Other...">
+                            </div>
+                        </div>
+                    </div>
+
+                        <button type="button" id="editor-setting-apply" class="editor-apply">Apply</button>
+                    </section>
+                    <div class="row mt-3" style="display: none;">
+                        <div class="col-12">
+                            <label class="form-label">Discount</label>
+                            <div class="d-flex">
+                                <input type="number" step="0.01" min="0" id="edit-discount-value" class="form-control"
+                                    placeholder="e.g. 10">
+
+                                <div class="ms-2 d-flex align-items-center">
+                                    <div class="btn-group" role="group" aria-label="Discount type">
+                                        <input type="radio" class="btn-check" name="edit_discount_type"
+                                            id="edit-discount-percent" value="percent" autocomplete="off" checked>
+                                        <label class="btn btn-outline-warning" for="edit-discount-percent">%</label>
+
+                                        <input type="radio" class="btn-check" name="edit_discount_type"
+                                            id="edit-discount-amount" value="amount" autocomplete="off">
+                                        <label class="btn btn-outline-warning" for="edit-discount-amount">₹</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-2" style="display: none;">
+                        <div class="col-12">
+                            <label class="form-label">Discount Description</label>
+                            <textarea id="edit-discount-description" class="form-control" rows="2"
+                                placeholder="Reason for discount (optional)"></textarea>
+                        </div>
+                    </div>
+                    <!-- Dine Type -->
+
+                </div>
+                <div class="modal-footer editor-footer">
+                    <div class="editor-total"><span id="editor-item-count"></span><strong id="editor-total-value" translate="no"></strong></div>
+                    <div class="editor-footer-actions"><button type="button" id="cancel-order-changes" class="editor-cancel">Close</button><button type="button" class="btn action-btn edit-btn" id="save-order-changes">Send only these changes</button></div>
+                    <p class="editor-save-help">Changes are sent when you update the order.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- the add-item sheet lives inside the modal so Bootstrap's focus
+             trap does not steal focus back from its search box; see
+             the comment on the sheet itself -->
+        <!--
+            THE MENU, FULL SCREEN, WHILE ADDING TO AN ORDER.
+
+            Rendered by MenuView - the same module that draws products.html - so a
+            waiter adding a second round sees the screen they already know rather
+            than a smaller copy of it written for a modal.
+        -->
+        <div id="item-picker" class="item-picker" hidden>
+            <div class="item-picker-head">
+                <button type="button" class="item-picker-back" id="item-picker-close" aria-label="Back to the order">&larr;</button>
+                <span class="item-picker-title" id="item-picker-title">Add to the order</span>
+            </div>
+            <!--
+                THE SAME SEARCH THE ORDERING SCREEN HAS.
+
+                Owner: "i want whole UI as same in new order search box, center menu
+                button with categories, efective search and list of items."
+
+                Same markup, same classes, and the ranking behind it is
+                ItemSearch - the module the ordering screen uses - so "cb" finds
+                Chicken Biryani here exactly as it does there. A second, simpler
+                search written for this sheet would have been the thing that drifts.
+            -->
+            <div class="item-picker-search">
+                <div class="product-search-inner">
+                    <span class="product-search-icon"><i class="fas fa-search"></i></span>
+                    <input type="text" id="picker-search-input" name="menu-search" placeholder="Search the menu" autocomplete="on"
+                        autocorrect="on" autocapitalize="none" spellcheck="true" />
+                    <button type="button" id="picker-search-clear" class="product-search-clear" hidden
+                        aria-label="Clear">&times;</button>
+                    <!--
+                        Owner: "inside menu pop up menu add + button or some
+                        symbol to do quick sales."
+
+                        The menu screen has one and this sheet did not, so a
+                        waiter adding to an order that is already on a table -
+                        which is most of them - had no way to put something on
+                        it that the menu has not got.
+                    -->
+                    <button type="button" id="picker-quick-sale" class="product-quick-sale"
+                        aria-label="Add an item that is not on the menu"
+                        title="Quick sale - something the menu does not have"><i class="fas fa-bolt" aria-hidden="true"></i><span>Quick sale</span></button>
+                </div>
+            </div>
+            <div class="item-picker-rail" id="item-picker-rail"></div>
+            <div class="item-picker-body" id="item-picker-body"></div>
+
+            <!--
+                Every category at once, with counts. The rail is fine for six
+                categories and useless for twenty-five, where the one you want is
+                always off the right-hand edge.
+            -->
+            <button type="button" class="menu-index-btn picker-index-btn" id="picker-index-btn" hidden>
+                <i class="fas fa-list-ul"></i> MENU
+            </button>
+            <div class="ui-scrim picker-index-scrim" id="picker-index" hidden>
+                <div id="picker-index-scrim" style="position:absolute;inset:0;"></div>
+                <div class="ui-sheet" style="position:relative;">
+                    <div class="ui-sheet-head" style="display:flex;align-items:center;justify-content:space-between;">
+                        <h2 class="ui-sheet-title">Menu</h2>
+                        <button type="button" class="ui-btn-quiet" id="picker-index-close"
+                            style="color:var(--ink-soft);font-size:20px;">&times;</button>
+                    </div>
+                    <div class="ui-sheet-body" id="picker-index-list"></div>
+                </div>
+            </div>
+
+            <div class="item-picker-foot"><small>Quantities here are new additions only.</small><div class="editor-total"><span id="picker-item-count"></span><strong id="picker-total-value" translate="no"></strong></div>
+                <button type="button" class="btn item-picker-done" id="item-picker-done">Review new items</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="order-toast" class="order-toast">
+        <div class="order-toast-content">
+            <span id="order-toast-message"></span>
+        </div>
+    </div>
+
+    <!-- Edit Item Notes Modal -->
+    <div class="modal fade" id="editItemNotesModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered edit-notes-dialog">
+            <div class="modal-content edit-notes-content">
+                <div class="modal-header edit-notes-header">
+                    <div><h5 class="modal-title">Item note</h5><p id="edit-notes-product-name" translate="no"></p></div>
+                    <button type="button" class="btn-close" aria-label="Close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body edit-notes-body">
+                    <label for="edit-item-notes-text" class="edit-notes-label">Instructions for the kitchen</label>
+                    <textarea id="edit-item-notes-text" class="edit-notes-textarea" rows="3" maxlength="300"
+                        placeholder="For example: less spicy, no onion"></textarea>
+                </div>
+                <div class="modal-footer edit-notes-footer">
+                    <button type="button" class="notes-btn notes-btn-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="button" class="notes-btn notes-btn-primary" id="edit-item-notes-apply">
+                        Save note
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remove Item Confirm Modal -->
+    <div class="modal fade" id="removeItemConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cancel item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="remove-item-message">Cancel this item already sent to the kitchen?</p>
+                    <p id="remove-item-name" translate="no" style="font-weight: 600; color: #E74C3C; margin-top: 8px;"></p><label for="cancel-item-reason">Reason for cancellation</label><textarea id="cancel-item-reason" class="form-control" rows="2" required minlength="3" maxlength="200"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-danger" id="confirm-remove-item-btn">
+                        Yes, Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Cancel Order Confirm Modal -->
+    <div class="modal fade" id="cancelConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cancel Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to cancel this order?</p><label for="history-cancel-reason" class="form-label mt-3">Reason for cancellation</label><textarea id="history-cancel-reason" class="form-control" rows="3" minlength="3" maxlength="200" required placeholder="Why is this order being cancelled?"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-danger" id="confirm-cancel-order-btn">
+                        Yes, Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Local, not a CDN: the shop Wi-Fi works with the internet down, and every
+         modal on this page (KOT edit, order update, the confirmations) is Bootstrap
+         JS. Fetching it from the internet meant those buttons did nothing exactly
+         when the app is most needed. -->
+    <script src="assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="assets/common/bill-review.js"></script>
+    <script src="assets/order-history/script.js"></script>
+    <script src="assets/order-history/editor.js"></script>
+</body>
+
+</html>

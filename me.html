@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="assets/common/appearance.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Me</title>
+    <link href="assets/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/common/design.css" rel="stylesheet">
+    <link href="assets/common/ui-theme.css" rel="stylesheet">
+    <link href="assets/me/style.css" rel="stylesheet">
+    <script src="assets/common/i18n.js"></script>
+    <script src="assets/common/languages.js"></script>
+    <script src="assets/jquery-3.6.0.min.js"></script>
+    <!-- Written at build time; absent at a desk, where the page says "dev". -->
+    <script src="app-build.js" onerror="this.remove()"></script>
+    <link rel="stylesheet" href="assets/common/confirm.css">
+<script src="assets/common/confirm.js"></script>
+<script src="assets/common/access.js"></script>
+    <script src="assets/common/money.js"></script>
+    <link rel="stylesheet" href="assets/common/service-details.css">
+    <script src="assets/common/service-details.js"></script>
+    <script src="assets/common/order-actions.js"></script>
+    <script src="assets/common/phone-preferences.js"></script>
+    <link rel="stylesheet" href="assets/common/kitchen-notices.css">
+    <script src="assets/common/kitchen-notices.js" defer></script>
+    <script src="config.js"></script>
+    <script src="assets/common/lock.js"></script>
+    <script src="assets/common/item-localization.js"></script>
+    <script src="assets/common/item-language.js"></script>
+    <script src="indexedDB.js"></script>
+    <script src="assets/common/order-queue.js"></script>
+    <script src="assets/common/account.js"></script>
+    <link rel="stylesheet" href="assets/common/i18n.css">
+    <link rel="stylesheet" href="assets/common/app-design.css">
+<script src="assets/common/navigation.js" defer></script>
+    <link rel="stylesheet" href="assets/common/appearance.css">
+</head>
+
+<body data-offline-page>
+    <header class="me-head">
+        <button type="button" class="me-back" id="me-back" aria-label="Back">&larr;</button>
+        <h1 class="me-title">Me</h1>
+    </header>
+    <main class="me-body" id="me-pages">
+        <section data-me-page="home">
+            <section class="me-card">
+                <a class="me-row me-row-go" href="#account"><span class="me-row-label">Account<span class="me-row-sub" id="me-home-who"></span></span></a>
+                <button type="button" class="me-row me-row-go" id="me-server"><span class="me-row-label">Change shop server<span class="me-row-sub" id="me-server-where" translate="no"></span></span></button>
+                <a class="me-row me-row-go" href="#language"><span class="me-row-label">Language</span><span class="me-row-value" id="me-language-name" translate="no"></span></a>
+                <a class="me-row me-row-go" href="#preferences"><span class="me-row-label">This phone</span></a>
+                <a class="me-row me-row-go" href="my-sales.html" id="me-sales"><span class="me-row-label">My sales today</span><span class="me-row-value" id="me-today"></span></a>
+                <a class="me-row me-row-go" href="pending.html" onclick="sessionStorage.setItem('captain_pending_return', 'me.html')"><span class="me-row-label">Order sync</span></a>
+            </section>
+            <section class="me-card"><a class="me-row me-row-go" href="help.html"><span class="me-row-label">Help</span></a></section>
+            <h2 class="me-heading">About</h2>
+            <p class="me-note" id="me-version"></p>
+        </section>
+        <section data-me-page="account" hidden>
+            <section class="me-card">
+                <p class="me-who" id="me-who"></p>
+                <button type="button" class="me-row me-row-go" id="me-profile"><span class="me-row-label">Profile details</span></button>
+                <button type="button" class="me-row me-row-go" id="me-password"><span class="me-row-label">Change password</span></button>
+                <button type="button" class="me-row" id="me-lock"><span class="me-row-label">Screen lock</span><span class="me-row-value" id="me-lock-state">Off</span></button>
+                <button type="button" class="me-row me-row-quiet" id="me-lock-off" hidden><span class="me-row-label">Turn the lock off</span></button>
+            </section>
+            <h2 class="me-heading">Account</h2>
+            <section class="me-card">
+                <button type="button" class="me-row me-row-go" data-account-change="staff"><span class="me-row-label">Switch staff</span></button>
+                <button type="button" class="me-row me-row-go" data-account-change="cloud"><span class="me-row-label">Use another cloud account</span></button>
+                <button type="button" class="me-row me-row-danger" id="me-sign-out"><span class="me-row-label">Sign out</span></button>
+            </section>
+        </section>
+        <section data-me-page="language" hidden>
+            <section class="me-card"><label class="me-field"><span class="me-row-label">Language</span><select id="me-language" class="ui-field"><option value="en">English</option><option value="ta">தமிழ்</option></select></label></section>
+        </section>
+        <section data-me-page="preferences" hidden>
+            <section class="me-card">
+                <label class="me-field"><span class="me-row-label">Appearance</span><select id="me-appearance" class="ui-field"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select><span class="me-row-sub">Choose how Captain looks on this phone.</span></label>
+                <label class="me-field"><span class="me-row-label">Item prices</span><select id="me-item-prices" class="ui-field"><option value="including">Including tax</option><option value="excluding">Excluding tax</option></select></label>
+                <label class="me-row"><span class="me-row-label">Sound alerts</span><input type="checkbox" role="switch" id="me-sound"></label>
+                <label class="me-row" id="me-vibration-row"><span class="me-row-label">Vibration</span><input type="checkbox" role="switch" id="me-vibration"></label>
+            </section>
+            <p id="me-preference-message" class="me-note" role="status"></p>
+            <section class="me-card">
+                <label class="me-field"><span class="me-row-label">Copies of a printed bill</span><select id="me-copies" class="ui-field"><option value="">As the shop is set</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>
+                <a class="me-row me-row-go" href="number-card.html"><span class="me-row-label">Number card for the wall</span></a>
+            </section>
+            <h2 class="me-heading">Restaurant</h2>
+            <section class="me-card">
+                <a class="me-row me-row-go" href="payment-settings.html"><span class="me-row-label">Collect payment</span></a>
+                <a class="me-row me-row-go" href="branch-details.html"><span class="me-row-label">Branch details</span></a>
+                <a class="me-row me-row-go" href="tables.html"><span class="me-row-label">Tables</span></a>
+                <a class="me-row me-row-go" href="#printers"><span class="me-row-label">Printing</span></a>
+            </section>
+        </section>
+        <section data-me-page="printers" hidden>
+            <section class="me-card me-printer-info">
+                <h2 class="me-heading">Receipt printer</h2>
+                <p class="me-note">Managed on desktop POS</p>
+            </section>
+            <section class="me-card me-printer-info">
+                <h2 class="me-heading">Kitchen printers</h2>
+                <p class="me-note">Managed on desktop POS</p>
+            </section>
+            <p class="me-note">Open an order and choose Kitchen delivery to check each printer report.</p>
+            <p class="me-note">Printer acceptance does not confirm paper output. Check the desktop printing log before reprinting.</p>
+            <a class="me-row me-row-go" href="kot-management.html"><span class="me-row-label">Back to tables</span></a>
+        </section>
+    </main>
+    <script src="assets/me/navigation.js"></script>
+    <script src="assets/me/profile.js"></script>
+    <script src="assets/me/script.js"></script>
+</body>
+</html>

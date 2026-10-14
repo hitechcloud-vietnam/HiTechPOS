@@ -1,0 +1,639 @@
+/*
+ * The floor, as a waiter reads it.
+ *
+ * WHAT THIS SCREEN WAS. A grid of identical boxes, each with a table number
+ * in it and nothing else. It is the first screen after signing in and the one
+ * somebody comes back to between every order, and the two questions they
+ * actually arrive with - which table has been waiting longest, and which is
+ * nearly done - were both unanswerable from it.
+ *
+ * The server was throwing the answers away (Posnic/POS: the aggregation
+ * grouped the open tickets by table and kept only the name). It sends the
+ * count, the age and the total now, and this draws them.
+ *
+ * WAITING TIME IS THE WHOLE SIGNAL. A table with one ticket from four minutes
+ * ago and a table with one from forty are the same box on the old screen and
+ * completely different problems on a floor. So the age is the thing that
+ * changes colour, and it is the only thing on the card that does.
+ */
+
+body.floor-screen {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font);
+}
+
+/* --------------------------------------------------------------- header */
+
+.floor-head {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s3) var(--s4);
+  padding-top: calc(var(--s3) + env(safe-area-inset-top, 0px));
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.floor-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--t-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+/*
+ * The quiet buttons, and the one that is not.
+ *
+ * There were four here, all the same size and weight: Change Branch, Refresh,
+ * KOT History, Add KOT. Only one of them is what somebody came to do. The
+ * other three are icons now, and the one that starts an order is the accent.
+ */
+.floor-icon {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 16px;
+  cursor: pointer;
+}
+.floor-icon:active {
+  background: var(--surface-sunk);
+}
+
+.floor-new {
+  position: fixed;
+  right: var(--s4);
+  bottom: calc(var(--s4) + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 52px;
+  padding: 0 var(--s5);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font);
+  font-size: var(--t-base);
+  font-weight: 700;
+  box-shadow: var(--lift-high);
+  cursor: pointer;
+}
+.floor-new:active {
+  transform: scale(0.97);
+}
+
+/* ---------------------------------------------------------------- cards */
+
+.floor-count {
+  padding: var(--s4) var(--s4) var(--s2);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.floor-grid {
+  display: grid;
+  /* Two up on a phone, more as the screen allows. auto-fill rather than a
+     fixed count, so a tablet on the pass uses the width it has. */
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--s3);
+  padding: 0 var(--s4);
+  /* Clear of the floating New order button. */
+  padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  list-style: none;
+  margin: 0;
+}
+
+.floor-card {
+  display: block;
+  padding: var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--lift);
+  color: var(--ink);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+.floor-card:active {
+  transform: scale(0.985);
+}
+
+/*
+ * The age stripe down the edge.
+ *
+ * Colour on a card a waiter is scanning at arm's length beats a number they
+ * have to read. Green is fine, amber is getting on, red has been too long -
+ * and the thresholds are deliberately generous, because a restaurant that
+ * turns everything red by eight o'clock has a screen nobody looks at.
+ */
+.floor-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--age, var(--line-strong));
+}
+.floor-card[data-age='fresh'] { --age: #16a34a; }
+.floor-card[data-age='waiting'] { --age: #d97706; }
+.floor-card[data-age='late'] { --age: #dc2626; }
+
+.floor-name {
+  font-size: var(--t-xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  /* A table name is typed by hand and can be anything. */
+  overflow-wrap: anywhere;
+}
+
+.floor-since {
+  margin-top: var(--s2);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--age, var(--ink-soft));
+  font-variant-numeric: tabular-nums;
+}
+
+.floor-meta {
+  margin-top: var(--s1);
+  font-size: var(--t-sm);
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.floor-card.is-takeaway .floor-name {
+  font-size: var(--t-lg);
+}
+
+/* ---------------------------------------------------------------- empty */
+
+/*
+ * Nothing open, which is good news and should read as good news.
+ *
+ * The old empty state was a grey clipboard and "No active orders", which on
+ * the screen somebody opens first reads like a failure to load.
+ */
+.floor-empty {
+  padding: var(--s6) var(--s5);
+  text-align: center;
+}
+.floor-empty-face {
+  font-size: 44px;
+  line-height: 1;
+  margin-bottom: var(--s3);
+}
+.floor-empty-said {
+  font-size: var(--t-lg);
+  font-weight: 600;
+  color: var(--ink);
+}
+.floor-empty-why {
+  margin-top: var(--s2);
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floor-card:active,
+  .floor-new:active {
+    transform: none;
+  }
+}
+
+/*
+ * "PRINT THE BILL", on the panel for a table.
+ *
+ * Quiet rather than primary. The thing a waiter comes to this panel to do is
+ * READ the table - what is on it, how long it has waited - and asking for the
+ * bill is the one thing they occasionally do next. A filled accent button here
+ * would compete with that every time the panel opens, and this is a button
+ * that should never be pressed by accident: a bill printing at the counter for
+ * a table still eating sends somebody on a walk for nothing.
+ */
+.floor-bill-btn {
+  margin-left: auto;
+  min-height: 36px;
+  padding: 0 var(--s3, 12px);
+  border: 1px solid var(--line-strong, #cbd5e1);
+  border-radius: var(--radius, 12px);
+  background: var(--surface, #fff);
+  color: var(--ink, #0f172a);
+  font: inherit;
+  font-size: var(--t-sm, 13px);
+  font-weight: 700;
+  cursor: pointer;
+}
+.floor-bill-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ==================================================== the order panel */
+
+/*
+ * THE PANEL THAT OPENS WHEN A TABLE IS TAPPED.
+ *
+ * Owner: "avoid usual design of claude blue gradient. match with app and
+ * professional design required."
+ *
+ * It was wearing the gradients a bootstrap template ships with - a purple-blue
+ * header (#667eea to #764ba2), green badges, a blue Modify button and a red
+ * Cancel one, each a different hue with its own light source. Four gradients on
+ * one panel is four things shouting, and none of them is the order.
+ *
+ * The menu, the bill, the floor and the table screen were rebuilt on
+ * design.css: ink on paper, one line weight, and ONE accent reserved for the
+ * single thing worth pressing. This brings the last screen into that, so the
+ * app stops changing its mind about what it looks like halfway through a
+ * shift.
+ *
+ * Cancel keeps a colour of its own. It is the one control here that destroys a
+ * customer's food, and it is the one place a second colour earns its keep.
+ *
+ * These override assets/kot/style.css, which loads before this file.
+ */
+.sliding-panel-header {
+  background: var(--surface);
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
+}
+.sliding-panel-header h3,
+.sliding-panel-header .panel-title,
+.sliding-panel-header #panel-title {
+  color: var(--ink);
+  font-weight: 700;
+}
+/* The close control was white-on-gradient and is now ink on paper. */
+.sliding-panel-header button,
+.sliding-panel-header .close-panel-btn,
+.sliding-panel-header i {
+  color: var(--ink-soft);
+}
+
+/*
+ * How many tickets are open. A count, not a trophy: soft accent, so it reads
+ * as information beside the heading rather than competing with it.
+ */
+.active-badge,
+.active-kot-badge {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid transparent;
+  font-weight: 700;
+  text-shadow: none;
+  box-shadow: none;
+}
+
+/* The money. Sunk rather than raised - it is a total to read, not a button. */
+.kot-total {
+  background: var(--surface-sunk);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+
+/* Keep the whole table detail on paired dark surfaces and text colors. */
+html[data-color-scheme="dark"] #kot-sliding-panel,
+  html[data-color-scheme="dark"] #kot-sliding-panel .kot-card,
+  html[data-color-scheme="dark"] #kot-sliding-panel .kot-item {
+    background: var(--surface);
+    color: var(--ink);
+    border-color: var(--line);
+  }
+html[data-color-scheme="dark"] #kot-sliding-panel .kot-item:hover,
+  html[data-color-scheme="dark"] #kot-sliding-panel .item-qty {
+    background: var(--surface-sunk);
+    color: var(--ink);
+    border-color: var(--line);
+  }
+html[data-color-scheme="dark"] #kot-sliding-panel .kot-details-header h3,
+  html[data-color-scheme="dark"] #kot-sliding-panel .item-name,
+  html[data-color-scheme="dark"] #kot-sliding-panel .kot-total span:first-child,
+  html[data-color-scheme="dark"] #kot-sliding-panel .total-amount {
+    color: var(--ink);
+  }
+html[data-color-scheme="dark"] #kot-sliding-panel .kot-meta-item,
+  html[data-color-scheme="dark"] #kot-sliding-panel .kot-meta-item i,
+  html[data-color-scheme="dark"] #kot-sliding-panel .item-index,
+  html[data-color-scheme="dark"] #kot-sliding-panel .item-note,
+  html[data-color-scheme="dark"] #kot-sliding-panel .service-round time,
+  html[data-color-scheme="dark"] #kot-sliding-panel .service-dish small,
+  html[data-color-scheme="dark"] #kot-sliding-panel .service-line.is-served {
+    color: var(--ink-soft);
+  }
+html[data-color-scheme="dark"] #kot-sliding-panel .service-action input {
+    background: var(--surface-sunk);
+    color: var(--ink);
+    border-color: var(--line);
+  }
+
+/*
+ * The one thing worth pressing on this panel, in the app's accent.
+ */
+.btn-modify {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+.btn-modify:hover {
+  background: var(--accent);
+  filter: brightness(0.94);
+}
+
+/*
+ * And the one that destroys somebody's food. Outlined rather than filled: it
+ * has to be findable and must never be the thing a thumb lands on by habit.
+ */
+.btn-cancel {
+  background: var(--surface);
+  color: var(--bad);
+  border: 1px solid var(--bad);
+  box-shadow: none;
+}
+.btn-cancel:hover {
+  background: var(--bad);
+  color: #fff;
+}
+
+/* The page itself: flat ground, like every other screen in the app. */
+body {
+  background: var(--ground);
+}
+
+/*
+ * WAITING FOR THE TILL, WHERE THE WAIT IS.
+ *
+ * Owner: "instead of hiding whole app." The section loader covered its element
+ * with a near-opaque white sheet and a Bootstrap-blue spinner, which is both
+ * the wrong colour and more sheet than a wait needs. Lighter, so the list
+ * underneath still reads as a list, and in the app's own accent.
+ */
+.section-loader {
+  background: rgba(255, 255, 255, 0.62) !important;
+  backdrop-filter: blur(1px);
+}
+.section-loader .spinner-border {
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+  color: var(--accent) !important;
+}
+
+/* ================================================== being somewhere */
+
+/*
+ * THE TOP OF THE SCREEN SAYS WHERE YOU ARE.
+ *
+ * Owner, relaying a client: "he dont have feeling he is in main page
+ * dashboard." It said "Tables" over an empty box, which on a quiet morning is
+ * indistinguishable from a screen that failed to load - and the way out of a
+ * screen that failed to load is the back button, which is exactly what he did.
+ *
+ * The greeting is small and grey; the shop's name is the heading. That order
+ * matters: the name is the fact worth reading, and a handset that could be
+ * pointed at any till in the estate has been answering "which one" nowhere.
+ */
+.floor-greet {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  margin-right: auto;
+}
+.floor-hello {
+  font-size: var(--t-xs, 12px);
+  font-weight: 600;
+  color: var(--ink-soft, #475569);
+  letter-spacing: 0.01em;
+}
+.floor-greet .floor-title {
+  margin: 0;
+  font-size: var(--t-xl, 20px);
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--ink, #0f172a);
+  /* A long branch name shortens rather than pushing the icons off the edge. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * WHAT THE GRID UNDERNEATH IS.
+ *
+ * Owner: "when you show table mention text like active order or active tables
+ * or some suitable name." A grid of numbered boxes under no heading is a grid
+ * of numbered boxes; named, it answers a question somebody already had.
+ */
+.floor-section {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s3, 12px);
+  margin: var(--s4, 16px) 0 var(--s2, 8px);
+}
+.floor-section-name {
+  font-size: var(--t-xs, 12px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint, #94a3b8);
+}
+/* The count loses its own block now that it shares a line with the heading. */
+.floor-section .floor-count {
+  margin: 0;
+  font-size: var(--t-sm, 13px);
+  font-weight: 700;
+  color: var(--ink-soft, #475569);
+}
+
+/* ============================================ online orders needing a person
+ *
+ * Owner: "request should go to desktop application and captain app. let him
+ * confirm. anyone can confirm about that."
+ *
+ * A bar across the top, not a badge. A badge is for something that can wait;
+ * a customer who has asked to cancel is standing at a table wondering whether
+ * their food is coming. It says how many and what the oldest one wants, and
+ * it does not go away until the queue is empty. Nothing blocks the screen -
+ * a waiter carrying three plates is never trapped in a dialog.
+ */
+.online-approvals-bar {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    border: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    background: #fff4e5;
+    color: #7a4100;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: left;
+}
+
+.online-approvals-panel {
+    padding: 12px 16px;
+    background: #fffaf3;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.online-approval {
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    background: #fff;
+}
+
+.online-approval[data-kind="cancel"] {
+    border-color: #d9534f;
+}
+
+.online-approval[data-kind="change"] {
+    border-color: #e0a800;
+}
+
+.online-approval-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.online-approval-what {
+    font-size: 13px;
+    opacity: 0.75;
+}
+
+.online-approval-where {
+    margin: 4px 0 0;
+    font-size: 13px;
+    opacity: 0.75;
+}
+
+.online-approval-lines {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    font-size: 15px;
+}
+
+.online-approval-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* Both full-width and equally weighted: neither answer is the safe default,
+   and a small "no" beside a big "yes" is a thumb being steered. */
+.online-approval-actions button {
+    flex: 1 1 0;
+    min-height: 44px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.online-approval-no {
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    background: #fff;
+    color: #333;
+}
+
+.online-approval-yes {
+    border: 0;
+    background: #1f2937;
+    color: #fff;
+}
+
+/* Individual takeaway tickets share the compact table grid. */
+#tables-list .floor-card.is-takeaway{grid-column:auto;border:1px solid var(--line);border-radius:13px;padding:16px;min-height:132px;background:var(--surface);box-shadow:none;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+#tables-list .floor-card.is-takeaway::before{display:none}
+#tables-list .is-takeaway .floor-name{font-size:18px;font-weight:500;display:flex;align-items:center;gap:10px;width:100%;line-height:1.3}
+
+.takeaway-type-icon{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;background:var(--surface-sunk,#f4f6fa);font-size:16px}
+.takeaway-payment-badge{font-size:12px;padding:4px 8px;border-radius:6px;background:var(--surface-sunk,#f4f6fa);color:var(--ink)}
+.takeaway-payment-badge.is-paid{background:#eaf7ef;color:#167249}
+#tables-list .is-takeaway .floor-meta,#tables-list .is-takeaway .floor-since{font-size:13px;color:var(--ink-soft);font-weight:400}
+.floor-filters{flex-wrap:wrap}.floor-filters [data-floor-filter]{min-width:0}
+
+.floor-primary-actions{display:flex;gap:6px;padding:12px 0;background:var(--surface-sunk)}
+.floor-primary-actions button{flex:1;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--accent);font:500 14px Inter,system-ui,sans-serif}
+.floor-primary-actions button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink)}
+.floor-filters [data-floor-filter]{border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:13px;font-weight:500;min-height:44px}
+.floor-filters [data-floor-filter][aria-pressed=true]{background:var(--accent);color:var(--accent-ink)}
+
+.floor-primary-actions .floor-new{position:static;inset:auto;z-index:auto;box-shadow:none;margin:0;padding:9px 12px;min-height:44px}
+
+#tables-list .floor-card{padding:16px;border-radius:13px;min-height:132px;box-shadow:none}
+#tables-list .floor-card .floor-name{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:500;line-height:1.3;letter-spacing:0}
+/* Light outline icons and medium-weight labels keep the floor easy to scan. */
+#tables-list { grid-template-columns:repeat(auto-fill,minmax(132px,1fr)); gap:12px; }
+#tables-list .floor-card {
+  --card-icon-ink:#66819d;
+  --card-icon-fill:#eff5fa;
+  color:var(--ink-soft);
+  background:var(--surface);
+  border-color:var(--line);
+  transition:border-color .15s,background .15s;
+}
+#tables-list .floor-card::before { width:3px; top:16px; bottom:16px; border-radius:0 3px 3px 0; opacity:.65; }
+#tables-list .floor-card:hover { border-color:var(--line-strong); background:var(--surface-sunk); }
+#tables-list .floor-card:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+#tables-list .floor-card .floor-name { color:var(--ink-soft); letter-spacing:0; }
+#tables-list .floor-card .floor-name { flex-direction:column; align-items:flex-start; gap:10px; }
+.table-type-icon,.takeaway-type-icon {
+  display:inline-flex; align-items:center; justify-content:center;
+  flex:0 0 auto; width:34px; height:34px; border-radius:10px;
+  background:var(--card-icon-fill); color:var(--card-icon-ink);
+}
+.table-type-icon svg,.takeaway-type-icon svg { width:22px; height:22px; }
+#tables-list .floor-card .floor-meta { font-size:12px; line-height:1.5; color:var(--ink-soft); font-weight:400; }
+#tables-list .floor-card .floor-since { font-size:12px; font-weight:500; }
+#tables-list .is-takeaway .floor-since,#tables-list .is-takeaway .floor-meta { margin-top:0; }
+#tables-list .floor-card-label { min-width:0; }
+html[data-color-scheme="dark"] #tables-list .floor-card { --card-icon-ink:#a5bbd1; --card-icon-fill:#27374a; }
+@media(max-width:360px) {
+  #tables-list .floor-card { padding:12px; }
+  #tables-list .floor-card .floor-name { font-size:16px; }
+}
+
+#tables-list .floor-card.is-takeaway{display:block;padding:16px;min-height:132px}
+#tables-list .floor-card.is-takeaway .floor-name{font-size:17px;font-weight:500;flex-direction:column;align-items:flex-start;gap:10px}
+#tables-list .takeaway-payment-badge{display:inline-block;margin-top:8px}
+#tables-list .is-takeaway .floor-meta,#tables-list .is-takeaway .floor-since{margin-top:4px}
+@media(max-width:360px){#tables-list .floor-card.is-takeaway{padding:12px}#tables-list .floor-card.is-takeaway .floor-name{font-size:16px}}
+
+/* Every floor tile occupies the same cell, regardless of its status content. */
+#tables-list{grid-auto-rows:1fr;align-items:stretch}
+#tables-list > .floor-card{align-self:stretch;height:100%;width:100%;box-sizing:border-box}
+
+
+/* Initial load occupies the list area without drawing fake cards or changing surfaces. */
+.floor-loading{grid-column:1/-1;min-height:148px;padding:20px 0;box-sizing:border-box;background:transparent;border:0;color:var(--ink-soft);font-size:13px;font-weight:400}
+.floor-loading span{display:inline-block;animation:floor-loading-appear .15s ease-out .25s both}
+@keyframes floor-loading-appear{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.floor-loading span{animation:none}}

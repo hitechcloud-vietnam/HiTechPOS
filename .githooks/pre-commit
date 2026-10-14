@@ -1,0 +1,38 @@
+#!/usr/bin/env sh
+
+# THE CHECKS, AT COMMIT TIME.
+#
+# Owner: "remove ci for captain. make it inside commit."
+#
+# The APK workflow is gone, so this is not a second opinion any more - it is
+# the only one. That is why it runs the whole thing rather than a quick subset:
+# a gate that checks less than the gate it replaced is not a gate.
+#
+#   unit suite      about 6 seconds
+#   browser suite   about 6 minutes
+#
+# Six minutes is a real cost and it is deliberate, because the alternative is
+# nothing at all. Two things follow from it:
+#
+#   Commit in batches rather than every few lines. The suite does not care how
+#   many changes it is checking.
+#
+#   `git commit --no-verify` when you genuinely need to save your place - a
+#   half-written thought, a stash by another name. Nothing downstream will
+#   catch it, so use it knowing that.
+#
+# TURN IT ON, ONCE PER CLONE:
+#
+#     git config core.hooksPath .githooks
+#
+# Not installed for you. A hook that appears unasked and takes six minutes the
+# first time somebody fixes a typo is a hook that gets switched off, and then
+# there is no gate anywhere.
+#
+# release.yml stays on GitHub: it needs a JDK, an Android SDK, a keystore and a
+# macOS runner, and none of that belongs on a laptop.
+
+# Tests create temporary repositories. Do not let the parent commit's Git
+# environment point those fixtures back at this worktree.
+unset $(git rev-parse --local-env-vars)
+npm run check

@@ -1,0 +1,460 @@
+/*
+ * The bill, which is the screen a waiter reads back to the table.
+ *
+ * WHAT WAS WRONG. The menu was rebuilt and this was not, so tapping "View
+ * bill" left one design and arrived in another - different type, different
+ * spacing, forty-five hard-coded greys, and a stylesheet that had never heard
+ * of design.css. An app that changes character between two screens somebody
+ * crosses forty times a night does not read as one app.
+ *
+ * Three things were wrong beyond the look.
+ *
+ * THE NAMES WERE CUT AT TWENTY-FIVE CHARACTERS, with an ellipsis, in JavaScript
+ * - so "Chicken Biryani (Boneless)" became "Chicken Biryani (Bonele...". That
+ * is the same mistake the menu grid made, on the screen where it matters most,
+ * because this is the one being read out loud to a customer.
+ *
+ * EVERY LINE HAD ITS OWN ACCORDION holding that line's subtotal, discount and
+ * tax. Twelve chevrons to open twelve times to answer one question - what does
+ * it come to - which is a question about the WHOLE bill and now gets answered
+ * once, at the bottom, where a bill answers it.
+ *
+ * AND THE FOOTER WAS THREE EQUAL THINGS: Clear, a total, Confirm. One of them
+ * sends food to a kitchen and it looked exactly like the one that throws the
+ * order away.
+ */
+
+/* ------------------------------------------------------------ the screen */
+
+/*
+ * AND THE DOCUMENT ITSELF, WHICH cart/style.css LOCKS.
+ *
+ * That sheet opens with `html { height: 100%; overflow: hidden }` and the
+ * comment "prevent whole page scroll", which was right for the layout it was
+ * written for and is wrong for this one: the head below is `position: sticky`
+ * and the body carries padding-bottom for the action bar, which are both ways
+ * of saying THE PAGE SCROLLS.
+ *
+ * Left as it was, a bill longer than the screen had lines nobody could reach -
+ * and it would not have looked broken, because `overflow: hidden` still allows
+ * programmatic scrolling, so every automated check passed over it. The menu and
+ * the table screen had the identical omission and it was reported from a
+ * handset as "items not able to scroll".
+ */
+html,
+body.bill-screen {
+  height: auto;
+  overflow: visible;
+}
+
+body.bill-screen {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--t-base);
+  line-height: 1.45;
+  /* Room for the action bar, so the last line is reachable rather than
+     permanently underneath it. */
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+}
+
+.bill-head {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  min-height: 52px;
+  padding: var(--s2) var(--s4);
+  padding-top: calc(var(--s2) + env(safe-area-inset-top, 0px));
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.bill-head .back-link {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-size: 20px;
+  text-decoration: none;
+}
+.bill-head-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--t-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.bill-head .header-btn {
+  border: none;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 16px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/*
+ * Which table this is for.
+ *
+ * The one piece of context a waiter carrying three orders needs before they
+ * read a word of it, and the old screen did not carry it at all.
+ */
+.bill-where {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s3) var(--s4) 0;
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+}
+.bill-where strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.bill-section {
+  margin-top: var(--s4);
+  padding: 0 var(--s4) var(--s2);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* -------------------------------------------------------------- a line */
+
+.bill-lines {
+  background: var(--surface);
+  border-block: 1px solid var(--line);
+}
+
+.bill-line {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  padding: var(--s4);
+  position: relative;
+}
+.bill-line + .bill-line::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--s4);
+  right: var(--s4);
+  border-top: 1px solid var(--line);
+}
+
+.bill-thumb {
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+  border: 1px solid var(--line);
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  line-height: 1;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
+
+.bill-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/*
+ * The name, WHOLE.
+ *
+ * Two lines, wrapped, never cut with an ellipsis in JavaScript. This is the
+ * screen that gets read out loud to a customer; a name that stops halfway
+ * through cannot be.
+ */
+.bill-name {
+  margin: 0;
+  font-size: var(--t-base);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/*
+ * How it was wanted. In the accent, because a requirement is something
+ * somebody asked for and not something that went wrong - and because this is
+ * the last screen before it reaches a kitchen that cannot guess it.
+ */
+.bill-note {
+  margin-top: 2px;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--accent);
+  overflow-wrap: anywhere;
+}
+
+.bill-each {
+  margin-top: var(--s1);
+  font-size: var(--t-sm);
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * A price the waiter typed can be typed again.
+ *
+ * Underlined with a dotted rule rather than dressed as a button: it sits
+ * inside a line of text, and a real button there would compete with the
+ * stepper beside it for a thumb. A dotted underline is the oldest signal there
+ * is for "this can be changed".
+ */
+.bill-each.is-askable {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  /* Small text still needs somewhere for a thumb to land. */
+  min-height: 32px;
+}
+
+.bill-each.is-askable:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.bill-right {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s2);
+}
+
+.bill-amount {
+  font-size: var(--t-base);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The stepper, the same object as the menu's so the two screens agree. */
+.bill-step {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.bill-step button {
+  flex: 0 0 30px;
+  height: 100%;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+.bill-step button:active {
+  background: var(--accent-soft);
+}
+.bill-step .bill-qty {
+  min-width: 26px;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* --------------------------------------------------------- what it comes to */
+
+/*
+ * ONE totals block, at the bottom, where a bill puts it.
+ *
+ * This used to be twelve accordions - each line's own subtotal, discount and
+ * tax behind its own chevron. Nobody adds up twelve accordions. The question
+ * is what the WHOLE thing comes to, and it is asked once.
+ */
+.bill-totals {
+  margin-top: var(--s4);
+  background: var(--surface);
+  border-block: 1px solid var(--line);
+  padding: var(--s3) var(--s4);
+}
+
+.bill-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding: var(--s2) 0;
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+}
+.bill-row span:last-child {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  font-weight: 600;
+}
+.bill-row.is-off span:last-child {
+  color: var(--good);
+}
+
+.bill-row.is-total {
+  margin-top: var(--s2);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line);
+  font-size: var(--t-lg);
+  font-weight: 700;
+  color: var(--ink);
+}
+.bill-row.is-total span:last-child {
+  font-size: var(--t-xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* ------------------------------------------------------------- the action */
+
+/*
+ * ONE of these sends food to a kitchen.
+ *
+ * The old footer was Clear, a total, and Confirm, all the same size and
+ * weight - so the button that throws the order away looked exactly like the
+ * button that commits it. The destructive one is quiet and on the left where
+ * nothing lands by accident; the committing one is the accent, carries the
+ * amount, and says what it does.
+ */
+.bill-bar-actions {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4);
+  padding-bottom: calc(var(--s3) + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -2px 16px rgba(15, 23, 42, 0.08);
+}
+
+.bill-clear {
+  flex: 0 0 auto;
+  min-height: 48px;
+  padding: 0 var(--s4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: var(--font);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bill-send {
+  flex: 1 1 auto;
+  min-height: 48px;
+  padding: 0 var(--s4);
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font);
+  font-size: var(--t-base);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+}
+.bill-send:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.bill-send .bill-send-amount {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+.bill-send:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+/* ---------------------------------------------------------------- empty */
+
+/*
+ * An empty bill, said rather than left blank - and NOT followed by a timed
+ * redirect. The old screen threw you back to the table list two seconds after
+ * you removed the last line, which is the app deciding you had finished.
+ * Somebody who takes an item off is usually about to add a different one.
+ */
+.bill-empty {
+  padding: var(--s6) var(--s5);
+  text-align: center;
+}
+.bill-empty-face {
+  font-size: 40px;
+  line-height: 1;
+  margin-bottom: var(--s3);
+}
+.bill-empty-said {
+  font-size: var(--t-lg);
+  font-weight: 600;
+  color: var(--ink);
+}
+.bill-empty-why {
+  margin-top: var(--s2);
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+}
+.bill-empty a {
+  display: inline-block;
+  margin-top: var(--s4);
+  min-height: 44px;
+  padding: 12px var(--s5);
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  font-size: var(--t-base);
+  text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bill-send:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+.bill-item-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:8px 0}
+.bill-item-actions .bill-note-action,.bill-item-actions .bill-preparation-action{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;margin:0;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-sunk);color:var(--ink);font:500 13px Inter,system-ui,sans-serif;cursor:pointer}
+.bill-item-actions .bill-preparation-action{width:44px;flex:0 0 44px;padding:0;color:var(--ink-soft)}
+.bill-item-actions i{font-size:14px}
+.bill-item-actions button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.bill-item-actions .bill-note-action{gap:4px;padding-inline:6px}

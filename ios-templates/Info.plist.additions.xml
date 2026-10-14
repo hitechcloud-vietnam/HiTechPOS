@@ -1,0 +1,75 @@
+<!--
+  What iOS needs to be told before this app can talk to a till.
+
+  These are merged into ios/App/App/Info.plist by build-ipa.js. They are kept
+  here, in the repo, rather than edited into a generated project, because
+  `npx cap add ios` regenerates that project and would silently drop them - and
+  the symptom is not a build error. It is an app that installs, launches, and
+  then cannot find the shop's server, which looks like a bug in the discovery
+  code rather than a missing declaration.
+
+  Two separate permissions, often confused:
+
+  NSAppTransportSecurity
+      iOS refuses plain http by default. The till is reached at
+      http://192.168.x.x:5555 and holds no certificate, so an exception is
+      required. NSAllowsLocalNetworking is the narrow one: it permits http to
+      local addresses ONLY, and leaves the block on arbitrary internet http in
+      place. NSAllowsArbitraryLoads would also work and is the wrong tool - it
+      turns the protection off everywhere, and App Review asks why.
+
+  NSLocalNetworkUsageDescription
+      Since iOS 14 an app must ask before it may contact devices on the local
+      network, and the user is shown this sentence verbatim. Without the key
+      the app does not get a refusal - it gets silence: every probe times out
+      and the shop's own till is invisible while the cloud address works fine.
+      Write it as an explanation to a waiter, not to a developer.
+-->
+<dict>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsLocalNetworking</key>
+        <true/>
+    </dict>
+
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>Captain looks for this shop's till on the Wi-Fi so orders reach the kitchen instantly, and keep working when the internet does not.</string>
+
+    <!-- Bonjour is what iOS gates local-network access behind. The app sweeps
+         addresses rather than browsing services, but iOS still expects a
+         declared service type before it will show the permission prompt. -->
+    <!--
+      The camera, for scanning the shop's code.
+
+      iOS kills an app outright that touches the camera without this key: not
+      a refusal the app can handle and explain, a termination. The sentence is
+      shown to the user verbatim, so it says why a waiter is being asked.
+    -->
+    <key>NSCameraUsageDescription</key>
+    <string>Captain uses the camera to scan the shop's code or photograph a handwritten order for you to review before sending it to the kitchen.</string>
+
+    <!--
+      The microphone, for a waiter who says the order instead of tapping it.
+
+      Same class of failure as the camera: iOS terminates an app that reaches
+      for the microphone with no declaration. Written to a waiter, because the
+      sentence is what they are shown.
+    -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Captain uses the microphone when you record a voice message for the kitchen or speak an order.</string>
+
+    <!--
+      Speech recognition is a SEPARATE permission from the microphone on iOS,
+      and asking for one does not ask for the other. Declared because a shop
+      may use the handset's own recogniser, which works with no key and with
+      the internet down; a shop using a cloud provider records here and
+      transcribes on its own server, and never reaches this.
+    -->
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Captain turns what you say into an order for this shop's menu. Nothing is sent to the kitchen until you have read it and pressed Add.</string>
+
+    <key>NSBonjourServices</key>
+    <array>
+        <string>_http._tcp</string>
+    </array>
+</dict>

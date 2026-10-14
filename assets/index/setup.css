@@ -1,0 +1,62 @@
+/* Setup has one task at a time. Scope these rules to the sign-in page. */
+body { background:#f5f7fa; color:#17233b; padding:0; }
+.auth-page { width:100%; max-width:480px; min-height:100dvh; padding:calc(env(safe-area-inset-top, 0px) + 24px) 24px calc(env(safe-area-inset-bottom, 0px) + 28px); }
+.auth-header { margin:0 0 42px; gap:12px; }
+.brand-circle { width:40px; height:40px; border-radius:12px; background:#2457e7 !important; }
+.brand-title { display:block !important; color:#17233b !important; font-size:21px; font-weight:700; letter-spacing:-.5px; }
+.brand-subtitle { color:#69758a; font-size:12px; margin-top:2px; }
+.setup-settings { margin-left:auto; width:44px; height:44px; border:1px solid #dfe5ef; background:white; color:#52617a; }
+.setup-settings svg { width:22px; height:22px; }
+.auth-card { padding:28px 24px; border:1px solid #e3e8f0 !important; border-radius:20px; margin:0; background:#fff !important; }
+#captain-onboarding { display:block; margin:0; }
+.setup-step, #captain-onboarding .setup-step { font-size:11px; letter-spacing:1.3px; font-weight:700; color:#68758b; margin:0 0 12px; }
+.setup-title { color:#17233b; font-size:27px; line-height:1.2; font-weight:700; letter-spacing:-.8px; margin:0 0 12px; }
+.setup-intro, #captain-onboarding .setup-intro { font-size:14px; color:#68758b; line-height:1.6; margin:0 0 28px; }
+.setup-label { display:block; color:#34435b; font-size:13px; font-weight:600; margin-bottom:9px; }
+.setup-address { display:flex; align-items:center; border:1px solid #cdd6e3; background:#fff; border-radius:12px; padding:3px; }
+.setup-address:focus-within { border-color:#2457e7; box-shadow:0 0 0 3px #2457e714; }
+#captain-server { width:100%; min-width:0; border:0; background:transparent; color:#17233b; outline:0; font-size:16px; padding:12px 9px; border-radius:9px; }
+#captain-server::placeholder { color:#8590a2; font-size:13px; }
+.setup-tools { display:flex; flex-shrink:0; gap:0; }
+.setup-tools button { border:0; background:transparent; color:#52617a; width:44px; height:44px; padding:11px; }
+.setup-tools button:hover, .setup-tools button[aria-expanded="true"] { background:#eef3ff; color:#2457e7; }
+.setup-tools svg { width:22px; height:22px; }
+.setup-tool-labels { display:flex; justify-content:flex-end; gap:12px; margin:9px 0 18px; color:#6d7890; font-size:10px; }
+#captain-onboarding .setup-hint { font-size:12px; line-height:1.6; color:#69758a; margin:16px 0 0; }
+.setup-hint strong { color:#34435b; font-weight:600; }
+.setup-primary, #login-btn { display:block; width:100%; min-height:50px; border:0; border-radius:12px !important; background:#2457e7; color:white; padding:14px 16px; font-size:15px; font-weight:600 !important; box-shadow:none; }
+.setup-primary:hover, #login-btn:hover { background:#1d49c7; color:#fff; }
+.setup-primary:disabled { opacity:.55; }
+.setup-link { background:none; border:0; color:#2457e7; font-size:13px; padding:12px 0; min-height:44px; font-weight:600 !important; text-align:left; }
+.setup-cloud { margin-top:28px; border-top:1px solid #e8edf4; padding-top:20px; }
+.setup-cloud > span { display:block; color:#79849a; font-size:12px; }
+.setup-cloud .setup-link { padding-bottom:0; }
+#captain-note:not(:empty) { margin:16px 0 0; padding:12px; border-radius:10px; color:#40516d; background:#f1f5fb; font-size:13px; }
+.setup-results { display:grid; gap:8px; margin-bottom:12px; }
+.setup-results:empty { display:none; }
+.setup-results button { text-align:left; overflow-wrap:anywhere; }
+#captain-code-options { margin-top:18px; }
+#captain-code-options > summary, #captain-legacy > summary { display:none; }
+#captain-code-options .setup-confirm { display:flex; align-items:flex-start; gap:8px; margin:16px 0; font-size:12px; line-height:1.5; }
+#captain-code-options input[type="checkbox"] { flex-shrink:0; margin:0; }
+#captain-legacy[hidden], #captain-onboarding[hidden], [hidden] { display:none !important; }
+.setup-back { margin:-8px 0 20px; }
+.setup-shop { background:#f5f7fb; padding:12px 14px; border-radius:10px; margin:0 0 24px; }
+.setup-shop span { display:block; font-size:10px; font-weight:600; letter-spacing:1px; color:#728098; margin-bottom:4px; }
+.setup-shop strong { display:block; color:#34435b; font-size:14px; font-weight:500; overflow-wrap:anywhere; }
+.auth-card .form-label { color:#34435b; font-size:13px; font-weight:600; }
+.auth-card .auth-input { min-height:50px; background:#fff; color:#17233b; border:1px solid #cdd6e3; font-size:16px; padding:12px 14px; }
+.auth-card .auth-input:focus { border-color:#2457e7; box-shadow:0 0 0 3px #2457e714; }
+.auth-card .auth-input::placeholder { color:#8590a2; font-size:14px; }
+#login-btn { margin-top:24px; }
+button:focus-visible, summary:focus-visible, a:focus-visible { outline:3px solid #9eb9ff; outline-offset:3px; }
+@media(max-width:380px) { .auth-page { padding-left:16px; padding-right:16px; } .auth-card { padding:24px 16px; } .setup-title { font-size:25px; } }
+@media(max-height:700px) { .auth-header { margin-bottom:24px; } }
+.setup-tools button { height:52px; padding:6px 0 4px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; }
+.setup-tools button span { font-size:9px; font-weight:500; line-height:1; }
+.setup-address { align-items:center; }
+#captain-onboarding .setup-hint { margin:12px 0 22px; }
+/* Visible saved accounts also work when the keyboard does not show datalists. */
+.saved-signin-choices{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.saved-signin-choices[hidden]{display:none;}
+.saved-signin-choices button{min-height:44px;max-width:100%;overflow-wrap:anywhere;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-sunk);color:var(--ink);font:inherit;font-size:14px;}

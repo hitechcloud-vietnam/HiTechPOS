@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="assets/common/appearance.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Captain</title>
+    <link href="assets/bootstrap.min.css" rel="stylesheet">
+    <script src="assets/common/i18n.js"></script>
+    <script src="assets/common/languages.js"></script>
+    <script src="assets/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="assets/common/confirm.css">
+<script src="assets/common/confirm.js"></script>
+<script src="assets/common/access.js"></script>
+    <script src="assets/common/money.js"></script>
+    <link rel="stylesheet" href="assets/common/service-details.css">
+    <script src="assets/common/service-details.js"></script>
+    <script src="assets/common/order-actions.js"></script>
+    <script src="assets/common/phone-preferences.js"></script>
+    <link rel="stylesheet" href="assets/common/kitchen-notices.css">
+    <script src="assets/common/kitchen-notices.js" defer></script>
+    <script src="config.js"></script>
+    <script src="assets/common/popup.js"></script>
+    <!-- What a dish SOUNDS like, for matching a transcript. Before
+         item-search.js, which picks it up if the page has it. -->
+    <script src="assets/common/sounds-like.js"></script>
+    <script src="assets/common/item-search.js"></script>
+    <!-- Today's price, for a dish the card cannot carry one for. Shared, so
+         the ordering screen and the add-to-an-order sheet ask the same
+         question in the same words. -->
+    <script src="assets/common/ask-price.js"></script>
+    <script src="assets/common/quick-sale.js"></script>
+    <script src="assets/common/ask-options.js"></script>
+    <script src="assets/common/ask-run-out.js"></script>
+    <script src="assets/common/serving-periods.js"></script>
+    <script src="assets/common/menu-view.js"></script>
+    <script src="assets/common/order-queue.js"></script>
+    <script src="assets/common/this-device.js"></script>
+    <script src="assets/common/item-localization.js"></script>
+    <script src="assets/common/item-language.js"></script>
+    <script src="indexedDB.js"></script>
+    <script src="assets/common/kitchen-send-feedback.js"></script><script src="assets/common/order-queue-ui.js"></script>
+    <script src="assets/common/voice-order.js"></script>
+    <script src="assets/common/speech.js"></script>
+    <script src="assets/common/voice-order-ui.js"></script>
+    <!-- The decisions every screen shares, made once. Before the screen's own
+         stylesheet, so a screen can override a token rather than fight one. -->
+    <link href="assets/common/design.css" rel="stylesheet">
+    <link href="assets/products/style.css" rel="stylesheet">
+    <link href="assets/products/menu.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="assets/common/i18n.css">
+    <link rel="stylesheet" href="assets/common/mobile-gestures.css">
+    <script src="assets/common/mobile-gestures.js" defer></script>
+    <link rel="stylesheet" href="assets/common/app-design.css">
+    <link rel="stylesheet" href="assets/common/appearance.css">
+    <link rel="stylesheet" href="assets/common/chef-loading.css">
+    <script src="assets/common/chef-loading.js" defer></script>
+</head>
+
+<body>
+
+    <!-- Page Loader -->
+    <div id="page-loader">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Popup -->
+    <div id="popup">
+        ⚠️ Need more? Our counter staff is happy to help!
+        <button onclick="hidePopup()" aria-label="Close popup">&times;</button>
+    </div>
+
+    <div class="content-wrapper">
+        <!-- Fixed Mobile Header -->
+        <div class="mobile-header">
+            <a href="discount.html" class="back-link" aria-label="Back">←</a>
+            <div class="store-title">Menu</div>
+            <div class="header-buttons">
+                <button class="header-btn" data-mobile-refresh aria-label="Refresh" onclick="refreshProductsPage(this)" title="Refresh Data & Images">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="header-btn" onclick="openOrderHistory()" title="Order History">
+                    <i class="fas fa-history"></i>
+                </button>
+                <div class="mobile-cart next-page">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="mobile-cart-count">0</span>
+                </div>
+            </div>
+        </div>
+
+        <section class="section-block fixed-heading">
+            <!-- 🔎 Product name filter -->
+            <div class="product-search">
+                <div class="product-search-inner">
+                    <span class="product-search-icon">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="product-search-input" name="menu-search" placeholder="Search the menu" autocomplete="on"
+                        autocorrect="on" autocapitalize="none" spellcheck="true" />
+                    <button type="button" id="product-search-clear" class="product-search-clear" hidden
+                        aria-label="Clear">&times;</button>
+                    <!--
+                        A WAY IN THAT DOES NOT DEPEND ON FINDING NOTHING.
+
+                        The offer used to appear only when a search matched
+                        nothing, which is fine for "birthday cake" and useless
+                        for the case a shop actually hits: owner, "I can add
+                        item like Fish but Fish Curry item already exist. how
+                        can i add now? its blocker."
+
+                        Typing "Fish" finds Fish Curry, so the search is not
+                        empty, so the offer never came - and there was no other
+                        door. This is the other door, and it is always here.
+                    -->
+                    <!--
+                        THE SAME MARK AS THE TILL. Owner: "better use same icon
+                        as desktop app has." The sale screen's quick sale is a
+                        lightning bolt (feather icon-zap), so this is one too:
+                        somebody who has used the till already knows it, and a
+                        bare + reads as "add a row" on a screen full of ADDs.
+                    -->
+                    <button type="button" id="product-quick-sale" class="product-quick-sale"
+                        aria-label="Add an item that is not on the menu"
+                        title="Quick sale - something the menu does not have"><i class="fas fa-bolt" aria-hidden="true"></i><span>Quick sale</span></button>
+                </div>
+            </div>
+        </section>
+
+        <!--
+            The category rail. A JUMP INDEX, not a filter: tapping a chip
+            scrolls to that section, and scrolling to a section lights its
+            chip. The menu is never rebuilt, so a place in it is never lost.
+        -->
+        <section class="section-block fixed-categories">
+            <div class="menu-rail" id="category-list">
+                <!-- Chips, from the menu itself -->
+            </div>
+        </section>
+
+        <div class="frequent-section" id="frequent-section" style="display:none;">
+            <h5>Frequently Ordered</h5>
+            <div class="frequent-items" id="frequent-items">
+                <!-- frequent items render here -->
+            </div>
+        </div>
+
+        <!-- One continuous menu, in sections. -->
+        <div class="scrollable-products">
+            <div id="product-list"></div>
+        </div>
+    </div>
+
+    <!--
+        Every category at once, with counts.
+
+        The rail is fine for a shop with six categories and useless for one
+        with twenty-five, where the one you want is always off the right-hand
+        edge. This is one tap from anywhere on the menu.
+    -->
+    <button type="button" class="menu-index-btn" id="menu-index-btn" hidden>
+        <i class="fas fa-list-ul"></i> MENU
+    </button>
+
+    <div class="ui-scrim" id="menu-index" hidden>
+        <div id="menu-index-scrim" style="position:absolute;inset:0;"></div>
+        <div class="ui-sheet" style="position:relative;">
+            <div class="mobile-sheet-handle" aria-hidden="true"></div>
+            <div class="ui-sheet-head" style="display:flex;align-items:center;justify-content:space-between;">
+                <h2 class="ui-sheet-title">Menu</h2>
+                <button type="button" class="ui-btn-quiet" id="menu-index-close"
+                    style="color:var(--ink-soft);font-size:20px;">&times;</button>
+            </div>
+            <div class="ui-sheet-body" id="menu-index-list"></div>
+        </div>
+    </div>
+
+    <!--
+        What is on the bill, and the way to it.
+
+        The old footer was "Back", a total and "Next" - three things of equal
+        weight, one of which was the only one anybody wanted. This rises when
+        there is something to say and stays down when there is not, rather
+        than spending a strip of a small screen on "0 items - ₹0.00".
+    -->
+    <div class="bill-bar" id="bill-bar">
+        <button type="button" class="bill-what" aria-label="Bill Summary" onclick="openCartSummarySheet()">
+            <span class="bill-count" id="bill-count">0 items</span>
+            <span class="bill-total" id="bill-total">₹0.00</span>
+        </button>
+        <!-- The spinner goes up before the navigation, because the gap between
+             tapping this and the bill page starting to load is part of the wait
+             too, and nothing else covers it. -->
+        <button type="button" class="bill-go" id="next-btn" onclick="goToBill()">
+            View bill →
+        </button>
+    </div>
+
+    <script>
+        /*
+         * To the bill, saying so.
+         *
+         * Owner: "view bill took few seconds ... dont confuse user few
+         * seconds." A bare location.href leaves the menu on screen and
+         * apparently unresponsive until the next page paints, so the first
+         * thing a second tap earns is a second navigation.
+         *
+         * This screen's loader starts visible and is hidden once the menu is
+         * drawn, so it is already here, ready to be shown again.
+         */
+        async function goToBill() {
+            const loader = document.getElementById('page-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                await waitForCartMutations();
+                window.location.href = 'cart.html';
+            } catch (error) {
+                if (loader) loader.style.display = 'none';
+                showErrorPopup('Failed to save notes. Please try again.');
+            }
+        }
+    </script>
+
+    <!-- Kept for the code that still reads them: updateCart writes the totals
+         into these as well as into the bar above. -->
+    <span id="cart-qty" hidden>0</span>
+    <span id="cart-total" hidden>0.00</span>
+
+    <!-- Product Notes / Customization Modal -->
+    <div id="product-notes-modal" class="notes-modal" style="display:none;">
+        <div class="notes-modal-content">
+            <h4 id="notes-product-name" translate="no" class="notes-title">Product Notes</h4>
+            <!-- What is in the dish, which is the thing a table asks about.
+                 It used to be typed INTO the box below, where it read as
+                 something the waiter had written and went to the kitchen as
+                 an instruction. -->
+            <p id="notes-about" class="notes-about" style="display:none;"></p>
+
+            <div class="notes-body">
+                <label for="product-notes-text" class="notes-label">How does the table want it?</label>
+                <textarea id="product-notes-text" rows="3" class="notes-textarea"
+                    placeholder="Eg: no onion, less spicy, half plate"></textarea>
+                <!-- One tap each, in the same words the microphone understands. -->
+                <div id="notes-chips" class="notes-chips"></div>
+            </div>
+
+            <div class="notes-footer">
+                <button type="button" id="notes-cancel-btn" class="notes-btn notes-btn-secondary">
+                    Cancel
+                </button>
+                <button type="button" id="notes-apply-btn" class="notes-btn notes-btn-primary">
+                    Apply &amp; Add
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Summary Bottom Sheet -->
+    <div id="cart-summary-sheet" class="cart-sheet">
+        <div class="cart-sheet-backdrop"></div>
+
+        <div class="cart-sheet-panel">
+            <div class="cart-sheet-handle"></div>
+
+            <div class="cart-sheet-header">
+                <div>
+                    <div class="cart-sheet-title">Bill Summary</div>
+                    <div class="cart-sheet-subtitle" id="cart-sheet-subtitle">
+                        0 items · 0 qty
+                    </div>
+                </div>
+                <button type="button" class="cart-sheet-close" aria-label="Close">
+                    ✕
+                </button>
+            </div>
+
+            <div class="cart-sheet-body" id="cart-sheet-body">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/products/meal-menu.js"></script>
+    <script src="assets/products/menu.js"></script>
+    <script src="assets/products/script.js"></script>
+</body>
+
+</html>

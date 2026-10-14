@@ -1,0 +1,96 @@
+/* Order history and every dialog it opens use paired surface/text colours.
+   design.css supplies the same light/dark palette as the menu. */
+:root {
+  color-scheme: light;
+  --light-bg: var(--ground);
+  --secondary-color: var(--ink);
+  --border-color: var(--line-strong);
+  --bs-body-color: var(--ink);
+  --bs-body-bg: var(--surface);
+  --bs-secondary-color: var(--ink-soft);
+  --bs-border-color: var(--line-strong);
+  --bs-light-rgb: 248, 250, 252;
+}
+
+body { background: var(--ground); color: var(--ink); }
+.modal-content {
+  --bs-modal-bg: var(--surface);
+  --bs-modal-color: var(--ink);
+  --bs-modal-border-color: var(--line-strong);
+  --bs-modal-header-border-color: var(--line-strong);
+  --bs-modal-footer-border-color: var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+}
+.table {
+  --bs-table-color: var(--ink);
+  --bs-table-bg: var(--surface);
+  --bs-table-border-color: var(--line-strong);
+  --bs-table-striped-color: var(--ink);
+  --bs-table-striped-bg: var(--surface-sunk);
+  color: var(--ink);
+}
+.table > :not(caption) > * > * { color: var(--ink); border-color: var(--line-strong); }
+.text-muted { color: var(--ink-soft) !important; }
+.status-cancelled { background: #f8d7da; color: #842029; }
+.order-items-table tfoot tr:last-child { border-top: 2px solid var(--line-strong) !important; }
+
+html[data-color-scheme="dark"] {
+    color-scheme: dark;
+    --bs-light-rgb: 13, 21, 38;
+    --bs-primary-rgb: 147, 197, 253;
+    --bs-success-rgb: 134, 239, 172;
+    --bs-danger-rgb: 252, 165, 165;
+  }
+
+html[data-color-scheme="dark"] .mobile-header, html[data-color-scheme="dark"] .table-card:not(.all-tables), html[data-color-scheme="dark"] .order-card, html[data-color-scheme="dark"] .search-filter-container, html[data-color-scheme="dark"] .product-suggestions, html[data-color-scheme="dark"] #editItemNotesModal .modal-content {
+    background: var(--surface);
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+
+html[data-color-scheme="dark"] .order-item-card, html[data-color-scheme="dark"] .item-preview, html[data-color-scheme="dark"] .empty-state, html[data-color-scheme="dark"] .product-suggestion:hover {
+    background: var(--surface-sunk);
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+
+html[data-color-scheme="dark"] .screen-header p, html[data-color-scheme="dark"] .order-meta, html[data-color-scheme="dark"] .order-items-preview, html[data-color-scheme="dark"] .item-info .item-price, html[data-color-scheme="dark"] .edit-notes-hint, html[data-color-scheme="dark"] .search-box i, html[data-color-scheme="dark"] .table-number, html[data-color-scheme="dark"] .order-items-table .order-item-notes { color: var(--ink-soft); }
+
+html[data-color-scheme="dark"] .modal h6, html[data-color-scheme="dark"] .modal .modal-title, html[data-color-scheme="dark"] .qty-display, html[data-color-scheme="dark"] .item-info h6, html[data-color-scheme="dark"] #editOrderModal h6, html[data-color-scheme="dark"] #editOrderModal .modal-title, html[data-color-scheme="dark"] #editItemNotesModal .edit-notes-header .modal-title { color: var(--ink); }
+
+html[data-color-scheme="dark"] input:not([type=checkbox]):not([type=radio]), html[data-color-scheme="dark"] textarea, html[data-color-scheme="dark"] select, html[data-color-scheme="dark"] .form-control, html[data-color-scheme="dark"] .qty-btn, html[data-color-scheme="dark"] .filter-btn:not(.active), html[data-color-scheme="dark"] .close-btn, html[data-color-scheme="dark"] .cancel-notes-btn, html[data-color-scheme="dark"] #editOrderModal .modal-footer .close-btn {
+    color: var(--ink);
+    background-color: var(--surface-sunk);
+    border-color: var(--line-strong);
+  }
+
+html[data-color-scheme="dark"] input::placeholder, html[data-color-scheme="dark"] textarea::placeholder { color: var(--ink-soft); opacity: 1; }
+
+html[data-color-scheme="dark"] .form-control:focus, html[data-color-scheme="dark"] input:focus, html[data-color-scheme="dark"] textarea:focus, html[data-color-scheme="dark"] select:focus {
+    color: var(--ink);
+    background-color: var(--surface-sunk);
+    border-color: #93c5fd;
+  }
+
+html[data-color-scheme="dark"] .modal-header, html[data-color-scheme="dark"] .modal-footer, html[data-color-scheme="dark"] .order-actions, html[data-color-scheme="dark"] .order-header, html[data-color-scheme="dark"] #editOrderModal .modal-header { border-color: var(--line-strong); }
+
+html[data-color-scheme="dark"] .btn-close { filter: invert(1) grayscale(100%) brightness(200%); opacity: .85; }
+
+html[data-color-scheme="dark"] .text-dark { color: var(--ink) !important; }
+
+html[data-color-scheme="dark"] .order-count { background: #16304e; color: #bfdbfe; }
+
+html[data-color-scheme="dark"] .order-count.no-orders { background: #1e293b; color: #cbd5e1; }
+
+html[data-color-scheme="dark"] .status-pending, html[data-color-scheme="dark"] .order-count.has-pending { background: #422d0b; color: #fde68a; }
+
+html[data-color-scheme="dark"] .status-completed { background: #123c36; color: #a7f3d0; }
+
+html[data-color-scheme="dark"] .status-cancelled { background: #491f2b; color: #fecdd3; }
+
+html[data-color-scheme="dark"] .edit-btn, html[data-color-scheme="dark"] #editOrderModal .modal-footer .edit-btn { background: #1d4ed8; color: #fff; }
+
+html[data-color-scheme="dark"] .cancel-btn, html[data-color-scheme="dark"] .remove-btn { background: #b91c1c; color: #fff; }
+
+html[data-color-scheme="dark"] #page-loader { background: var(--ground); }

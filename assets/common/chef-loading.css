@@ -1,0 +1,19 @@
+.chef-loading-host.loader,.chef-loading-host.spinner-border{width:64px!important;height:64px!important;border:0!important;border-radius:0!important;background:transparent!important;animation:none!important;color:var(--accent,#2459de)!important}
+.chef-loading-art{position:relative;display:inline-flex!important;align-items:center;justify-content:center;width:64px;height:64px;flex:0 0 64px;color:var(--accent,#2459de);animation:chef-appear .15s ease-out .15s both!important;pointer-events:none}
+.chef-loading-art svg{width:42px;height:42px;overflow:visible}
+.floor-loading.chef-loading-host,[data-chef-loading].chef-loading-host{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px}
+#page-loader:has(.chef-loading-host),#loader:has(.chef-loading-host){background:color-mix(in srgb,var(--surface,#fff) 92%,transparent)!important}
+.chef-loading-hat svg{animation:chef-hop 1.2s ease-in-out infinite}
+.chef-loading-shadow{position:absolute;bottom:4px;width:25px;height:4px;border-radius:50%;background:currentColor;opacity:.12;animation:chef-shadow 1.2s ease-in-out infinite!important}
+.chef-loading-steam svg,.chef-loading-stir svg{transform:translateY(7px)}
+.chef-loading-steam > .chef-loading-steam{position:absolute;display:flex!important;gap:7px;top:1px;animation:none!important}
+.chef-loading-steam b{height:10px;width:2px;border-radius:50%;background:currentColor;animation:chef-steam 1.4s ease-out infinite}
+.chef-loading-steam b:nth-child(2){animation-delay:.2s}.chef-loading-steam b:nth-child(3){animation-delay:.4s}
+.chef-loading-spoon{position:absolute;top:5px;left:31px;width:3px;height:20px;border-radius:3px;background:currentColor;transform-origin:50% 100%;animation:chef-stir 1.2s ease-in-out infinite!important}
+.chef-loading-spoon:before{content:'';position:absolute;top:-4px;left:-2px;width:7px;height:9px;border-radius:50%;background:currentColor}
+@keyframes chef-appear{from{opacity:0}to{opacity:1}}
+@keyframes chef-hop{0%,100%{transform:translateY(0) rotate(0)}45%{transform:translateY(-6px) rotate(-6deg)}70%{transform:translateY(1px) rotate(3deg)}}
+@keyframes chef-shadow{45%{transform:scale(.7);opacity:.06}}
+@keyframes chef-steam{0%{transform:translateY(5px);opacity:0}40%{opacity:.5}100%{transform:translateY(-5px);opacity:0}}
+@keyframes chef-stir{0%,100%{transform:translateX(-5px) rotate(-16deg)}50%{transform:translateX(5px) rotate(16deg)}}
+@media(prefers-reduced-motion:reduce){.chef-loading-art,.chef-loading-art *{animation:none!important}}

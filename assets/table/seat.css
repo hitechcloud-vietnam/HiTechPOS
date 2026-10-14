@@ -1,0 +1,572 @@
+/*
+ * Where they are sitting, and how many.
+ *
+ * THE MIDDLE OF THE JOURNEY. Tables, then this, then the menu, then the bill.
+ * The other three were rebuilt and this was not, so a waiter crossed one
+ * design, hit a second, and came out into the first again - which is the
+ * single loudest way an app says it was made by different people at different
+ * times.
+ *
+ * It also holds the one number nobody could change quickly. Pax was a row of
+ * person icons for 1 to 6 and a text box for anything above, so a table of
+ * eight meant tapping a box, raising a numeric keyboard, and typing - while
+ * standing at the table. A stepper does it in two taps and never raises a
+ * keyboard at all. The quick-pick row stays, because most tables ARE two or
+ * four and one tap beats two.
+ */
+
+/*
+ * A SCREEN A THUMB CAN MOVE.
+ *
+ * table/style.css says `html, body { height: 100%; overflow: hidden }`, and
+ * this sheet replaced everything about that screen EXCEPT those two
+ * declarations - so a shop with more tables than fit could not reach the ones
+ * below the fold, and on a short phone neither the pax stepper nor Next was
+ * reachable.
+ *
+ * It hid because `overflow: hidden` still allows PROGRAMMATIC scrolling.
+ * Everything automated moves the page with scrollTo and passes; only a finger
+ * is refused. The menu screen had the identical bug and it was reported as
+ * "menu(category) i can able to scroll but items not able to scroll".
+ */
+html,
+body.seat-screen {
+  height: auto;
+  overflow: visible;
+  display: block;
+}
+
+body.seat-screen {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--t-base);
+}
+
+.seat-head {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  min-height: 52px;
+  padding: var(--s2) var(--s4);
+  padding-top: calc(var(--s2) + env(safe-area-inset-top, 0px));
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.seat-head-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--t-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.discount-container {
+  padding: 0 var(--s4);
+  /* Room for the footer, so the last control is reachable. */
+  padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* A heading that names a step, in the same voice as the menu's sections. */
+.section-title {
+  padding: var(--s5) 0 var(--s3);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* ------------------------------------------------------ dine in or out */
+
+.dine-toggle-wrapper {
+  padding-top: var(--s4);
+}
+
+/*
+ * Two choices, one of which is always true.
+ *
+ * A segmented control rather than two buttons: it says "pick one of these"
+ * and shows which is picked, where two buttons say "do one of these" and
+ * show nothing afterwards.
+ */
+.dine-toggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunk);
+}
+.dine-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.dine-option {
+  position: relative;
+  z-index: 1;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  font-size: var(--t-base);
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  margin: 0;
+  transition: color 0.18s ease;
+}
+.dine-toggle input:checked + .dine-option {
+  color: var(--accent-ink);
+}
+/* The slider itself, which moves rather than appearing - so the eye follows
+   the change instead of hunting for it. */
+.dine-toggle-indicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  transition: transform 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+#order_type_takeaway:checked ~ .dine-toggle-indicator {
+  transform: translateX(100%);
+}
+.dine-toggle input:focus-visible + .dine-option {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------ the tables */
+
+.table-section-center {
+  text-align: left;
+}
+
+.table-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: var(--s2);
+}
+
+/*
+ * A table is a target, not a radio button with a word beside it.
+ *
+ * The whole tile is the label, so a thumb aimed anywhere on it lands - which
+ * on a screen used while walking is the difference between one tap and three.
+ */
+.table-list input[type='radio'] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.table-list label,
+.table-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch);
+  padding: var(--s2);
+  margin: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--t-base);
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.table-list input[type='radio']:checked + label,
+.table-list label.is-picked {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.table-list input[type='radio']:disabled + label {
+  opacity: 0.45;
+  cursor: default;
+}
+.table-list input[type='radio']:focus-visible + label {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Typing a table number by hand, when the shop has not laid its tables out. */
+.table-input-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--s3);
+}
+#manual_table_input {
+  width: 100%;
+  max-width: 320px;
+  min-height: var(--touch);
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--line-strong) !important;
+  border-radius: var(--radius) !important;
+  background: var(--surface);
+  color: var(--ink);
+  text-align: center;
+  /* 16px or larger, or iOS zooms the page in on focus. */
+  font-size: 16px !important;
+  font-family: var(--font);
+}
+#manual_table_input:focus {
+  outline: none;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* The note that says WHY there are no tables. */
+.table-note {
+  max-width: 420px;
+  margin: 0 auto var(--s3);
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+  color: var(--ink-soft);
+  font-size: var(--t-sm);
+  line-height: 1.5;
+  text-align: left;
+}
+.table-note strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ink);
+  font-size: var(--t-base);
+}
+
+/* --------------------------------------------------------------- the pax */
+
+.person-count-section {
+  text-align: left;
+}
+
+/*
+ * THE STEPPER, which is the point of this rewrite.
+ *
+ * Pax was a row of icons for 1 to 6 and a text box for anything more, so a
+ * table of eight meant tapping a box, raising a numeric keyboard, and typing,
+ * while standing at the table. Two taps now, and no keyboard.
+ */
+.pax-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.pax-stepper button {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+.pax-stepper button:active {
+  background: var(--accent-soft);
+}
+.pax-stepper button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.pax-now {
+  flex: 1 1 auto;
+  text-align: center;
+}
+.pax-number {
+  display: block;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.pax-word {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+}
+
+/*
+ * And the quick pick, kept.
+ *
+ * Most tables are two or four, and one tap beats two. The stepper is for the
+ * table of nine; this is for the other ninety percent.
+ */
+.person-icon-container {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--s2);
+  margin-top: var(--s3);
+}
+.person-icon-btn {
+  min-height: 44px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: var(--font);
+  font-size: var(--t-base);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+.person-icon-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* The old hero icon and free-text box are replaced by the stepper above. */
+.person-hero,
+#person_input {
+  display: none !important;
+}
+
+/* ------------------------------------------------------------ the footer */
+
+/*
+ * Back is quiet, Next is the action.
+ *
+ * Both used to be the same orange button, so the way forward and the way back
+ * were indistinguishable at a glance - on a screen somebody uses without
+ * looking properly, forty times a night.
+ */
+.btn-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4);
+  padding-bottom: calc(var(--s3) + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -2px 16px rgba(15, 23, 42, 0.08);
+}
+.btn-footer .btn-next[onclick*='goBackToKot'] {
+  flex: 0 0 auto;
+  min-height: 48px;
+  padding: 0 var(--s4) !important;
+  border: 1px solid var(--line-strong) !important;
+  border-radius: var(--radius) !important;
+  background: var(--surface) !important;
+  color: var(--ink-soft) !important;
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+.btn-footer .btn-next:not([onclick*='goBackToKot']) {
+  flex: 1 1 auto;
+  min-height: 48px;
+  padding: 0 var(--s4) !important;
+  border: none !important;
+  border-radius: var(--radius) !important;
+  background: var(--accent) !important;
+  color: var(--accent-ink) !important;
+  font-size: var(--t-base);
+  font-weight: 700;
+}
+.discount-cart-summary {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  background: none !important;
+  color: var(--ink-soft) !important;
+  font-size: var(--t-sm);
+}
+.discount-cart-summary .header-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dine-toggle-indicator,
+  .dine-option,
+  .table-list label {
+    transition: none;
+  }
+}
+
+/* ============================================ what the old sheet still does */
+
+/*
+ * THE PAGE IS A COLUMN, not a row.
+ *
+ * .discount-page is `display:flex; align-items:stretch; justify-content:center`
+ * in style.css, so the header added above the container became a flex ITEM
+ * BESIDE it - "New order" ran down the left of the screen, vertically centred,
+ * next to everything else.
+ */
+.discount-page {
+  display: block;
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0;
+  background: var(--ground);
+}
+
+.discount-container {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 var(--s4);
+  padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+}
+
+/*
+ * THE LABEL SITS ABOVE THE SLIDER.
+ *
+ * Both carried z-index 1 - the label from this file, the indicator from
+ * style.css - and the indicator comes later in the DOM, so it painted on top
+ * and "Dine-in" vanished behind a solid purple pill. The other half still read
+ * "Take away" because nothing was covering it, which is what made it look like
+ * a missing label rather than a stacking order.
+ */
+.dine-option {
+  z-index: 3;
+}
+.dine-toggle-indicator {
+  z-index: 1;
+  /* style.css sets this 8px narrower, which left a gap the label overhung. */
+  width: calc(50% - 4px) !important;
+  box-shadow: none !important;
+  background: var(--accent) !important;
+}
+#order_type_dinein:not(:checked) + label,
+#order_type_takeaway:not(:checked) + label {
+  color: var(--ink-soft) !important;
+}
+#order_type_dinein:checked + label,
+#order_type_takeaway:checked + label {
+  color: var(--accent-ink) !important;
+}
+
+/*
+ * THE NOTE AND THE BOX ARE NOT TABLES.
+ *
+ * Both are written into .table-list, which is a grid of 78px columns - so a
+ * paragraph explaining that Restaurant is switched off was squeezed into one
+ * cell and came out a word per line, and "Enter Table Number" was cut to
+ * "Enter Tabl". They are full-width rows in that grid, not tiles in it.
+ */
+.table-list .table-note,
+.table-list .table-input-wrapper,
+.table-note,
+.table-input-wrapper {
+  grid-column: 1 / -1;
+}
+
+/* And when the grid holds only those, it should not reserve tile columns. */
+.table-list:not(:has(label)) {
+  display: block;
+}
+
+/*
+ * The last of the orange.
+ *
+ * style.css paints these from --primary, which is the old brand orange. They
+ * are the only two things left on the screen not in the design's own accent,
+ * and a single stray colour reads as an oversight rather than a choice.
+ */
+.discount-cart-summary .header-btn {
+  border: none !important;
+  background: none !important;
+  color: var(--ink-soft) !important;
+  box-shadow: none !important;
+}
+.person-icon-btn:focus,
+.person-icon-btn:focus-visible,
+#manual_table_input:focus {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px;
+  box-shadow: none !important;
+}
+.person-icon-btn.active {
+  box-shadow: none !important;
+}
+
+/*
+ * "Other", inside the chip, where there is no room for the rule above.
+ *
+ * #manual_table_input is written for the FULL-WIDTH box a shop with no tables
+ * laid out gets. The same id also appears inside the last chip of the table
+ * grid, and a chip is 78px wide: 8px of label padding and 16px of the input's
+ * own padding on each side leave about 26px of content box, so the word
+ * "Other" - and every table number typed after it - was drawn outside the
+ * input and clipped. The text was never missing; there was nowhere to put it.
+ *
+ * An id beats a class, so this has to be at least as specific to undo it.
+ */
+.table-list .manual-table {
+  /* Two cells. "Other" is a word, not a number, and it needs the width. */
+  grid-column: span 2;
+}
+.table-list .manual-label {
+  padding: 0;
+}
+.table-list .manual-label #manual_table_input {
+  width: 100%;
+  max-width: none;
+  min-height: var(--touch);
+  padding: 0 var(--s2);
+  border: 0 !important;
+  border-radius: var(--radius) !important;
+  background: transparent;
+  /* The chip is white when it is not picked and accent when it is. Following
+     it means the typed number is legible in both, which a fixed colour is
+     not. */
+  color: inherit;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.table-list .manual-label #manual_table_input::placeholder {
+  color: currentColor;
+  opacity: 0.55;
+}
+.table-list .manual-label #manual_table_input:focus {
+  box-shadow: none;
+}
+/* The chip itself takes the focus ring, so the whole target shows it. */
+.table-list .manual-label:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

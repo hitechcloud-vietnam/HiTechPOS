@@ -1,0 +1,1080 @@
+/*
+ * The menu, laid out the way somebody actually reads one.
+ *
+ * WHAT WAS WRONG. The old screen was a grid of square photo cards, with a row
+ * of category chips where tapping one REPLACED the list. Both are the kiosk
+ * pattern, and a waiter is not a kiosk.
+ *
+ * The grid cost the names. "Chicken Biryani (Boneless)" in a half-width card
+ * is "Chicken Biry..." - the one thing a person came to read is the thing that
+ * gets cut. It also assumed photographs: a shop that has uploaded none got
+ * forty identical grey placeholders, which is worse than no pictures at all,
+ * because it looks broken rather than plain.
+ *
+ * The chips cost the place. A table orders across categories - a biryani, a
+ * Coke, a gulab jamun - so every third item meant a tap back up to the rail, a
+ * new list, and the scroll position gone. Three items, three lost places.
+ *
+ * WHAT THIS IS INSTEAD. One continuous menu, in sections, thumbed top to
+ * bottom the way a paper menu is read. The chips stay, but as an INDEX: they
+ * jump you to a section and they follow you as you scroll, so the rail always
+ * says where you are. Nothing is replaced and no place is lost.
+ *
+ * And rows, not cards. The name gets the full width and is never cut. The
+ * description, the veg mark and the kitchen's timing fit beside it - all of
+ * which the server has been sending for months to a screen with nowhere to put
+ * them. The photograph becomes a thumbnail on the right, and where there is no
+ * photograph the dish's icon takes the space and the row still reads: a menu
+ * without pictures should look like a menu, not like a failure.
+ *
+ * Everything here is built from the tokens in assets/common/design.css.
+ */
+
+/* ------------------------------------------------------------ the sections */
+
+/*
+ * A category heading that stays while you are under it.
+ *
+ * Somebody eight dishes into Biryani should not have to scroll back up to
+ * find out that is where they are.
+ */
+.menu-section-head {
+  position: sticky;
+  /* Below the search box and the chip rail, which are sticky too. Set from
+     script.js, because the offset depends on what is showing. */
+  top: var(--menu-stick, 0px);
+  z-index: 5;
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+  padding: var(--s4) var(--s4) var(--s2);
+  background: var(--ground);
+  /* No border. The gap above it separates the sections; a line here would
+     read as a table. */
+}
+
+.menu-section-name {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* How many, said once, so nobody scrolls a section to find out it holds two. */
+.menu-section-count {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+
+.menu-section-items {
+  background: var(--surface);
+}
+
+/* ----------------------------------------------------------------- a dish */
+
+/*
+ * One dish, one row.
+ *
+ * Text on the left, because text is what is read. The picture on the right,
+ * because it confirms a choice rather than making one.
+ */
+.dish {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s4);
+  padding: var(--s4);
+  background: var(--surface);
+  position: relative;
+}
+
+/* A hairline between dishes, inset so it does not run edge to edge and turn
+   the list into a spreadsheet. */
+.dish + .dish::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--s4);
+  right: var(--s4);
+  border-top: 1px solid var(--line);
+}
+
+.dish-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/*
+ * The veg mark.
+ *
+ * A square outline with a dot in it - the mark itself, not a decoration. In
+ * India it is on every package and every menu by law, and somebody scanning
+ * for it is scanning for this exact shape.
+ */
+.dish-diet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--diet, var(--ink-faint));
+  border-radius: 3px;
+  margin-bottom: var(--s2);
+  vertical-align: middle;
+}
+.dish-diet::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--diet, var(--ink-faint));
+}
+.dish-diet.is-veg {
+  --diet: #0f8a45;
+}
+.dish-diet.is-nonveg {
+  --diet: #b91c1c;
+}
+/* An egg is neither, and a shop that marks it deserves to have it shown. */
+.dish-diet.is-egg {
+  --diet: #b45309;
+}
+
+/* Sold most often, from what this shop actually billed. Not a marketing
+   badge: it is the row a waiter reaches for without reading. */
+.dish-badge {
+  display: inline-block;
+  margin-left: var(--s2);
+  padding: 1px var(--s2);
+  border-radius: var(--radius-pill);
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+html[data-color-scheme="dark"] .dish-badge {
+    background: #451a03;
+    color: #fdba74;
+  }
+
+.dish-name {
+  margin: 0;
+  font-size: var(--t-lg);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+  /* The whole point of a row: the name is not cut. Two lines covers the
+     longest real dish name and stops one runaway entry eating the screen. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dish-price {
+  margin-top: var(--s2);
+  font-size: var(--t-base);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* What it cost before the discount, struck through. Shown only when there IS
+   one: a struck-through price equal to the price is noise. */
+.dish-was {
+  margin-left: var(--s2);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: var(--ink-faint);
+  text-decoration: line-through;
+}
+.dish-off {
+  margin-left: var(--s2);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--good);
+}
+
+.dish-note {
+  margin: var(--s2) 0 0;
+  font-size: var(--t-sm);
+  line-height: 1.45;
+  color: var(--ink-faint);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* How long the kitchen needs, when the shop has said. Zero is silence, not
+   "0 min": a guess printed as a fact is worse than nothing. */
+.dish-prep {
+  margin-top: var(--s2);
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+}
+
+/* -------------------------------------------------------- the picture side */
+
+/*
+ * The thumbnail, and the button sitting on it.
+ *
+ * Fixed width, so every row's text starts and ends in the same place. A ragged
+ * right edge is most of what makes a list feel homemade.
+ */
+.dish-media {
+  flex: 0 0 104px;
+  width: 104px;
+  /* Room for the button, which hangs off the bottom of the picture. */
+  padding-bottom: 18px;
+  position: relative;
+}
+
+.dish-photo {
+  width: 104px;
+  height: 104px;
+  border-radius: var(--radius);
+  object-fit: cover;
+  background: var(--surface-sunk);
+  display: block;
+}
+
+/*
+ * No photograph, so the dish's own icon instead.
+ *
+ * Most shops have uploaded no pictures and never will. A grey placeholder
+ * forty times over looks like an app that failed to load; a tile with a bowl
+ * of rice on it looks like a menu. The icon is chosen on the server, so this
+ * app, the kiosk and a QR code all draw the same thing for the same dish.
+ */
+.dish-icon {
+  width: 104px;
+  height: 104px;
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  line-height: 1;
+  /* So an emoji renders as an emoji and not as a box. */
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
+
+/*
+ * ADD, and the stepper it turns into.
+ *
+ * Both live in this box and both fill it exactly, so the row does not change
+ * height when somebody adds one. A list that reflows under the thumb is a list
+ * that gets the wrong thing tapped.
+ */
+.dish-action {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 96px;
+  height: 36px;
+}
+
+.dish-add {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  box-shadow: var(--lift);
+  cursor: pointer;
+}
+.dish-add:active {
+  transform: scale(0.96);
+}
+
+.dish-step {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--lift);
+  overflow: hidden;
+}
+.dish-step button {
+  flex: 0 0 30px;
+  height: 100%;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+.dish-step button:active {
+  background: rgba(0, 0, 0, 0.12);
+}
+.dish-step .dish-qty {
+  flex: 1 1 auto;
+  text-align: center;
+  color: var(--ink);
+  font-size: var(--t-base);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+/* What is left, but only when it is worth saying. A shop tracking no stock
+   shows nothing, and one with plenty shows nothing either. Three left is
+   news. */
+.dish-left {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  transform: translate(-50%, 100%);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--warn);
+  white-space: nowrap;
+}
+
+/*
+ * Sold out.
+ *
+ * Dimmed, not hidden. A waiter needs to be able to TELL the table it is off,
+ * and a dish that has silently vanished from the menu cannot be talked about.
+ */
+.dish.is-out {
+  opacity: 0.55;
+}
+.dish.is-out .dish-action {
+  pointer-events: none;
+}
+.dish-outmark {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+  color: var(--ink-faint);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Already on the bill, so the row says so at a glance while scrolling past. */
+/*
+ * ALREADY ON THE ORDER.
+ *
+ * Owner: "if some items already added to that cart that menu need little
+ * highlight."
+ *
+ * It had one: a background of --accent-soft, which is #eef2ff. Against the
+ * #ffffff of every other row that is a difference of about seven points of
+ * blue, and on a phone held at arm's length in a bright dining room it is not
+ * a difference at all. The stepper on the right says the same thing, but only
+ * once your eye is on that row - the question being asked here is "what have I
+ * already got", which is asked of the whole list at once.
+ *
+ * So: the tint stays, and a solid bar goes down the leading edge. Drawn with
+ * an inset shadow rather than a border, because a border would add 3px to the
+ * row and the row is pinned to one height on purpose - a list that reflows as
+ * you add to it loses your place, which is the bug the whole screen was
+ * rebuilt around.
+ */
+.dish.is-in {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* ---------------------------------------------------------- the chip index */
+
+/*
+ * The rail: a jump index that follows you, not a filter that replaces things.
+ */
+.menu-rail {
+  display: flex;
+  gap: var(--s2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: var(--s2) var(--s4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+.menu-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.menu-chip {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: var(--s2) var(--s4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: var(--font);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+/* `.is-here`, not `.active`: the chip is not a selection, it is a statement
+   about where the scroll has got to. */
+.menu-chip.is-here {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* --------------------------------------------------------- the whole index */
+
+/*
+ * Every category at once, with counts.
+ *
+ * The rail is fine for a shop with six categories and useless for one with
+ * twenty-five, where the one you want is always off the right-hand edge. This
+ * answers "what else is there", one tap from anywhere on the menu.
+ */
+.menu-index-btn {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  /*
+   * Just above the bill bar when there is one, and near the bottom when there
+   * is not. Parked at the bill bar's height with an empty bill, it floats in
+   * the middle of the screen over whatever section happens to be there, which
+   * reads as a button that has come loose.
+   */
+  bottom: calc(var(--s4) + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s3) var(--s5);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--ground);
+  font-family: var(--font);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: var(--lift-high);
+  cursor: pointer;
+}
+.menu-index-btn:active {
+  transform: translateX(-50%) scale(0.97);
+}
+body.has-bill .menu-index-btn {
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Out of the way while the keyboard is up, and while the sheet is open. */
+body.is-searching .menu-index-btn,
+body.menu-index-open .menu-index-btn {
+  display: none;
+}
+
+.menu-index-row {
+  width: 100%;
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding: var(--s3) 0;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--t-base);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.menu-index-row:last-child {
+  border-bottom: none;
+}
+.menu-index-row .menu-index-count {
+  color: var(--ink-faint);
+  font-weight: 600;
+  font-size: var(--t-sm);
+}
+.menu-index-row.is-here {
+  color: var(--accent);
+}
+
+/* ------------------------------------------------------------ the bill bar */
+
+/*
+ * One bar that says what is on the bill and takes you to it.
+ *
+ * The old footer was "Back", a total, and "Next" - three things of equal
+ * weight, one of which was the only one anybody wanted. This appears when
+ * there is something to say and stays out of the way when there is not.
+ */
+.bill-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  padding: var(--s3) var(--s4);
+  padding-bottom: calc(var(--s3) + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -2px 16px rgba(15, 23, 42, 0.08);
+  transform: translateY(110%);
+  transition: transform 0.22s ease;
+}
+.bill-bar.is-up {
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .bill-bar {
+    transition: none;
+  }
+}
+
+.bill-what {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.bill-count {
+  display: block;
+  font-size: var(--t-xs);
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.bill-total {
+  display: block;
+  font-size: var(--t-lg);
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.bill-go {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 44px;
+  padding: 0 var(--s5);
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font);
+  font-size: var(--t-base);
+  font-weight: 700;
+  cursor: pointer;
+}
+.bill-go:active {
+  transform: scale(0.98);
+}
+
+/* ---------------------------------------------------------------- nothing */
+
+/*
+ * An empty result, said in words rather than left blank.
+ *
+ * A blank screen is indistinguishable from a broken one, and the difference
+ * matters most to the person least able to tell.
+ */
+.menu-nothing {
+  padding: var(--s6) var(--s5);
+  text-align: center;
+  color: var(--ink-soft);
+}
+.menu-nothing-face {
+  font-size: 40px;
+  line-height: 1;
+  margin-bottom: var(--s3);
+}
+.menu-nothing-said {
+  font-size: var(--t-base);
+  font-weight: 600;
+  color: var(--ink);
+}
+.menu-nothing-why {
+  margin-top: var(--s2);
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+}
+
+/* ============================================================ the layout */
+
+/*
+ * THE PAGE SCROLLS, not a box inside it.
+ *
+ * This screen used to be a full-height flex column with `overflow: hidden` on
+ * the body and a scrolling div in the middle. Two things came of that, and
+ * both were reported as bugs.
+ *
+ * The keyboard. A soft keyboard shrinks the viewport, and a layout pinned to
+ * 100% height shrinks with it - so the header, the search pill and the chip
+ * rail kept their full height inside a box half as tall, and what was left for
+ * results was a letterbox about a row and a half deep. Scrolling the page
+ * instead means the keyboard simply covers the bottom of it, the way it does
+ * in every other app.
+ *
+ * And the momentum. A nested scroller in an Android WebView does not get the
+ * same overscroll handling the document does; it stops dead where the page
+ * glides. On a long menu that is the difference between an app that feels
+ * bought and one that feels built.
+ *
+ * So: the document scrolls, and the three pieces of chrome stick to the top of
+ * it in order. Each one's `top` is the sum of the heights above it, which
+ * MenuScreen.stick() measures rather than guesses, because the header's height
+ * depends on the phone and the rail is not there while searching.
+ */
+/*
+ * AND THE SAME ON html, WHICH IS THE WHOLE BUG.
+ *
+ * style.css says `html, body { height: 100%; overflow: hidden }`. Resetting
+ * only `body` leaves the document element hidden and 100% tall, and that alone
+ * decides whether a finger can move the page: `overflow: hidden` still allows
+ * PROGRAMMATIC scrolling, so window.scrollTo() worked perfectly - the chip
+ * jump, the index sheet, every scroll assertion in the suite - while a thumb
+ * on the list did nothing at all.
+ *
+ * That is why 136 browser tests passed over a menu nobody could scroll: every
+ * one of them scrolled by calling scrollTo, which is the one way of moving the
+ * page that overflow:hidden does not block. Measured: 9255px of dishes in an
+ * 844px window, wheel gesture moved it 0px.
+ *
+ * The category rail kept working throughout because it is its own
+ * `overflow-x: auto` box and never asked the document for anything - which is
+ * exactly how this reads on a handset: "menu(category) i can able to scroll
+ * but items not able to scroll".
+ */
+html {
+  height: auto;
+  overflow: visible;
+  display: block;
+}
+
+body {
+  height: auto;
+  overflow: visible;
+  display: block;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font);
+  /* Room for the bill bar and the MENU button, so the last dish on the menu
+     is reachable rather than permanently underneath them. */
+  padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+}
+
+.content-wrapper {
+  display: block;
+  overflow: visible;
+}
+
+.scrollable-products {
+  flex: none;
+  overflow: visible;
+  padding: 0;
+}
+
+.mobile-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  min-height: 52px;
+  padding: var(--s2) var(--s4);
+  padding-top: calc(var(--s2) + env(safe-area-inset-top, 0px));
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.mobile-header .back-link {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-size: 20px;
+  text-decoration: none;
+}
+
+.mobile-header .store-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--t-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fixed-heading {
+  position: sticky;
+  /*
+   * Under the header, whose height MenuScreen measures - or under the status
+   * bar, whichever is lower.
+   *
+   * Owner: "when you search input box overlapting with top network symbol,
+   * time and etc." The app draws under the system bar, and the header pads
+   * itself by the inset. This row trusted the header's measured height; when
+   * that is small or the header is not there, the row stopped at zero and the
+   * clock sat on top of what somebody was typing.
+   *
+   * max() leaves the normal case exactly as it was, because a visible header
+   * is always taller than the inset it already contains.
+   */
+  top: max(var(--head-stick, 52px), env(safe-area-inset-top, 0px));
+  z-index: 15;
+  background: var(--surface);
+}
+
+.fixed-categories {
+  position: sticky;
+  top: var(--rail-stick, 108px);
+  z-index: 10;
+}
+
+/* --------------------------------------------------------- the search box */
+
+.product-search {
+  padding: var(--s2) var(--s4) var(--s3);
+  background: var(--surface);
+}
+
+.product-search-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 44px;
+  padding: 0 var(--s3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+}
+.product-search-inner:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  background: var(--surface);
+}
+
+.product-search-icon {
+  flex: 0 0 auto;
+  color: var(--ink-faint);
+  font-size: 14px;
+}
+
+.product-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--ink);
+  /* 16px or larger, or iOS zooms the page in on focus and the waiter is
+     suddenly looking at a magnified corner of a form. */
+  font-size: 16px;
+  font-family: var(--font);
+}
+.product-search input::placeholder {
+  color: var(--ink-faint);
+}
+
+/*
+ * A way out of a search that is not the backspace key.
+ *
+ * Clearing a mistyped term meant holding backspace and watching the results
+ * flicker through six wrong answers on the way to none.
+ */
+.product-search-clear {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: var(--line);
+  color: var(--ink-soft);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+/*
+ * THE WAY IN FOR SOMETHING THE MENU DOES NOT HAVE.
+ *
+ * Beside Clear rather than anywhere else: this is a thing you do TO what you
+ * have typed, and the hand is already there. Deliberately quieter than an
+ * accent button - it is used twice a service, and a loud one on a screen used
+ * forty times would be paid for all evening.
+ */
+.product-quick-sale {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.product-quick-sale:active {
+  background: var(--line);
+}
+
+.search-count {
+  padding: 0 var(--s4) var(--s2);
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+  background: var(--surface);
+}
+
+/* The rail goes while searching: results are not in categories. */
+body.is-searching .fixed-categories {
+  display: none !important;
+}
+
+/*
+ * The header's own buttons, in ink rather than a fixed grey.
+ *
+ * #333 on a dark ground is nearly invisible: on a phone set to dark the
+ * refresh and history buttons faded into the bar and looked disabled.
+ */
+.header-btn {
+  color: var(--ink-soft);
+  min-width: 40px;
+  min-height: 40px;
+}
+.header-btn:hover {
+  background-color: var(--surface-sunk);
+}
+
+.mobile-cart {
+  color: var(--ink);
+  /* A real target, not a 20px glyph somebody has to aim at. */
+  min-width: 40px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Nothing on the bill, nothing to count. A red "0" is a notification badge
+   claiming there is news when there is none. */
+.cart-count:empty,
+.next-page.disabled .cart-count {
+  display: none;
+}
+
+/* ========================================================== it responds */
+
+/*
+ * WHAT A TAP SHOULD FEEL LIKE.
+ *
+ * Adding a dish changed a button into a stepper and a number at the bottom of
+ * the screen, both instantly, both silently. Correct, and completely inert:
+ * the waiter's eye is on the row they touched and the confirmation is 600px
+ * away, so the honest question "did that register?" gets asked by pressing
+ * again, and now there are two.
+ *
+ * So the row answers where it was touched, and the answer travels to the bill.
+ * Every one of these is transform or opacity, which are composited - no
+ * layout, no paint, and no reason for the cheap Android a restaurant actually
+ * buys to drop a frame over it.
+ *
+ * All of it is off under prefers-reduced-motion, at the bottom of this file.
+ * Somebody who has asked their phone to stop moving things has asked this too.
+ */
+
+/*
+ * The stepper arriving.
+ *
+ * Overshoot in the curve, not in the keyframes: a spring that settles is the
+ * difference between a control that appeared and one that was PUT there.
+ */
+@keyframes dish-step-in {
+  from { transform: scale(0.72); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+.dish-step {
+  animation: dish-step-in 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* The count, when it changes on a stepper that is already there. */
+@keyframes dish-qty-bump {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+.dish-qty.is-bumped {
+  animation: dish-qty-bump 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/*
+ * The row acknowledging the tap.
+ *
+ * A wash of the accent that arrives fast and leaves slowly - fast enough to
+ * feel caused by the finger, slow enough to still be there when the eye gets
+ * back from the button.
+ */
+@keyframes dish-took {
+  0%   { background: var(--accent-soft); }
+  100% { background: var(--surface); }
+}
+.dish.is-taking {
+  animation: dish-took 700ms ease-out;
+}
+/* A row already on the bill stays tinted, so it fades back to that instead. */
+.dish.is-in.is-taking {
+  animation: none;
+}
+
+/* The picture giving under the press. */
+.dish-media { transition: transform 140ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+.dish.is-taking .dish-media { transform: scale(0.94); }
+
+/*
+ * The bill bar taking the news.
+ *
+ * It rises the first time (that is .is-up) and nudges every time after. The
+ * nudge is what connects a tap at the top of the screen to a total at the
+ * bottom: without it the number just differs, and a number that differs is
+ * something you have to check rather than something you saw happen.
+ */
+@keyframes bill-bump {
+  0%   { transform: translateY(0) scale(1); }
+  35%  { transform: translateY(-3px) scale(1.012); }
+  100% { transform: translateY(0) scale(1); }
+}
+.bill-bar.is-up.is-bumped {
+  animation: bill-bump 380ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes bill-total-bump {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.bill-total.is-bumped {
+  display: inline-block;
+  animation: bill-total-bump 340ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* And the basket in the header, for anybody watching that instead. */
+@keyframes cart-pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
+.cart-count.is-bumped {
+  animation: cart-pop 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/*
+ * A DISH ARRIVING BECAUSE SOMEBODY SAID SO.
+ *
+ * Voice puts several lines on the bill at once, and several rows changing in
+ * the same frame is a flicker rather than an event. Staggered, each row lands
+ * just after the one above it, so the order reads in the sequence it was
+ * spoken - which is also the order it will be read back to the table.
+ */
+@keyframes dish-heard {
+  0%   { transform: translateX(-10px); background: var(--accent-soft); }
+  100% { transform: translateX(0);     background: var(--surface); }
+}
+.dish.is-heard {
+  animation: dish-heard 520ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dish-step,
+  .dish-qty.is-bumped,
+  .dish.is-taking,
+  .dish.is-heard,
+  .bill-bar.is-up.is-bumped,
+  .bill-total.is-bumped,
+  .cart-count.is-bumped {
+    animation: none;
+  }
+  .dish.is-taking .dish-media { transform: none; }
+}
+
+/*
+ * THE WAY OUT OF AN EMPTY SEARCH.
+ *
+ * Offered only where somebody has just discovered the menu does not have the
+ * thing, so it costs nothing on a screen used forty times a service.
+ */
+.menu-quick-sale {
+  padding: var(--s3) var(--s4) var(--s5);
+  text-align: center;
+}
+
+.menu-quick-sale-btn {
+  width: 100%;
+  max-width: 420px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent, #0d6efd);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.menu-quick-sale-why {
+  margin: 10px auto 0;
+  max-width: 420px;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.dish-tax{display:block;color:var(--ink-soft,#667085);font-size:12px;line-height:1.5;margin-top:3px}
+
+.product-quick-sale{width:auto;min-width:110px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px;font-size:13px;border-radius:10px}.product-quick-sale span{white-space:nowrap}
+
+.product-quick-sale{min-height:44px;height:auto;color:var(--accent)}
+
+/* Local confirmation only after a successful quantity increase. */
+/* One glass bubble rises, then expands into a soft pop. */
+.menu-add-burst{position:fixed;width:0;height:0;z-index:1100;pointer-events:none;color:var(--accent);contain:layout style}
+.menu-add-burst i{position:absolute;display:block;width:92px;height:92px;margin:-46px;border:1.5px solid color-mix(in srgb,currentColor 55%,transparent);border-radius:50%;background:radial-gradient(circle at 30% 25%,#ffffff90,transparent 30%),radial-gradient(circle at 65% 75%,color-mix(in srgb,currentColor 18%,transparent),transparent 75%);box-shadow:inset 0 0 12px color-mix(in srgb,currentColor 16%,transparent);animation:menu-add-bubble 460ms linear both}
+@keyframes menu-add-bubble{0%{opacity:0;transform:translateY(0) scale(.3)}20%{opacity:.8;transform:translateY(-4px) scale(.65)}65%{opacity:.8;transform:translateY(-14px) scale(1)}78%{opacity:.85;transform:translateY(-16px) scale(1.08)}88%{opacity:.55;transform:translateY(-17px) scale(1.4);background-color:color-mix(in srgb,currentColor 12%,transparent)}100%{opacity:0;transform:translateY(-18px) scale(1.7)}}
+button.btn-add,button.btn-increase{background-image:linear-gradient(155deg,color-mix(in srgb,var(--surface) 65%,transparent),transparent 55%);box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 9%,transparent),0 2px 6px color-mix(in srgb,var(--accent) 9%,transparent)}
+@media(prefers-reduced-motion:reduce){.menu-add-burst{display:none}}
+
+.menu-quantity-heart i,.menu-quantity-sad i{width:32px;height:32px;margin:-16px;display:grid;place-items:center;font:26px/1 system-ui,sans-serif;border:0;background:none;box-shadow:none;animation:menu-heart-pop 460ms ease-out both}
+.menu-quantity-sad i{animation:menu-sad-pop 900ms ease-out both}
+@keyframes menu-heart-pop{0%{transform:scale(.3);opacity:0}65%{transform:translateY(-20px) scale(1);opacity:1}100%{transform:translateY(-20px) scale(1.55);opacity:0}}
+@keyframes menu-sad-pop{0%{transform:scale(.3);opacity:0}25%{transform:translateY(6px) scale(1);opacity:1}65%{transform:translateY(10px) scale(1);opacity:1}100%{transform:translateY(14px) scale(1.3);opacity:0}}

@@ -1,0 +1,480 @@
+body,
+html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    overflow: hidden;
+    /* ✅ prevent whole page scroll */
+}
+
+:root {
+    --primary: #ff7a3c;
+    --primary-soft: #ffe0cf;
+    --border-soft: #e5e5e5;
+    --bg: #f7f7f7;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: #007bff;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.back-btn:hover {
+    text-decoration: underline;
+}
+
+/* Updated cart-item section ends here */
+
+.cart-actions {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+    max-width: 600px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    z-index: 1000;
+}
+
+.cancel-btn,
+.checkout-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    background: linear-gradient(to right, #ff7e5f, #feb47b);
+    color: white;
+    box-shadow: 0 2px 6px rgba(255, 126, 95, 0.3);
+}
+
+.cancel-btn:hover,
+.checkout-btn:hover {
+    opacity: 0.9;
+}
+
+.summary-display {
+    flex: 2;
+    text-align: center;
+    background: #fff5f0;
+    color: #ff5e3a;
+    padding: 12px;
+    font-weight: bold;
+    font-size: 15px;
+    border-radius: 12px;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.05);
+    white-space: nowrap;
+}
+
+/* Page Loader Styles */
+/*
+ * SHOWN WHILE THE BILL IS BEING MADE.
+ *
+ * Owner: "view bill took few seconds. if its api call and waiting show some
+ * anitmation or progress bar. dont confuse user few seconds."
+ *
+ * This started HIDDEN, and renderCart - which reads the cart, prices every
+ * line, applies the discount and lays the bill out - only ever hides it. So on
+ * the one screen where the wait is longest there was nothing on screen at all
+ * for the length of it: a waiter taps View bill, the menu goes, and a blank
+ * page sits there.
+ *
+ * The menu screen has had it the right way round all along (products/style.css
+ * starts it as flex), which is why the same wait there has never been
+ * reported. renderCart already hides this on both of its paths - the empty
+ * cart and the full one - so starting it visible needs nothing else.
+ */
+#page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loader {
+    width: 50px;
+    height: 50px;
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #ff7e5f;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Modal box */
+.modal-content {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    max-width: 320px;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+
+/* Title */
+.modal-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: #222;
+}
+
+/* Message */
+.modal-message {
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 20px;
+}
+
+/* Buttons container */
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+#cancelModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    /* semi-transparent background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    /* above everything else */
+}
+
+/* Buttons */
+.modal-btn {
+    flex: 1;
+    padding: 10px 0;
+    font-size: 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.modal-btn.confirm {
+    background-color: #d9534f;
+    color: white;
+}
+
+.modal-btn.confirm:hover {
+    background-color: #c9302c;
+}
+
+.modal-btn.cancel {
+    background-color: #e2e2e2;
+    color: #333;
+}
+
+.modal-btn.cancel:hover {
+    background-color: #ccc;
+}
+
+/* Responsive tweaks for small screens */
+@media (max-width: 360px) {
+    .modal-content {
+        padding: 16px;
+        max-width: 280px;
+    }
+
+    .modal-title {
+        font-size: 1.1rem;
+    }
+
+    .modal-message {
+        font-size: 0.95rem;
+        margin-bottom: 16px;
+    }
+
+    .modal-btn {
+        font-size: 0.95rem;
+    }
+}
+
+#popup {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background-color: #f44336;
+    /* brighter red for better visibility */
+    border: 1px solid #d32f2f;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    font-weight: 500;
+    font-size: 14px;
+    max-width: 320px;
+    line-height: 1.5;
+    white-space: normal;
+    word-break: break-word;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(-10px);
+    /* subtle upward motion */
+    z-index: 1000;
+}
+
+#popup.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#popup button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-weight: bold;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    float: right;
+    margin-left: 12px;
+    padding: 0;
+    user-select: none;
+    transition: color 0.2s;
+}
+
+#popup button:hover {
+    color: #ffcccb;
+}
+
+.back-link {
+    color: var(--primary);
+    font-size: 14px;
+    text-decoration: none;
+}
+
+@media (max-width: 480px) {
+#popup {
+        top: 12px;
+        right: 12px;
+        font-size: 13px;
+        padding: 8px 12px;
+        max-width: 90%;
+    }
+}
+
+.header-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #000;
+    /* or #fff depending on header bg */
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.header-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.btn-cancel {
+    border: 1px solid var(--border-soft);
+    background: var(--primary);
+    color: #fff;
+}
+
+/* === Cart Summary Bottom Sheet (same as products) === */
+
+.cart-sheet {
+    position: fixed;
+    inset: 0;
+    display: none;
+    z-index: 1000;
+    pointer-events: none;
+    font-family: inherit;
+}
+
+.cart-sheet.open {
+    display: block;
+    pointer-events: auto;
+}
+
+.cart-sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(2px);
+}
+
+.cart-sheet-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #ffffff;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+    padding: 16px 16px 20px;
+    max-height: 70vh;
+    transform: translateY(100%);
+    animation: cart-sheet-slide-up 260ms ease-out forwards;
+}
+
+@keyframes cart-sheet-slide-up {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0%);
+        opacity: 1;
+    }
+}
+
+.cart-sheet-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: #ddd;
+    margin: 0 auto 12px;
+}
+
+.cart-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.cart-sheet-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.cart-sheet-subtitle {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.cart-sheet-close {
+    border: none;
+    background: #f3f4f6;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4b5563;
+}
+
+.cart-sheet-body {
+    margin-top: 8px;
+    overflow-y: auto;
+    max-height: calc(70vh - 70px);
+}
+
+/* Summary chips & total */
+
+.cart-summary-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cart-summary-chip-row {
+    display: flex;
+    gap: 10px;
+}
+
+.cart-summary-chip {
+    flex: 1;
+    background: #f9fafb;
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cart-summary-chip-label {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.cart-summary-chip-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.cart-summary-total {
+    margin-top: 8px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f97316, #fb923c);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #ffffff;
+}
+
+.cart-summary-total-label {
+    font-size: 13px;
+    opacity: 0.95;
+}
+
+.cart-summary-total-amount {
+    font-size: 18px;
+    font-weight: 700;
+}

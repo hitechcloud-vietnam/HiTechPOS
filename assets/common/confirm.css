@@ -1,0 +1,7 @@
+#captain-discard{box-sizing:border-box;width:min(440px,calc(100% - 32px));max-height:calc(100dvh - 32px);padding:24px;border:1px solid var(--line,#dce3eb);border-radius:20px;background:var(--surface,#fff);color:var(--ink,#152238);overflow:auto;box-shadow:0 24px 80px #0003}
+#captain-discard::backdrop{background:#15223b88}
+#captain-discard h2{font-size:22px;line-height:1.35;margin:0 0 24px;overflow-wrap:anywhere}
+#captain-discard footer{display:flex;gap:12px;flex-wrap:wrap}
+#captain-discard button{flex:1 1 150px;min-height:48px;padding:12px 16px;border:1px solid var(--line,#dce3eb);border-radius:12px;background:var(--surface,#fff);color:inherit;font:inherit;font-weight:600}
+#captain-discard [data-confirm-action=discard]{color:var(--bad,#be123c);border-color:currentColor}
+#captain-discard button:focus-visible{outline:3px solid var(--accent,#315efb);outline-offset:3px}

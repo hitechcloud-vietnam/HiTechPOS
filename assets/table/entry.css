@@ -1,0 +1,93 @@
+/* Seating entry: clear table cards and a single guest-selection surface. */
+.seat-screen{font-family:Inter,system-ui,sans-serif}
+.seat-screen .discount-container{display:flex;flex-direction:column;gap:0;width:100%;max-width:760px;padding:20px 20px 108px;box-sizing:border-box;margin-inline:auto}
+.seat-screen .table-section-center,.seat-screen .person-count-section{width:100%;margin:0;padding:0;border:0;text-align:start}
+.seat-screen .section-title{display:flex;align-items:center;gap:8px;color:var(--ink);font-size:18px;font-weight:650;padding:22px 0 6px}
+.seat-screen .section-title i{display:none}
+.seat-screen .entry-help{font-size:13px;line-height:1.5;color:var(--ink-soft);margin:0 0 18px}
+.seat-screen .table-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%;max-width:none}
+.seat-screen .table-item{width:auto;min-width:0;margin:0}
+.seat-screen .table-label{display:flex;flex-direction:column;gap:6px;min-height:68px;height:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);padding:9px 6px;font-weight:500}
+.seat-screen .entry-table-icon{width:18px;height:18px;color:var(--ink-soft);margin-bottom:2px}
+.seat-screen .entry-table-name{font-size:14px;font-weight:650}
+.seat-screen .entry-availability{font-size:11px;color:var(--ink-soft)}
+.seat-screen .table-radio:checked+.table-label{background:var(--accent-soft);color:var(--ink);border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.seat-screen .table-radio:checked+.table-label .entry-table-icon{color:var(--accent)}
+.seat-screen .table-radio:disabled+.table-label,.seat-screen .table-item.table-occupied .table-label{background:var(--surface-sunk)!important;color:var(--ink-soft)!important;border-color:var(--line)!important;opacity:1;box-shadow:none}
+.seat-screen .table-list .manual-table{grid-column:1/-1;margin-top:4px}
+.seat-screen .table-list .manual-label{min-height:52px;flex-direction:row;justify-content:space-between;padding:6px 14px;border-style:dashed;background:transparent;gap:12px}
+.seat-screen .entry-custom-label{font-size:13px;white-space:nowrap;color:var(--ink-soft)}
+.seat-screen .table-list .manual-label #manual_table_input{width:110px;min-height:40px;padding:0 8px;text-align:end;font-size:15px;text-transform:none}
+.seat-screen .person-count-section{margin-top:24px;padding-top:0;border-top:1px solid var(--line);display:flex;flex-direction:column}
+.seat-screen .person-icon-container{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0;order:1}
+.seat-screen .person-icon-btn.has-number{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;min-height:48px;border-radius:10px;background:var(--surface);font-size:14px;font-weight:500;color:var(--ink);border:1px solid var(--line);margin:0}
+.seat-screen .person-icon-btn i{display:none}
+.seat-screen .person-icon-btn.active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.seat-screen .entry-custom-guests{order:2;margin-top:12px;color:var(--ink-soft);font-size:13px}
+.seat-screen .entry-custom-guests summary{min-height:44px;display:flex;align-items:center;cursor:pointer;gap:8px}
+.seat-screen .entry-custom-guests summary:before{content:'+';font-size:20px}
+.seat-screen .entry-custom-guests[open] summary:before{content:'−'}
+.seat-screen .pax-stepper{max-width:220px;margin:0 0 12px;padding:6px;border-radius:12px;background:var(--surface-sunk)}
+.seat-screen .pax-number{font-size:22px}
+.seat-screen .pax-stepper button{width:44px;height:44px;min-height:44px}
+.seat-screen .person-count-section[hidden],.seat-screen .table-section-center[hidden]{display:none}
+.seat-screen .btn-footer{width:100%}
+@media(min-width:768px){.seat-screen .table-list{grid-template-columns:repeat(5,minmax(0,1fr))}.seat-screen .person-icon-container{grid-template-columns:repeat(6,minmax(0,1fr))}.seat-screen .discount-container{padding:28px 28px 108px}}
+
+.seat-screen .table-label .entry-table-name{white-space:nowrap}
+.seat-screen .table-label .table-seat-info{margin:0;font-size:11px;line-height:1.3}
+.seat-screen .table-label .table-seat-info:empty{display:none}
+.seat-screen .table-label:has(.table-seat-info:not(:empty)){padding:12px 8px;min-height:122px}
+.seat-screen .dine-toggle-wrap{margin:0 0 8px}
+
+/* Ten tables fit in four short rows on a phone. */
+.seat-screen .table-label{gap:4px;position:relative;min-height:68px}
+.seat-screen .table-label .entry-table-icon{display:block;position:absolute;inset-inline-start:6px;top:13px;width:15px;height:15px}
+.seat-screen .table-label .entry-table-name{padding-inline-start:16px}
+.seat-screen .table-label .table-seat-info{display:none}
+.seat-screen .table-label:has(.table-seat-info:not(:empty)){padding:9px 6px;min-height:68px}
+.seat-screen .entry-table-name{line-height:1.3}
+.seat-screen .table-list .manual-label{min-height:46px}
+.seat-screen .discount-container{padding-top:12px}
+.seat-screen .section-title{padding-top:14px}
+.seat-screen .entry-help{margin-bottom:12px}
+.seat-screen .person-count-section{margin-top:16px}
+
+/* Soft outline icon spans the table number and availability lines. */
+.seat-screen .table-label:not(.manual-label){display:grid;grid-template-columns:26px minmax(0,1fr);grid-template-rows:auto auto;column-gap:7px;row-gap:3px;align-content:center;text-align:start}
+.seat-screen .table-label .entry-table-icon{position:static;grid-column:1;grid-row:1/3;width:26px;height:30px;margin:0;color:var(--ink-soft);align-self:center;opacity:.8}
+.seat-screen .table-label .entry-table-name{grid-column:2;padding:0;font-size:14px}
+.seat-screen .entry-availability{grid-column:2;font-size:10px;line-height:1.35;overflow-wrap:anywhere}
+.seat-screen .person-icon-btn .entry-guest-icon{display:inline-flex;flex:0 0 17px;color:var(--ink-soft);opacity:.8}
+.seat-screen .entry-guest-icon svg{width:17px;height:20px}
+.seat-screen .person-icon-btn.active .entry-guest-icon{color:var(--accent)}
+.seat-screen .person-icon-btn.has-number{gap:4px;font-size:13px;padding:8px 4px}
+@media(max-width:480px){.seat-screen .entry-table-prefix{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.seat-screen .table-label:not(.manual-label){grid-template-columns:22px minmax(0,1fr);column-gap:5px}.seat-screen .table-label .entry-table-icon{width:22px;height:28px}}
+
+.seat-screen .entry-state-badge{position:absolute;inset-inline-start:5px;top:37px;width:15px;height:15px;padding:1px;box-sizing:content-box;border-radius:6px;background:var(--surface-sunk);color:var(--ink);z-index:1}
+.seat-screen .table-radio:checked+.table-label .entry-state-badge{background:var(--accent-soft)}
+
+.seat-screen .dine-option{display:flex;align-items:center;justify-content:center;gap:7px}
+.seat-screen .dine-option svg{width:18px;height:20px;flex:0 0 18px;opacity:.9}
+
+/* Custom seating occupies one normal grid cell. */
+.seat-screen .table-list .manual-table{grid-column:auto;margin-top:0}
+.seat-screen .table-list .manual-label{height:68px;min-height:68px;box-sizing:border-box;flex-direction:column;justify-content:center;gap:3px;padding:7px 5px;border-style:dashed;border-radius:14px}
+.seat-screen .entry-custom-label{font-size:11px;white-space:normal;line-height:1.3;text-align:center}
+.seat-screen .table-list .manual-label #manual_table_input{width:100%;min-width:0;min-height:28px;height:28px;padding:0 3px;text-align:center;font-size:15px;border-radius:4px!important}
+
+.seat-screen .entry-section-heading{display:flex;align-items:baseline;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;margin:12px 0 10px}
+.seat-screen .entry-section-heading .section-title{padding:0;font-size:16px;flex:0 0 auto}
+.seat-screen .entry-section-heading .entry-help{margin:0;font-size:11px;line-height:1.4;flex:1 1 130px;text-align:end}
+.seat-screen .person-count-section{margin-top:12px}
+.seat-screen .entry-custom-guests{margin-top:4px}
+.seat-screen .dine-toggle-wrapper{margin-top:0;margin-bottom:12px}
+
+/* Occupied tables recede without fading their readable labels. */
+.seat-screen .table-item:has([data-table-state="occupied"]) .table-label{
+ background:color-mix(in srgb,var(--surface-sunk) 48%,var(--surface))!important;
+ border-color:color-mix(in srgb,var(--line) 65%,var(--surface))!important;
+ box-shadow:none;
+}
+.seat-screen .table-item:has([data-table-state="occupied"]) .entry-table-icon{opacity:.55}
+.seat-screen .table-item:has([data-table-state="occupied"]) .entry-state-badge{background:color-mix(in srgb,var(--surface-sunk) 48%,var(--surface))}

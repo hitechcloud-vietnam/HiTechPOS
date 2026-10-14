@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <script src="assets/common/appearance.js"></script><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Branch details</title>
+<link rel="stylesheet" href="assets/common/design.css"><link rel="stylesheet" href="assets/common/ui-theme.css"><link rel="stylesheet" href="assets/me/style.css"><link rel="stylesheet" href="assets/common/i18n.css"><link rel="stylesheet" href="assets/common/app-design.css">
+<script src="assets/common/i18n.js"></script><script src="assets/common/languages.js"></script><link rel="stylesheet" href="assets/common/confirm.css">
+<script src="assets/common/confirm.js"></script>
+<script src="assets/common/access.js"></script><script src="assets/common/money.js"></script><script src="assets/common/phone-preferences.js"></script>
+    <link rel="stylesheet" href="assets/common/kitchen-notices.css">
+    <script src="assets/common/kitchen-notices.js" defer></script>
+    <script src="config.js"></script><script src="assets/common/lock.js"></script><script src="assets/me/branch-details.js" defer></script>    <link rel="stylesheet" href="assets/common/appearance.css">
+</head><body data-offline-page>
+<header class="me-head"><button type="button" class="me-back" id="branch-back" aria-label="Back">←</button><h1 class="me-title">Branch details</h1></header>
+<main class="me-body"><h2 id="branch-name" translate="no"></h2><p id="branch-message" role="status"></p><button type="button" id="branch-retry" class="profile-secondary" hidden>Refresh</button>
+<form id="branch-details-form" hidden><label class="profile-field">UPI ID<input id="branch-upi-id" name="branch_upi_id" class="ui-field" maxlength="80" autocomplete="off" autocapitalize="none" spellcheck="false"></label><label class="profile-field">Receiving name<input id="branch-upi-name" name="branch_upi_name" class="ui-field" maxlength="80" autocomplete="organization"></label><p class="me-note">Set up UPI in Branch details. UPI QR payments require INR.</p><div class="profile-actions"><button type="button" id="branch-cancel" class="profile-secondary">Cancel</button><button type="submit" class="profile-primary">Save</button></div></form></main></body></html>

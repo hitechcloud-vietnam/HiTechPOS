@@ -1,0 +1,200 @@
+/*
+ * THE REQUESTS PANEL, ON A PHONE.
+ *
+ * A waiter is holding this one-handed, on the floor, with a customer looking
+ * at them. So: a button that only appears when there is something to answer,
+ * a sheet from the bottom the thumb can reach, and targets big enough to hit
+ * without looking twice.
+ *
+ * Tokens only, never a literal colour - this app themes itself and a hex here
+ * is the one thing a shop could not change.
+ */
+
+/* Only there when there is something to answer. A control that is always
+   present and usually does nothing is a control people stop seeing. */
+.rq-open {
+  position: fixed;
+  right: 12px;
+  bottom: 76px;
+  z-index: 60;
+  min-height: 44px;
+  padding: 0 16px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: 0;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.25);
+  cursor: pointer;
+}
+
+.rq-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: flex-end;
+}
+
+.rq-shade {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.rq-panel {
+  position: relative;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.rq-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.rq-close {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink-soft);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+/* The switch a waiter reaches for while looking at the thing they want to
+   stop. Quiet, and below the heading rather than beside it, so it is never
+   the first thing a thumb lands on. */
+.rq-mute {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 8px 4px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.rq-mute input {
+  width: 20px;
+  height: 20px;
+}
+
+.rq-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rq-card {
+  margin-bottom: 10px;
+  padding: 12px;
+  background: var(--surface-sunk);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+/* The question first, because it is what the answer is about. */
+.rq-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rq-what {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.rq-when {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.rq-who {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.rq-lines {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+/*
+ * The three states of a line. Every line of the order is drawn, not only the
+ * ones that moved: what is NOT changing is half of what the waiter is being
+ * asked about, and on a handset there is no second screen to check on.
+ */
+.rq-lines li.same {
+  color: var(--ink-faint);
+}
+
+.rq-lines li.moved b {
+  font-weight: 700;
+}
+
+/* The same colour the till's dock uses for a removal, so a waiter and a
+   manager reading the same request see the same thing. */
+.rq-lines li.gone {
+  color: var(--bad);
+}
+
+.rq-lines li.gone b {
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.rq-do {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.rq-do button {
+  flex: 1 1 0;
+  min-height: 44px;
+  font: inherit;
+  font-weight: 700;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.rq-no {
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+}
+
+.rq-yes {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+/* Answering takes a moment over a shop's Wi-Fi; a button that looks live
+   while it is working is a button somebody presses twice. */
+.rq-do button.is-working {
+  opacity: 0.6;
+  pointer-events: none;
+}

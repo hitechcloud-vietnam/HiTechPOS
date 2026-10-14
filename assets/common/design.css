@@ -1,0 +1,597 @@
+@font-face { font-family: Inter; src: url('../vendor/inter/InterVariable.woff2') format('woff2'); font-weight: 100 900; font-style: normal; font-display: swap; }
+/*
+ * The small set of decisions every screen shares.
+ *
+ * WHY A FILE AND NOT MORE INLINE STYLES. This app was written with its design
+ * in its markup: a gradient here, a #d1d5db border there, 14px in one card and
+ * 13px in the next. Nothing was WRONG, and that is the problem - a hundred
+ * small independently reasonable choices do not add up to a considered one,
+ * and the result reads as homemade to the shopkeeper being asked to trust it
+ * with their money.
+ *
+ * So the decisions are made once, here, and used by name. Changing the accent
+ * colour is one line. Making every touch target bigger is one line. And a
+ * screen written next month inherits the decisions rather than inventing new
+ * ones a shade off.
+ *
+ * WHAT IS ACTUALLY DECIDED.
+ *
+ * A type scale with five steps, because a phone held at arm's length in a
+ * restaurant cannot use subtle distinctions - and because more steps is how
+ * hierarchy stops meaning anything.
+ *
+ * A spacing scale in multiples of four. Every gap on every screen is one of
+ * six numbers, which is what makes a layout look deliberate rather than
+ * arranged.
+ *
+ * ONE accent. The old screens used a purple gradient as decoration, which
+ * spends the most attention-getting thing a design has on a header nobody
+ * needs to look at. The accent belongs on the thing to press.
+ *
+ * Touch targets of 48px, which is the smallest a thumb reliably hits while
+ * its owner is walking between tables and looking somewhere else.
+ *
+ * And the phone's own light or dark setting, honoured. A waiter on a dim
+ * floor at 11pm is not helped by a white screen, and being blinded by the
+ * device you work on all evening is a thing people remember about software.
+ */
+
+:root {
+  color-scheme: light;
+  /* Ink, from strongest to faintest. Named by ROLE, so a screen never has to
+     know which grey it is asking for. */
+  --ink: #0f172a;
+  --ink-soft: #475569;
+  --ink-faint: #94a3b8;
+
+  /* Ground, from the page up to the thing floating above it. */
+  --ground: #f1f5f9;
+  --surface: #ffffff;
+  --surface-sunk: #f8fafc;
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
+
+  /* The one accent, and the two states everything else needs to say. */
+  --accent: #4f46e5;
+  --accent-ink: #ffffff;
+  --accent-soft: #eef2ff;
+  --good: #16a34a;
+  --warn: #b45309;
+  --bad: #dc2626;
+
+  /* Four is the unit. Every gap is a multiple of it. */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+
+  --radius: 12px;
+  --radius-lg: 18px;
+  --radius-pill: 999px;
+
+  /* Two shadows. A third is how a page stops having a foreground. */
+  --lift: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.08);
+  --lift-high: 0 10px 40px rgba(15, 23, 42, 0.18);
+
+  /* Five steps. A phone at arm's length cannot use more. */
+  --t-xs: 12px;
+  --t-sm: 13px;
+  --t-base: 15px;
+  --t-lg: 17px;
+  --t-xl: 22px;
+
+  /* The smallest a thumb reliably hits while its owner is walking. */
+  --touch: 48px;
+
+  --font: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+}
+
+/*
+ * The phone's own setting, honoured.
+ *
+ * A waiter on a dim floor at 11pm is not helped by a white screen, and being
+ * blinded by the device you work on all evening is a thing people remember
+ * about software.
+ */
+html[data-color-scheme="dark"] {
+    color-scheme: dark;
+    --ink: #f1f5f9;
+    --ink-soft: #cbd5e1;
+    --ink-faint: #94a3b8;
+    --ground: #0b1220;
+    --surface: #111a2e;
+    --surface-sunk: #0d1526;
+    --line: #1e293b;
+    --line-strong: #334155;
+    --accent: #6366f1;
+    --accent-soft: #1e1b4b;
+    --lift: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --lift-high: 0 10px 40px rgba(0, 0, 0, 0.6);
+  }
+
+/*
+ * `hidden` means hidden.
+ *
+ * A bare `hidden` attribute is only `display: none` from the user agent
+ * stylesheet, which ANY class rule beats - so `<div class="ui-scrim" hidden>`
+ * showed a full-screen scrim over the page. Bootstrap happens to carry this
+ * same rule, which is why it worked at all; a page that ever drops Bootstrap
+ * should not start showing its sheets.
+ */
+[hidden] {
+  display: none !important;
+}
+
+/* ------------------------------------------------------------------ sheet */
+
+/*
+ * A panel that floats over the page.
+ *
+ * Bottom-anchored on a phone and centred on anything wider: a thumb reaches
+ * the bottom of a tall screen and does not reach the middle of one.
+ */
+.ui-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  backdrop-filter: blur(2px);
+}
+
+.ui-sheet {
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font);
+  width: 100%;
+  max-width: 440px;
+  max-height: 92vh;
+  overflow: auto;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--lift-high);
+  /* Clear of the home indicator, which otherwise sits on the last button. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (min-width: 560px) {
+  .ui-scrim {
+    align-items: center;
+    padding: var(--s4);
+  }
+  .ui-sheet {
+    border-radius: var(--radius-lg);
+  }
+}
+
+/*
+ * A heading that says where you are, and nothing else.
+ *
+ * The old one was a purple gradient - the most attention-getting thing the
+ * design had, spent on a header nobody needs to look at.
+ */
+.ui-sheet-head {
+  padding: var(--s5) var(--s5) var(--s4);
+  border-bottom: 1px solid var(--line);
+}
+.ui-sheet-title {
+  font-size: var(--t-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--ink);
+}
+.ui-sheet-sub {
+  margin: var(--s1) 0 0;
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+}
+.ui-sheet-body {
+  padding: var(--s4) var(--s5) var(--s5);
+}
+
+/* ------------------------------------------------------------- a choice */
+
+/*
+ * One of several things a person may do next.
+ *
+ * A whole row is the target, not the words in it: a thumb aimed at a label
+ * lands next to it as often as on it.
+ */
+.ui-choice {
+  width: 100%;
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  text-align: left;
+  padding: var(--s3) var(--s4);
+  margin-bottom: var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.08s ease;
+}
+.ui-choice:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-sunk);
+}
+.ui-choice:active {
+  transform: scale(0.99);
+}
+.ui-choice:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.ui-choice-icon {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.ui-choice-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ui-choice-title {
+  display: block;
+  font-weight: 600;
+  font-size: var(--t-base);
+  color: var(--ink);
+}
+.ui-choice-note {
+  display: block;
+  margin-top: 1px;
+  font-size: var(--t-sm);
+  /* Stated, not inherited. A button takes its weight from whatever the page
+     gives it, so the same component read as two different things depending on
+     which screen it was dropped into - and secondary text competing with its
+     own title is the one thing it must not do. */
+  font-weight: 400;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+.ui-choice-chev {
+  flex: 0 0 auto;
+  color: var(--ink-faint);
+  font-size: 14px;
+}
+
+/* ------------------------------------------------------- fields, buttons */
+
+.ui-label {
+  display: block;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: var(--s2);
+}
+
+.ui-field {
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  /* 16px or larger, or iOS zooms the whole page in on focus and the waiter
+     is suddenly looking at a magnified corner of a form. */
+  font-size: 16px;
+  font-family: var(--font);
+  box-sizing: border-box;
+}
+.ui-field:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.ui-field::placeholder {
+  color: var(--ink-faint);
+}
+
+.ui-btn {
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--s3) var(--s4);
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 650;
+  font-size: var(--t-base);
+  font-family: var(--font);
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.08s ease;
+}
+.ui-btn:hover {
+  filter: brightness(1.06);
+}
+.ui-btn:active {
+  transform: scale(0.99);
+}
+.ui-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.ui-btn-quiet {
+  background: none;
+  /* Its own, not inherited from .ui-btn: this class gets used alone, and
+     without it a browser draws a button's default bevelled border - which
+     showed up as a box around the close X on the menu sheet. */
+  border: none;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: var(--t-sm);
+  min-height: auto;
+  width: auto;
+  padding: var(--s2) 0;
+}
+
+/* ------------------------------------------------------------- messages */
+
+.ui-note {
+  font-size: var(--t-sm);
+  line-height: 1.45;
+  color: var(--ink-soft);
+  margin-top: var(--s3);
+  min-height: 20px;
+}
+.ui-note-bad {
+  color: var(--bad);
+}
+.ui-note-good {
+  color: var(--good);
+}
+.ui-meta {
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+  margin-top: var(--s1);
+}
+
+/*
+ * Something is happening and it is not instant.
+ *
+ * A search of a whole Wi-Fi network takes seconds. Seconds of a screen that
+ * does not move is how somebody decides an app is broken and presses
+ * everything.
+ */
+.ui-working {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3) 0;
+  color: var(--ink-soft);
+  font-size: var(--t-sm);
+}
+.ui-spinner {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--line-strong);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: ui-spin 0.7s linear infinite;
+}
+@keyframes ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/*
+ * A wait that has finished without finding anything still has something to
+ * say, and a spinner still turning next to it says the opposite.
+ */
+.is-done .ui-spinner {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-spinner {
+    animation-duration: 2.4s;
+  }
+  .ui-choice,
+  .ui-btn {
+    transition: none;
+  }
+}
+
+/* ----------------------------------------------------- where this connects */
+
+/*
+ * Owner: "make it very smart on this... need very simple configuration not to
+ * make so much confusion. lan or internet all should be internal. user dont
+ * know much about networking stuff. however if someone know we have option."
+ *
+ * So the default view is ONE SENTENCE and a dot. No addresses, no words like
+ * LAN, nothing to decide. The dot is the only thing that moves, and it moves
+ * on its own, which is the honest picture: the app changes doors by itself.
+ *
+ * Everything an engineer wants is behind one tap, off the screen entirely
+ * until asked for.
+ */
+.conn-now {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+}
+
+.conn-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex: none;
+  background: var(--ink-faint);
+}
+
+.conn-dot.is-shop {
+  background: var(--good);
+}
+
+.conn-dot.is-internet {
+  background: var(--accent);
+}
+
+.conn-dot.is-down {
+  background: var(--bad);
+}
+
+.conn-said {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.conn-title {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.conn-note {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.conn-more-btn {
+  display: block;
+  width: 100%;
+  margin-top: var(--s2);
+  padding: var(--s2) 0;
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  /* Small text still needs somewhere for a thumb to land. */
+  min-height: 32px;
+}
+
+.conn-ways {
+  border: 0;
+  padding: 0;
+  margin: var(--s3) 0 0;
+}
+
+.conn-way {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  padding: var(--s3);
+  margin-top: var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.conn-way:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.conn-way input {
+  margin-top: 3px;
+  flex: none;
+}
+
+.conn-way-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.conn-way-title {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.conn-way-note {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.conn-addresses {
+  margin-top: var(--s4);
+  border-top: 1px solid var(--line);
+  padding-top: var(--s3);
+}
+
+.conn-address {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s2) 0;
+}
+
+.conn-address-label {
+  width: 92px;
+  flex: none;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.conn-address-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.conn-address-btn {
+  flex: none;
+  color: var(--accent);
+}
+
+/*
+ * THE DISH NUMBER.
+ *
+ * Owner: "self manage number... if enter 33 then it shows."
+ *
+ * Quiet, monospaced and the same width for one digit or three, so a column of
+ * rows reads as a column rather than as ragged text. A waiter is not meant to
+ * look at it; they are meant to absorb it over a week and then start typing it
+ * instead of reading the name at all.
+ */
+.dish-no {
+  display: inline-block;
+  min-width: 2.2em;
+  margin-right: var(--s2);
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: var(--ground);
+  color: var(--ink-faint);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  vertical-align: 1px;
+}

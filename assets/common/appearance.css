@@ -1,0 +1,44 @@
+/* Pair text and surfaces in legacy order controls as well as new screens. */
+html[data-color-scheme="dark"] { --muted:var(--ink-soft); --card-bg:var(--surface); }
+html[data-color-scheme="dark"] :is(.bill-screen .container,.bill-screen .modal-content,.notes-modal-content,.cart-notes-modal-content,.discount-container,.kot-sliding-panel,.sliding-panel-header,.sliding-panel-content) {
+  background:var(--surface); color:var(--ink); border-color:var(--line);
+}
+html[data-color-scheme="dark"] :is(.notes-title,.notes-label,.notes-close,.bill-name,.item-name,.item-price,.kot-item-name,.kot-total,.kot-date,.kot-persons,.kot-sliding-panel h2,.kot-sliding-panel h3) { color:var(--ink); }
+html[data-color-scheme="dark"] :is(.notes-textarea,.notes-btn-secondary,.table-label,.pax-stepper,.order-type-label) {
+  color:var(--ink); background:var(--surface-sunk); border-color:var(--line-strong);
+}
+html[data-color-scheme="dark"] :is(input,textarea,select):not([type="radio"]):not([type="checkbox"]) {
+  color:var(--ink); background-color:var(--surface-sunk); border-color:var(--line-strong);
+}
+html[data-color-scheme="dark"] :is(input,textarea)::placeholder { color:var(--ink-soft); opacity:1; }
+html[data-color-scheme="dark"] .table-radio:checked + .table-label { color:var(--accent-ink); background:var(--accent); }
+html[data-color-scheme="dark"] .order-workspace :is(.order-cancel,[data-line-action="cancel"]) { color:var(--bad); }
+html[data-color-scheme="dark"] .order-workspace .order-add,
+html[data-color-scheme="dark"] .order-financial [data-collect-table]:not([hidden]) { color:var(--accent-ink); }
+
+/* Cancellation surfaces and their copy must always use the same theme. */
+:is(#cancelOrderModal,#cancelConfirmModal,#removeItemConfirmModal,#moveTableModal) .modal-content {
+  background:var(--surface);color:var(--ink);border:1px solid var(--line);
+}
+:is(#cancelOrderModal,#cancelConfirmModal,#removeItemConfirmModal,#moveTableModal) :is(.modal-header,.modal-body,.modal-footer,.modal-title,.form-label,p) {
+  color:var(--ink);background:transparent;border-color:var(--line);
+}
+html[data-color-scheme="dark"] :is(#cancelOrderModal,#cancelConfirmModal,#removeItemConfirmModal,#moveTableModal) .btn-close {filter:invert(1) grayscale(100%) brightness(200%);opacity:.8}
+
+#moveTableModal .move-table{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+#moveTableModal .move-table.is-busy{background:var(--surface-sunk);border-color:var(--warn)}
+#moveTableModal .move-table.is-chosen{background:var(--accent-soft);color:var(--ink);border-color:var(--accent)}
+#moveTableModal :is(.move-table-now,.move-table-note){color:var(--ink-soft);opacity:1}
+#moveTableModal .close-btn{background:var(--surface-sunk);color:var(--ink);border:1px solid var(--line-strong)}
+#moveTableModal #move-table-go{background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent)}
+#moveTableModal #move-table-go:disabled{background:var(--surface-sunk);color:var(--ink-soft);border-color:var(--line);opacity:1}
+
+#appearance-toggle svg[hidden]{display:none}
+#appearance-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-radius:10px}
+
+.floor-header-controls{display:flex;align-items:center;gap:4px;margin-inline-start:auto;flex-shrink:0}
+.floor-header-controls .connection-signals{margin-inline-start:0;gap:0}
+.floor-control-divider{width:1px;height:22px;background:var(--line-strong);flex-shrink:0}
+
+/* Selected table uses one matching foreground for all of its contents. */
+html[data-color-scheme="dark"] .seat-screen .table-radio:checked + .table-label :is(.entry-table-name,.entry-availability,.entry-table-icon,.entry-custom-label,.table-seat-info){color:var(--accent-ink);opacity:1}

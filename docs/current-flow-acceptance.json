@@ -1,0 +1,1027 @@
+{
+  "objective": "Rebuild Captain to visually match every approved mockup and latest user decision exactly, preserving real POS/API integrations and released fixes. Complete screenshot comparisons and end-to-end verification before release; functionality alone is not design acceptance.",
+  "status": "fresh-design-rebuild-in-progress",
+  "baseline": {
+    "captainMain": "10bc975",
+    "workingBranch": "codex/ios-test-build",
+    "workingCommit": "af4cf7c",
+    "posMain": "539fc994",
+    "designReview": "captain-full-mockup-review.html",
+    "historicalCoverage": "approved-design-coverage.json",
+    "note": "Historical acceptance does not establish acceptance of the newer approved flows. Latest user decisions override older mockup behavior.",
+    "posIntegratedCommit": "a18f6803"
+  },
+  "requirements": [
+    {
+      "id": "connection-login",
+      "scope": "Choose a clearly actionable server before login; remember credentials securely and restore autofill",
+      "status": "browser-and-android-connection-checks-passed",
+      "evidence": "Installed Android API 36 debug APK: cold-start native runtime probe passed after MainActivity document readiness fix; native server selection precedes credentials and username/current-password autocomplete verified. No real credentials submitted in native check; authenticated native flows remain."
+    },
+    {
+      "id": "layouts",
+      "scope": "Compact phone/tablet layouts, readable dark mode, fully scrollable lists",
+      "status": "targeted-browser-checks-passed",
+      "evidence": "Table detail contrast and table list phone/tablet checks passed. Scrolling test now uses repeated actual touch swipes instead of mixing a mouse wheel with mobile touch inertia. All 40 tables reachable above navigation at 390x640 and 768x1024. Wider complete-app visual review pending."
+    },
+    {
+      "id": "optional-workflows",
+      "scope": "Cleaning and optional workflows default off; configuration on module pages",
+      "status": "cleaning-default-regressions-passed",
+      "evidence": "Move table browser checks passed with cleaning enabled, disabled and unset (3). The previous full-suite failure was an outdated fixture omitting cleaningEnabled:true; default-off app behavior retained. Broader optional settings audit remains."
+    },
+    {
+      "id": "entry",
+      "scope": "Clearly distinguish table and guests; go to items after selection; takeaway skips both",
+      "status": "table-first-redesign-targeted-browser-passed",
+      "evidence": "Table selection now precedes guests in DOM and visual order. Table tiles contrasted with pill-shaped person-icon guest choices. Removed conflicting legacy ui-theme stylesheet from discount.html. Explicit table plus guest preset opens products directly, verified with isolated fixtures at 320px and 768px; two tests passed in captain-table-first-final.log. Screenshots test-artifacts/table-first-320.png and table-first-768.png inspected. Full 11-flow visual parity remains incomplete."
+    },
+    {
+      "id": "direct-edit",
+      "scope": "Direct Add items, Note and Cancel; retain/select search text; visibly separate unsent quantities from previous rounds",
+      "status": "direct-line-actions-browser-verified",
+      "finding": "Direct line actions, order-level Kitchen note, Move table and pinned Send only these changes implemented. Send label translated in all 30 locales; build/audit passed. Full current browser suite running. Unified details visual and native fidelity remain.",
+      "evidence": "Seven direct-action scenarios pass across latest targeted runs; service-round regression suite (6 scenarios) passes at phone/tablet widths, partial/all service and 201-line retry/batching. 320px screenshot visually checked, labels do not overlap. Captain 649 unit tests and production build/30-language audit pass. These browser flows mock API; latest native and end-to-end implementation coverage remains incomplete."
+    },
+    {
+      "id": "round-notes",
+      "scope": "Repeated dishes retain separate timestamped rounds; Add again gets a fresh note; kitchen and configured print receive new changes",
+      "status": "targeted-api-print-and-browser-checks-passed",
+      "evidence": "Fresh preparation identity and note verified through paired HTTP. Current and earlier order-note snapshots verified in real kitchen print queue; note-only jobs carry no food. 32 kitchen/print checks and 11 direct-action browser checks passed. Physical printing remains unverified."
+    },
+    {
+      "id": "order-actions",
+      "scope": "Ready/served, cancellation, item cancellation, move table, bill/print, split bill, payment and reliable return navigation",
+      "status": "takeaway-billing-and-direct-item-actions-browser-verified",
+      "evidence": "29 bill-review, guest-bill, payment and Take Away billing browser checks pass. Exact saleId flows through bill, print, split and payment; uncertain payment survives reload on its original order; old APIs never receive unscoped takeaway billing. 23 real paired HTTP integration checks passed in POS including selected Take Away bill/split/print and kitchen handover. Direct floor Move and remaining approved action placement need audit. Direct Move table is now available on floor order details; focused browser test passed without opening Modify, preserves preparations and notes, closes stale source details after save."
+    },
+    {
+      "id": "takeaway",
+      "scope": "Individual numbered Take Away cards and bag icon; paid orders remain in kitchen until fulfilled",
+      "status": "selected-order-billing-and-service-integrated",
+      "finding": "Individual Take Away cards use sales numbers and bag icons, open a specific sale including paid preparation, and scope readiness and previous/next navigation to sale identity. Kitchen labels, real end-to-end fulfillment and payment actions remain to verify.",
+      "evidence": "POS branch 5a2ae362 supports selected Take Away bill, guest split, standard print queue, mixed payment, paid preparation, ready/pickup/serve lifecycle. 23 real HTTP checks pass. Captain adds exact-sale billing controls; paid orders retain service controls without financial edits. New Captain 29-case billing suite passes, release/runtime verification pending."
+    },
+    {
+      "id": "ready-visibility",
+      "scope": "Partial/all ready quantities and item preview on cards; originating captain notified; only ready quantities leave preparation",
+      "status": "partial-implementation-verified",
+      "finding": "Partial/all ready cards, preparation-only kitchen quantities and numbered Take Away labels implemented. Foreground ready notices poll on authenticated Captain pages, match round owner, suppress repeats by scope/line/version, exclude collected quantities, respect sound/vibration preferences and link to Ready list. Real-device/background notification and full pickup flow remain to verify.",
+      "evidence": "23 POS kitchen tests passed including MongoDB-backed kitchen-board regressions; 4 Captain Playwright tests passed covering phone/tablet floor and partial/all readiness with outage clearing. Local working-tree changes; not released. Kitchen follow-up: 38 Node DOM/service/display regressions and 23 MongoDB-backed API/unit tests passed; targeted lint passed. Both kitchen views now label numbered Take Away orders; local only. Browser owner/deduplication/takeaway notification checks and production build passed; native sound/background delivery unverified.",
+      "posWorktree": "C:/Users/Kayal/.codex/worktrees/takeaway-completion-20261003"
+    },
+    {
+      "id": "payment",
+      "scope": "Collect payment reliably, optional mixed Cash/Card/UPI, no redundant zero-balance page, configured auto-print only",
+      "status": "mixed-ui-and-backend-locally-tested",
+      "finding": "Split payment toggle defaults off and requires server capability. Cash/Card/UPI amounts must sum to the bill, noncash verification is required, review precedes one durable combined request. Retry keeps request and amounts unchanged. Physical device and real isolated API/browser end-to-end verification still pending.",
+      "evidence": "30 MongoDB-backed Captain payment tests passed, including new cash/card settlement, retry dedupe, unchanged items, bad total and unverified card rejection. Targeted lint passed. No live customer payment performed. All 12 Captain payment browser cases passed in 1.3 minutes, including mixed retry, single cash/card/UPI, guest splits, Tamil/Urdu layout and full-payment return. Production build and 30-language audit passed. Follow-up: all 33 Mongo-backed payment tests pass, including multi-sale tender allocation, disabled/enabled auto-print, and a real Mongo print-queue retry producing exactly one template receipt. Two targeted mixed-payment browser tests pass including selected guest visibility and preserved amounts on Back."
+    },
+    {
+      "id": "paper-orders",
+      "scope": "AWS extraction, editable review, reference-only attachment, S3 photo thumbnail/full view and order provenance",
+      "status": "scan-and-reference-flows-locally-tested",
+      "evidence": "3 paper-order browser tests passed: disabled hidden, editable extracted draft with optional pax and photo reference on send, failed recognition retains photo after reload. These use mocked recognition, not live AWS. Floor photo preview/zoom/return and failure retry browser checks passed (2). Photo branch repository suite: 126 passed; targeted lint 0 errors, 91 existing warnings. Captain production build passed after photo viewer addition. Latest: all 5 photo browser cases passed including reference upload lost-response retry and disabled feature. 14 API photo tests passed, including real MongoDB attachment dedupe, unchanged paid sale, read access, and cross-order rebinding rejection; AWS SDK mocked. Production build/30-language checks passed. No live customer orders changed. Follow-up: all 7 order-photo browser cases passed, including reload recovery and staff/sale isolation. Real AWS Textract and private S3 service check passed in ap-south-1 using generated Segoe Print sample; exact-photo roundtrip, anonymous 403, idempotency, quota, ownership and binding checks passed, test object deleted. Admin CLI profile used, not deployed application credentials.",
+      "finding": "Reference photos persist before upload in IndexedDB, scoped by shop, branch, staff and sale. Lost responses retry the same immutable ID after reload; successful upload clears the draft. Thumbnails/viewer and desktop sale details use authenticated private originals. POS integration complete on branch. Real handwriting accuracy and deployed application IAM remain unverified.",
+      "photoApiWorktree": "C:/Users/Kayal/.codex/worktrees/kitchen-speech-queue/POS",
+      "photoApiBranch": "codex/sale-photo-audit"
+    },
+    {
+      "id": "tax-voice",
+      "scope": "Tax-inclusive/exclusive display configuration and approved voice flows",
+      "status": "needs-current-verification"
+    },
+    {
+      "id": "gestures",
+      "scope": "Pull refresh, visible refresh, previous/next and swipe navigation, draft preservation, pinned send action",
+      "status": "browser-regressions-passed-native-and-pinned-actions-pending",
+      "check": "Playwright mobile-gestures, detail-gestures and table-refresh-typing suites",
+      "evidence": "22 Playwright checks passed (2.2 minutes) on af4cf7c: touch swipes, refresh success/failure, request coalescing, RTL, navigation boundaries, stale response protection, typing and cart preservation. Mocked API responses; not live POS or physical-device verification."
+    }
+  ],
+  "releaseGates": {
+    "allFlowsVerified": false,
+    "androidRuntimeVerified": false,
+    "iosRuntimeVerified": false,
+    "androidReleaseReady": false,
+    "testFlightReady": false,
+    "localPosInstallerReady": true,
+    "publicPosRelease": "not-authorized"
+  },
+  "verificationSummary": {
+    "captainUnitTests": {
+      "passed": 649,
+      "failed": 0
+    },
+    "nativeLayout": "Latest working-tree Android debug APK rebuilt successfully (Gradle 123 tasks), installed on API 36 emulator, forced cold start and native connection to develop.posnic.io/api passed in 1 second. Evidence: captain-current-android-build.log and captain-latest-android-runtime.log. Build stamp af4cf7c reflects uncommitted working tree, not a released revision; authenticated application flows remain unverified.",
+    "physicalAndroid": "Android 36 emulator available; authenticated native flows and physical device verification remain.",
+    "release": "No new Captain release or TestFlight upload; required implementation and runtime verification remain.",
+    "fullBrowserSuite": {
+      "passed": 730,
+      "failed": 1,
+      "status": "Prior snapshot failed outdated cleaning fixture; corrected and 3 focused cases pass. Entire latest snapshot has not been rerun.",
+      "currentRun": {
+        "session": 10821,
+        "log": "captain-complete-current-check.log",
+        "total": 750,
+        "status": "Stopped before fresh design rewrite; not a passing current run."
+      }
+    },
+    "latestTargetedBrowser": {
+      "billing": 29,
+      "photos": 7,
+      "cleaning": 3,
+      "directLineActions": 7,
+      "serviceRounds": 6
+    },
+    "posPullRequest": {
+      "number": 1112,
+      "commit": "a18f6803",
+      "allChecks": "pending",
+      "ciRun": 37166174971,
+      "codeqlRun": 37166174976
+    },
+    "orderPreparationNote": {
+      "status": "targeted-tests-passed",
+      "browserChecks": 11,
+      "kitchenPrintChecks": 32,
+      "pairedHttpChecks": 23,
+      "evidence": [
+        "captain-order-notes-browser.log",
+        "POS: captain-order-note-print.log",
+        "POS: captain-order-note-http.log"
+      ],
+      "limits": "Print field generation verified; no physical print. Latest Android and POS installer predate this change.",
+      "printQueue": "Real repository queue verified: original note snapshots remain immutable, note-only jobs contain no food, cursor advances. Initial historical jobs do not inherit newer notes."
+    },
+    "localPosBuild": {
+      "commit": "a18f6803",
+      "status": "passed",
+      "log": "C:/Users/Kayal/.codex/worktrees/kitchen-speech-queue/POS/captain-pos-note-build.log",
+      "published": false
+    },
+    "nativeTestServer": {
+      "session": 18861,
+      "url": "http://127.0.0.1:5198/api",
+      "fixture": "POS/api/tests/captain-native-fixture.cjs",
+      "status": "real login verified; native UI next",
+      "isolated": true
+    }
+  },
+  "localPosInstaller": {
+    "commit": "a18f6803",
+    "result": "local build passed",
+    "published": false,
+    "signed": false,
+    "path": "C:/Users/Kayal/.codex/worktrees/kitchen-speech-queue/POS/dist/Posnic-1.9.2-windows-x64-installer.exe",
+    "bytes": 219050281,
+    "sha256": "0FDE47646B6387A6A284AB10213EB46E0384F07A28FCD222DEB186DF3ECC0FA0",
+    "installationRuntimeVerified": false
+  },
+  "nextImplementation": "User rejected old layout and authorized fresh mockup implementation. Automatic merge/release continuation 618 and commit session 5289 stopped before commit. Legacy floor script archived under archive/2026-10-04-order-design. New assets/kot/order-view.js/css wired. Complete unified draft/add-items/rounds and pinned actions from mockup; compare screenshots before release. Do not resume previous release sequence until fresh UI ready.",
+  "freshOrderDesign": {
+    "status": "partial redesign; not release ready",
+    "changes": [
+      "Single order-scroll region; footer outside scrolling content",
+      "Compact dish rows and grouped quantity controls",
+      "Order options and whole-order service share a compact toolbar",
+      "Top Add items; old Modify removed"
+    ],
+    "verification": "17 targeted Playwright cases passed (2.5m), floor-line-actions and service-rounds. Includes 320px action overlap, 390/800/1280px service flows, partial service, held food and 201-line recovery. Read-only live preview visual inspection verified one inner scroll surface and pinned footer; no customer mutations.",
+    "evidence": "captain-fresh-compact-check.log; test-artifacts/direct-order-actions-320.png",
+    "remaining": "Unified draft/add-items view, explicit Add again, full mockup visual comparison, authenticated native end-to-end and release still pending."
+  },
+  "visualAcceptance": {
+    "status": "required; not passed",
+    "reference": "captain-full-mockup-review.html plus latest user decisions",
+    "requirements": [
+      "Bundled Inter with mockup typography",
+      "Matching colours, spacing, icons and controls",
+      "Ticket groups, explicit Add again and separate unsent changes",
+      "Unified editing and complete navigation with pinned actions",
+      "All 11 flows compared at identical phone/tablet viewports in light/dark"
+    ],
+    "releaseBlockedUntil": "Every visual discrepancy resolved or explicitly accepted by user",
+    "standingAutomation": "complete-and-verify-captain-app updated and ACTIVE",
+    "progress": "Bundled Inter variable font and OFL license locally; design token now uses Inter. Order ticket cards use approved mockup colours, font weights and dimensions. Explicit Add again label wired to existing fresh-preparation action. Three focused browser checks passed, including narrow phone overlap, fresh notes and quick-note templates. Visual inspection confirms ticket grouping and Inter font stack; full parity NOT passed. Add again translations, unified editor, exact service/actions placement and all remaining screens still required."
+  },
+  "changeReasonRemoval": {
+    "decision": "User explicitly removed reason-for-change prompts",
+    "captain": "Removed server-triggered reason dialog and mandatory discount reason field",
+    "api": "Reason optional; preserve actor audit and cancellation/discount permissions and manager approval",
+    "verification": "3 focused Captain browser tests and 2 POS edit-policy tests passed",
+    "deployment": "Applied minimal hotfix to live Azure shared API release v1.6.1--1790022905 on 2026-10-04 07:50 IST; backup captain-edit-policy.js.before-optional-reason-20261004T022022Z. Reloaded posnic-shard-1, PID 1550247 online. Azure root 200, protected API 401. Isolated synthetic policy probe confirms no-reason reduction accepted and manager authorization remains enforced. No customer order mutated. Repository fix is in takeaway-completion-20261003; must merge before any subsequent deployment to prevent regression."
+  },
+  "takeawayEntryAndNotes": {
+    "status": "partial-local-fix-verified",
+    "changes": [
+      "Take Away selection navigates directly to products and clears table/pax context.",
+      "Older server grouped summary expands to separate sale-scoped cards using existing order tokens; open count counts individual sales.",
+      "Cart has explicit Note icon/text button; tapping item name does not open notes."
+    ],
+    "evidence": "captain-takeaway-notes-check.log: 17 Playwright tests passed, including 320/768 entry, older-server individual cards, scoped takeaway navigation, note isolation and cart integrity. Synthetic data only.",
+    "remaining": [
+      "Reserve a short sequential Take Away number before item selection using server-coordinated allocation, and carry it through draft, submission, cart and kitchen. Existing card fallback shows the existing server token; it does not implement pre-entry allocation.",
+      "Server release and Android/iOS runtime verification remain pending."
+    ],
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c"
+  },
+  "cancellationReason": {
+    "decision": "User permits a reason window for cancellation; normal edits remain without reason prompts.",
+    "implementation": "Floor and history cancellation confirmation includes labelled reason textarea, sends change_reason, preserves text on failed request and clears on opening another cancellation.",
+    "verification": "Two focused Playwright checks passed: floor validation/retry/payload and history cancellation payload. Synthetic orders only.",
+    "release": "Local development only."
+  },
+  "designGapsOctober4": {
+    "status": "partial-visual-correction-not-complete",
+    "changes": [
+      "Quick sale text labels in menu and existing-order picker.",
+      "Price-per-item dialog uses shared typography, blue action, theme colours and small-screen sizing.",
+      "Table-first instructions and Table/guest labels replace ambiguous bare numbers.",
+      "Orders entry actions at top, All/Tables/Takeaway filters, individual full-width takeaway cards with bag icon and payment badge."
+    ],
+    "verification": [
+      "31 focused browser checks passed before final entry-action move.",
+      "4 checks passed after entry-action move and dark-mode button contrast correction.",
+      "Price-dialog light/dark screenshots reviewed at 320px; actual localhost Orders page visually inspected."
+    ],
+    "remaining": [
+      "Takeaway card Collect/Handed over actions and full exact detail-screen parity.",
+      "Server-coordinated sequential takeaway numbering before item selection.",
+      "Full mockup parity and native runtime verification; no new release."
+    ],
+    "evidence": [
+      "captain-design-gaps-check.log",
+      "captain-design-visual-recheck.log",
+      "test-artifacts/market-price-light.png",
+      "test-artifacts/market-price-dark.png"
+    ]
+  },
+  "inlineOrderEditing": {
+    "status": "implemented-locally-targeted-checks-passed",
+    "decision": "No separate Modify screen for floor item edits. Cancel means actual item/order cancellation; Close/Discard changes abandon editing.",
+    "implementation": [
+      "Existing authenticated draft/save controller is mounted inside the current order details; redundant Modify header and context screen hidden.",
+      "Save is hidden until dirty; pinned footer uses Discard changes when dirty and Close when unchanged.",
+      "Declining item removal dismisses unchanged inline draft, restoring original item list without save controls.",
+      "Successful save refreshes the current order rather than closing its details.",
+      "Other order actions/navigation cannot replace an active draft."
+    ],
+    "verification": [
+      "captain-inline-edit-check.log: 3 passed (decline cancellation, discard, add/save).",
+      "captain-inline-edit-final.log: 4 passed (exact preparation notes in both timeline modes, add/save, pinned inline/discard).",
+      "test-artifacts/inline-order-edit.png visually reviewed."
+    ],
+    "limitations": [
+      "Complete mockup parity and native release checks remain outstanding.",
+      "Local changes only; no customer orders used for tests."
+    ]
+  },
+  "numericTokensAndTableCards": {
+    "status": "local-new-token-format-and-active-table-card-verified",
+    "changes": [
+      "New token generation uses decimal numbers only, preserving the former token-space size.",
+      "Existing phone token history is mapped when avoiding reuse; issued historical tokens and kitchen references are not rewritten.",
+      "Active table cards have a table SVG, explicit Table label, consistent spacing and readable amount text."
+    ],
+    "verification": "captain-numeric-table-cards.log: 4 Playwright checks passed. Table-card screenshot reviewed.",
+    "remaining": [
+      "Existing L931 retains its original reference; no production data migration performed.",
+      "No release performed."
+    ]
+  },
+  "compactOrderActions": {
+    "status": "local-layout-and-interaction-checks-passed",
+    "changes": [
+      "Icon-labelled Note and Add again grouped beside compact quantity and cancel-item controls.",
+      "Serving actions separated from edits; Serve all and Served use check icons.",
+      "Order cancellation is a quiet icon-labelled action; Add items remains primary.",
+      "Bill and Split bill use icons with labels."
+    ],
+    "evidence": [
+      "captain-compact-actions.log: 5 passed (notes, declined cancellation, 320/480 layout).",
+      "captain-compact-actions-visual.log: 2 passed with settled-panel screenshots.",
+      "test-artifacts/compact-order-actions-320.png and compact-order-actions-480.png visually inspected."
+    ],
+    "release": "Local only; full-app mockup parity remains outstanding."
+  },
+  "previewFreshness": {
+    "finding": "Port 5174 serves captain-paper-orders updated Orders markup and table icons. User screenshot showed earlier markup; active tab subsequently had new discount entry. Exact origin of old screenshot not established.",
+    "codeFix": "Development server no-store headers plus BFCache pageshow refresh on Orders when no active draft/dialog. Does not clear app storage or mutate orders.",
+    "verification": "HTTP confirmed no-store, Orders heading, takeaway filter, table-icon code and restore guard. Opened separate fresh browser tab and visually confirmed new Orders/filters/icon cards.",
+    "limitations": "This fixes development preview freshness; full redesign and release remain incomplete.",
+    "cartFollowup": "Confirmed updated indexedDB.js is served no-store with bill-item-actions and preparation icon. Added development-only classic-script update notification (explicit Vite hot context), plus safe cart history restore guard. Opened a fresh Cart Summary tab and visually verified actual saved cart renders separate controls. Did not clear storage or submit an order."
+  },
+  "cartItemActionSpacing": {
+    "status": "local-verified",
+    "change": "Note pen/text button and Preparation controls-icon button in a dedicated spaced flex row with 44px touch targets, wrapping safely on narrow screens. Preparation has accessible name and tooltip; saved note/details stay separate from controls.",
+    "verification": "3 targeted checks passed for spacing, both dialogs, note identity and unsupported preparation hiding; final compact padding check passed. Screenshot inspected at 320px.",
+    "evidence": "captain-cart-actions-spacing.log; captain-cart-actions-visual.log; test-artifacts/cart-item-actions-320.png"
+  },
+  "sequentialTakeawayNumbers": {
+    "status": "implemented-and-targeted-checks-passed-local-only",
+    "requirement": "Take Away 1, Take Away 2, Take Away 3; increasing numeric sequence per branch, no random or letter-prefixed tokens.",
+    "implementation": [
+      "Server reservations use a unique branch/number index and persistent request IDs. Concurrent phones sharing one server/database receive distinct sequential numbers; retries retain their number.",
+      "Captain reserves before opening items, stores the number with its draft, shows it on cart, and carries the reservation in the durable checkout payload.",
+      "Server binds reservations to submitted order identity and stores takeaway_number plus numeric token_id; floor summary and kitchen tickets read the assigned number. Older Captain submissions receive server-assigned numbers too."
+    ],
+    "verification": [
+      "POS takeaway-sequence-api.log: 5 tests passed including Mongo concurrency, retries, branch isolation, permission rejection, and real sale persistence.",
+      "Captain takeaway-sequence-check.log: 8 passing checks; one test initially accessed menu JS before ready. Added readiness wait.",
+      "Captain takeaway-reservation-check.log: both reservation/browser checkout and failed-request retry checks passed after test readiness fix."
+    ],
+    "remaining": [
+      "Requires POS/API deployment before connected preview can reserve numbers. No deployment or mobile release performed in this change.",
+      "Existing orders retain their original issued references. Abandoned reservations are not recycled.",
+      "Independent offline server databases do not share the sequence automatically; cross-database routing coordination remains to verify."
+    ]
+  },
+  "softFloorCards": {
+    "status": "local-preview-verified",
+    "changes": [
+      "Thin outlined table and bag icons on pale blue backgrounds.",
+      "Medium-weight slate labels instead of heavy dark text; compact cards and slim inset status stripe.",
+      "Shared heading markup for active, available and pending tables; dark-mode icon colors."
+    ],
+    "verification": "Three browser layout checks passed at 320px light, 390px dark, 768px light. Phone light/dark screenshots visually inspected. Port 5174 confirmed serving updated stylesheet.",
+    "evidence": "soft-floor-cards.log; test-artifacts/soft-floor-cards-320-light.png; test-artifacts/soft-floor-cards-390-dark.png",
+    "release": "Local preview only."
+  },
+  "appearancePreference": {
+    "status": "implemented-local-browser-verified",
+    "changes": [
+      "Account > This phone > Appearance: System, Light, Dark; stored per device and applied before paint across app pages.",
+      "Unified existing dark styles under resolved appearance state, including live system-theme changes.",
+      "Paired legacy order/cart/note/entry surfaces and text. Fixed white cart container behind light text; retained readable item/action colors."
+    ],
+    "verification": [
+      "appearance-check.log: 3 Playwright checks passed.",
+      "Preference persists across navigation; explicit Light overrides dark OS and explicit Dark overrides light OS; System follows changes.",
+      "Measured at least 4.5:1 contrast for tested order name, Note action, entry heading, cart table label, note heading/label/input.",
+      "Dark order, entry and note screenshots visually reviewed. Preview 5174 serves appearance script."
+    ],
+    "limitations": [
+      "Android/iOS native runtime and new mobile release remain outstanding.",
+      "No production customer order or payment used in checks."
+    ]
+  },
+  "compactTakeawayAndCompletion": {
+    "status": "local-browser-and-existing-server-regressions-passed",
+    "changes": [
+      "Takeaway cards now occupy one grid cell like tables, with the same light icon and heading style.",
+      "Paid takeaway order view retains serving/handover actions; paid item edits remain disabled.",
+      "Single-order view offers Serve all & collect payment / Hand over & collect payment when collection is available. This marks only displayed pending quantities then opens normal payment collection after successful server confirmation. No automatic financial charge.",
+      "Collect payment alone never marks quantities served. Payment dialog states food stays active until handed over. Paid takeaway detail refreshes instead of being dismissed automatically.",
+      "Kitchen staff transfer action renamed Assign staff in order options to distinguish it from customer handover."
+    ],
+    "verification": [
+      "takeaway-compact-completion.log: 5 passed, including equal card widths at phone/tablet and paid/unpaid handover.",
+      "takeaway-combined-retry.log: 2 passed including failed handover does not open payment, retry succeeds, paid orders omit combined payment action.",
+      "POS takeaway-completion-recheck.log: 19 existing Mongo tests passed including payment-first and service-first completion.",
+      "320px compact-card screenshot visually inspected."
+    ],
+    "limitations": [
+      "Local changes only. Deployment and mobile release remain pending.",
+      "Combined action is shown only for a single order with kitchen-round support; unsupported older server data cannot safely infer served quantities.",
+      "Ready quantities leave preparation; pickup/handover and payment determine takeaway completion."
+    ]
+  },
+  "inlineServedIcon": {
+    "status": "local-preview-verified",
+    "change": "Tray/check SVG serving button shares item edit row, 44px tap target with accessible name and tooltip. Compact narrow-phone controls preserve all actions. Partial quantity entry retains a separate row.",
+    "verification": "inline-served-icon.log: 3 layout checks passed at 320,390,480; same-row position, no overflow and minimum tap size asserted. 390 screenshot visually inspected. Service request handlers unchanged.",
+    "release": "Local preview only."
+  },
+  "internetFallbackConsent": {
+    "status": "local-verified",
+    "decision": "Local-to-Cloud fallback requires explicit consent explaining slower kitchen delivery. Latest user instruction overrides earlier automatic internet switching.",
+    "implementation": [
+      "Shared consent gate in managed request transport before order transmission and in legacy resolver/adoption/hedging.",
+      "Verified shop identity and order-authority checks remain in force; acceptance does not authorize replay to an unrelated server.",
+      "Stay on Wi-Fi retains orders; one refusal per outage/session suppresses repeat prompts and leaves a visible Switch to internet action.",
+      "Consent survives page navigation within the session; returning from Cloud to verified LAN resets it for the next outage. Initial explicitly selected Cloud operation is unchanged."
+    ],
+    "verification": [
+      "internet-consent-access.log: all 30 secure-access tests passed, including zero Cloud order writes when declined and identical saved-order payload after acceptance.",
+      "internet-consent-browser.log: consent prompt, refusal, no repeated dialog and explicit retry/acceptance passed.",
+      "test-artifacts/internet-switch-consent.png visually reviewed."
+    ],
+    "limitations": [
+      "Native Wi-Fi/mobile-data transition not tested on a physical device. Local source changes only; mobile release pending.",
+      "Message describes local server reachability, not presumed Wi-Fi disconnection: browser cannot reliably distinguish Wi-Fi loss from a stopped POS server."
+    ]
+  },
+  "editorPreparationIcon": {
+    "status": "local-verified",
+    "change": "Replaced legacy full-text Preparation button in existing-order editor with a 44px sliders icon beside Note. Accessible name and tooltip retained. Narrow controls wrap without overflow.",
+    "verification": "editor-preparation-icon.log: 2 browser checks passed at 320 and 424 pixels; spacing, dimensions, no visible Preparation text, no overflow, correct preparation and note dialogs.",
+    "release": "Local preview only."
+  },
+  "consistentExistingOrderAdditions": {
+    "status": "local-verified",
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c",
+    "changes": [
+      "Sent-row Add again, editor repeat and menu additions use one fresh-draft helper. Original line quantities and notes remain unchanged.",
+      "Plain unsent additions combine; a draft carrying notes or preparation choices stays separate. New lines receive unique line IDs.",
+      "Already sent and New items · Not sent yet sections distinguish batches. Only Note opens notes; tapping item text does not.",
+      "Inline editor has no modal transition that can swallow a fast save. Narrow action groups wrap without overlap."
+    ],
+    "verification": [
+      "repeat-draft-flow.log: initial 21/24 passed; three failures investigated and fixed.",
+      "repeat-draft-recheck.log: 6/6 passed including note-only saves, old batch repeats, actual menu addition, fresh-note separation and submitted quantities/identities.",
+      "repeat-draft-layout.log: 3/3 passed at 320/424 and repeat flow at 390 with no action overlap; screenshot visually reviewed.",
+      "node --check assets/order-history/script.js passed. Local port 5174 serves addDraftServing implementation."
+    ],
+    "limitations": [
+      "Local source only; not a released mobile build. Browser API fixtures used; no live customer orders changed."
+    ]
+  },
+  "customMoveTable": {
+    "status": "local-verified-server-deployment-required",
+    "change": "Move table now offers Custom table for 1–6 letters/numbers (6A/6B/6C). Use table creates or reuses the branch-scoped destination, refreshes availability, then requires the normal Move confirmation. Input changes invalidate the previous selection. Merge and unresolved moves do not offer custom creation.",
+    "backend": "captain-tables.temporary and POST /captain/v1/tables/temporary in codex/takeaway-completion-20261003. Requires sales permission, normalizes labels and uses the existing unique table identity index. Existing metadata is preserved; normal move occupancy/seating checks remain authoritative.",
+    "verification": [
+      "custom-table-api.log: 25 MongoMemoryServer service tests passed including concurrent creation, retries, existing-table reuse, validation, permission and branch scope.",
+      "custom-table-browser.log: 3 browser flows passed: configured table, temporary table with item/note preservation, and durable seating move.",
+      "custom-table-lint.log: zero errors, one pre-existing unused-variable warning in captain-tables.test.js.",
+      "JavaScript syntax passed; custom-table-move.png visually reviewed."
+    ],
+    "release": "Local preview and integration source only. Connected server needs the new endpoint; no live orders or payments used in tests."
+  },
+  "cancellationReasonTemplates": {
+    "status": "local-verified",
+    "change": "Added five quick reason chips to floor and history cancellation windows. Selection populates the editable reason; custom typing updates selection. Selecting a template never cancels the order automatically.",
+    "verification": "cancellation-templates.log: 4 browser checks passed including template selection/edit/save in both windows and reason retention after failure. Screenshot visually reviewed; syntax check passed; port 5174 serves implementation.",
+    "release": "Local preview only; no new server endpoint required."
+  },
+  "sameScreenAddAgain": {
+    "status": "local-verified",
+    "change": "Add again retains original kitchen batches and header, showing only new unsent lines inline below them. Repeated original-row taps share the existing draft; Add items opens the picker without resetting it. Previous editor copies of sent items are hidden. Save/discard controller and allocated-price picker protections retained.",
+    "verification": [
+      "same-screen-repeat.log: 4 passed covering old-batch repeats and saved original/new quantities and notes.",
+      "same-screen-repeat-recheck.log: 5 passed covering same-screen menu/notes/save, annotated draft separation, 320/424 preparation layout, and declining cancellation.",
+      "Screenshot same-screen-add-again.png visually reviewed. JavaScript syntax passed; local port 5174 serves the new inline mode."
+    ],
+    "release": "Local preview only; no server endpoint change for this flow."
+  },
+  "equalFloorCardSizes": {
+    "status": "local-verified",
+    "change": "Floor grid uses equal-height rows and stretched border-box cards, so available and occupied tables share dimensions despite different metadata. Applies to takeaway cards too.",
+    "verification": "equal-table-cards.log: 3 browser checks passed at 320, 490 and 768px, comparing five cards across rows with no content clipping. equal-table-cards.png visually reviewed.",
+    "release": "Local CSS change; no server deployment required."
+  },
+  "inlineItemCancellation": {
+    "status": "local-verified",
+    "change": "Remove item opens confirmation above the unchanged kitchen batches. Confirmed cancellation strikes the original row with a Not sent yet label and retains pinned save/discard. No duplicate editor list. Existing addition drafts accept cancellation without reopening or resetting. Disabled controls restored when draft closes.",
+    "verification": "inline-remove-item.log: 4 browser checks passed: declining leaves original view, Add again remains inline, cancellation on legacy and kitchen-round rows sends only the remaining item with original note. Syntax checks and local served asset verified; screenshot reviewed.",
+    "release": "Local preview only; no new server endpoint required."
+  },
+  "completedOrderReceipt": {
+    "status": "local-verified-deployment-required",
+    "change": "Completed/Paid history details offer View / Print bill. Read-only receipt preview targets exact sale ID and shows total, paid and balance with no collect/split actions. Server reprint uses normal bill payload/receipt designer payment fields, copy status and configured copies. Durable ticket keys deduplicate retries.",
+    "verification": [
+      "completed-receipt-browser.log: completed paid history preview and exact-ID print request passed; no payment controls.",
+      "completed-receipt-api.log: 7 MongoMemoryServer tests passed including completed paid receipt, cross-branch denial, duplicate request prevention, payment data in both print formats and no sale mutation.",
+      "completed-receipt-lint.log: lint passed."
+    ],
+    "limitations": [
+      "POS/API source requires deployment. Physical paper output not tested.",
+      "Captain codex/ios-test-build; POS integration codex/takeaway-completion-20261003. No live customer payments/orders used."
+    ]
+  },
+  "transferQuantitySteps": {
+    "status": "local-verified",
+    "change": "Transfer Items and Served inputs use step 1 for whole recorded quantities instead of universal .001. Decimal precision retained when existing quantity or served quantity is fractional. Native validity blocks .001 entries for whole servings.",
+    "verification": "transfer-quantity-steps.log: 2 browser tests passed for ArrowUp 0 to 1, invalid .001 submission and retaining fractional .5 support. JavaScript syntax passed.",
+    "limitation": "No unit-of-measure metadata inferred; step is based on recorded portions. Local UI change only."
+  },
+  "transferEligibilityVerification": {
+    "status": "local-verified",
+    "finding": "Screenshot source was cancelled. Server rejection was correct, but Transfer items was incorrectly exposed in history. UI now hides it and refuses direct opening for cancelled/completed/paid/closed orders.",
+    "verification": [
+      "transfer-eligibility.log: 5 browser checks passed including blocked terminal sources and quantity controls.",
+      "transfer-browser-journey.log: open unpaid selection -> destination -> preview -> save passed against isolated API fixtures.",
+      "transfer-recovery-check.log: 20 client recovery/selection tests passed.",
+      "transfer-verification.log: 243/244 backend tests passed initially; remaining assertion was obsolete mandatory reason for ordinary discount edits. Updated to latest approved optional-reason behavior.",
+      "transfer-source-recheck.log: all 124 source-suite tests passed including three new closed/paid rejection cases. Other four suites passed in initial run. Aggregate 247 backend checks passed across the two runs."
+    ],
+    "limitations": [
+      "No live customer orders moved. Browser flow uses mock endpoints; backend suites use MongoMemoryServer. Physical devices and deployed-server full transfer not verified this run."
+    ],
+    "branches": [
+      "Captain codex/ios-test-build",
+      "POS codex/takeaway-completion-20261003"
+    ]
+  },
+  "draftRemoveVersusKitchenCancel": {
+    "status": "local-verified",
+    "change": "New unsent lines show a trash icon and Remove, and delete immediately without confirmation. Minus to zero follows the same rule. Removing the final change closes the clean draft without discard confirmation. Sent lines retain Cancel item and require a reason with quick templates; saved change_reason is included in update request.",
+    "verification": "draft-remove-reason.log: 6 browser tests passed including immediate remove, minus to zero, no live writes for draft removal, required sent cancellation reason and saved reason, legacy/round cancellation, declining confirmation. JS syntax passed.",
+    "release": "Local preview only; existing update endpoint used."
+  },
+  "addMoreMenuQuantityScope": {
+    "status": "local-verified",
+    "change": "Add-more menu counters contain only unsent additions. Previously sent items start at ADD. Minus cannot reduce a sent line. Footer counts and line-price subtotal show additions only with explicit explanatory text; button reads Review new items. Removing final addition within menu leaves menu open.",
+    "verification": "new-addition-menu.log: 4 browser checks passed covering initial zero, add twice, remove twice, unchanged sent quantities, no confirmation on draft removal, repeat paths and note separation. JS syntax passed.",
+    "release": "Local preview; no server update needed."
+  },
+  "previouslyOrderedMenuIndicator": {
+    "status": "local-verified",
+    "change": "Add-more menu labels matching products Already ordered: N using original quantities across lines. Label survives row redraws and remains separate from draft counter. Included for normal menu and search.",
+    "verification": "previously-ordered-indicator.log: browser add/remove flow passed, original count remains 2 while draft goes 0 to 2 to 0; unrelated items have no label. Syntax passed.",
+    "release": "Local preview only."
+  },
+  "neutralQuantityCounter": {
+    "status": "local-verified",
+    "change": "Menu quantity stepper uses theme surface and normal ink for quantity instead of blue accent fill/white text. Plus/minus retain accent color. Quantity is non-selectable.",
+    "verification": "neutral-quantity-counter.log: add/remove browser check passed including neutral counter background and readable number after increment.",
+    "release": "Local CSS only."
+  },
+  "compactInlineDraftRows": {
+    "status": "local-verified",
+    "change": "Add items now enters the same inline additions mode as Add again. Existing kitchen rows remain intact. New rows use compact name/price, one action row, subtle New · Not sent group, and immediate unsent trash removal. Narrow-screen footer spacing and scroll clearance corrected.",
+    "verification": "compact-draft-rows.log: 7 passed; compact-draft-recheck.log: 5 passed; preparation checks 2 passed in compact-draft-final.log; final visibility checks 2 passed at 320 and 540 in compact-draft-visibility.log. Screenshots reviewed. JS syntax passed; port 5174 confirmed serving compact row code.",
+    "release": "Local preview only; no server change required.",
+    "followup": "Drafts now use service-round, service-line, service-dish and service-quantity markup shared with sent kitchen rows. Quantity replaces the mismatched draft price in the title row. Same font metrics and action heights verified against the existing row; generic modal 46px minimum overridden to matching 44px. New · Not sent is a shared ticket header. 5 behavior checks passed in unified-service-draft.log, then 4 final layout/preparation checks passed in unified-service-draft-verified.log at 320/424/540. Preview port 5174 serves the new markup; existing browser tabs reported Preview updated · Reload."
+  },
+  "existingItemNoteInline": {
+    "status": "local-verified",
+    "change": "Existing-line Note enters compact inline mode, keeps kitchen rows in place, and updates the note beneath its original dish. Note actions remain available during a draft. Discard restores original note DOM; new unsent notes never rewrite sent lines.",
+    "verification": "inline-existing-note.log: 4 passed, including note targeting and repeat/add draft behavior. inline-note-restore.log: 2 passed including reopen and discard in legacy and kitchen-round layouts. Syntax checks passed for all three changed scripts.",
+    "release": "Local preview only; no backend change."
+  },
+  "itemNoteDialogDesign": {
+    "status": "implemented-awaiting-full-visual-acceptance",
+    "change": "Archived obsolete orange note styles. Dedicated note dialog uses bundled Inter, approved light/dark palette, 130px textarea, compact suggestions, Save note and Close actions, and visible dark close icon. Item name is subtitle; hint states notes travel with next kitchen update. Existing API/draft behavior retained.",
+    "evidence": [
+      "note-dialog-design.log: 4 behavior checks passed",
+      "note-dialog-final.log: 6 phone/tablet light/dark and note apply/discard checks passed",
+      "test-artifacts/item-note-comparison.html: paired reference/actual captures at 390 and 768 pixels in light/dark"
+    ],
+    "remaining": "Full app visual parity and device/runtime release gates remain open. Dialog instead of separate note screen follows latest user direction; expanded preset list and surrounding order shell still require full visual review."
+  },
+  "visualMismatchLedger": "docs/visual-mismatch-ledger.json",
+  "sentQuantityReductionInline": {
+    "status": "local-browser-verified",
+    "change": "Sent-item minus stays in the compact kitchen list. Every sent reduction requests a reason and stages a specific quantity. Confirmed row quantity remains unchanged with a pending Cancel X of Y label. Repeated reductions use the same draft. Save includes reason and remaining quantity; discard restores original display. New unsent minus/removal remains immediate.",
+    "evidence": "inline-partial-cancel-matrix.log: 12 passed at 390/768 in light/dark; sent full cancellation and unsent remove checks included. Syntax checks passed. Reference/actual screenshots saved in test-artifacts/partial-cancel-comparison.html.",
+    "limitations": "Browser API fixtures only for these checks. Backend deployment, physical kitchen printing, device keyboard/runtime, and full visual parity remain open."
+  },
+  "smoothOrderFeedback": {
+    "status": "local-verified",
+    "change": "Adds, quantity changes, notes and staged cancellations briefly highlight the affected row. Off-screen rows scroll within the order above the pinned footer; reduced-motion uses an immediate scroll and outline. Menu additions reveal on return. First floor request uses stable skeleton cards and never premature empty state; refresh retains existing cards and known filter data. Pending page explains local delivery recovery versus active orders/unpaid bills.",
+    "verification": "smooth-order-feedback-final.log: 6 passed including delayed first load, pending event before response, refreshing retained cards, 320/540 row layout, reveal above footer, cancellations. Note apply/reopen/discard cases passed in initial feedback run. JS syntax checks passed.",
+    "release": "Local preview only."
+  },
+  "quietDarkFloorLoading": {
+    "status": "local-verified",
+    "change": "Removed skeleton card boxes. Initial loading is transparent with small muted text delayed 250ms to avoid flashing on fast responses. No shimmer, changing fill or covering overlay. Existing cards remain on refresh. Reduced motion disables text fade.",
+    "verification": "quiet-dark-loading.log: 2 passed. Explicit dark choice on a light OS tested with delayed API, transparent borderless loading area, >=4.5 text contrast, unchanged body background after response and no premature empty state. Screenshot floor-loading-dark.png reviewed. JS syntax passed.",
+    "release": "Local preview only."
+  },
+  "voiceMessageReplay": {
+    "status": "local-implemented-server-deployment-required",
+    "change": "Green round record/play/send controls, compact voice bubbles and waveform, separate durable recording archive and authenticated replay after reload. Private S3 / S3-compatible endpoint when configured; server database fallback. 7-day archive. Cloud storage never claims kitchen playback. Tap or hold to record, release to preview, slide left to discard, slide up to lock; subsequent tap pauses locked recording.",
+    "evidence": "voice-message-final.log: 3 browser tests passed. voice-message-retry.log: retry identity/account isolation test passed. POS voice-archive-new-tests.log: 4 Mongo-backed storage tests passed, S3 mocked. Existing kitchen-voice suite 5 passed. Screenshot voice-message-replay-dark.png reviewed. voice-verified.log: 3 passed at 320/900 with hold/release, slide cancel and lock, plus real Chromium WAV decoding/playback after reload at 390 dark. Fixed ignored first tap after locking.",
+    "outstanding": [
+      "Deploy API archive/recordings/playback routes and Captain client together",
+      "Configure private bucket and 7-day lifecycle; real provider upload not verified",
+      "Cloud-to-local speaker relay is not implemented; local broadcast still requires local POS Kitchen Sound",
+      "Native recording and real speaker playback require device verification"
+    ]
+  },
+  "paperScanDiscoverability": {
+    "status": "local-browser-verified",
+    "change": "Explicitly disabled paper workflow stays off/hidden. Enabled but unconfigured entry remains visible and explains server setup on tap. Failed capability request remains discoverable and retries on tap with connection guidance; never launches recognition without positive capability response. Latest user direction: icon-only outlined paper scanner moved into primary action row first, followed by New order and Ready; accessible label/title retained, floating text button removed.",
+    "evidence": "paper-entry-check.log: 5 passed including existing photo review/send and durable failed-recognition recovery plus disabled, missing-configuration and unavailable API states. node --check passed.",
+    "remaining": "Connected deployment configuration not verified; full scan presentation/reference parity and native camera checks still open.",
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c",
+    "latestLayoutCheck": "Verified primary-action DOM order: scan icon, New order, Ready. Existing compact 46px scan button and equal-height controls retained."
+  },
+  "releaseAuthorization": {
+    "authorized": true,
+    "requested": "2026-10-04",
+    "scope": "Release Captain after all requested changes and verification; Android APK and processed TestFlight; local POS installer only, no public POS release.",
+    "latestPreflight": {
+      "productionBuild": "FAILED: i18n audit finds missing recent UI messages; see release-build-check.log. Existing 30-language key/placeholder check passes.",
+      "attribution": "PASSED: release-attribution-check.log",
+      "androidRuntime": "NOT RUN: no attached device reported in release-device-check.log",
+      "fullUnitSuite": "Failed; release-unit-check.log. Triage ongoing: five cancellation recovery failures were incomplete document mocks; fixed fixture readiness and all five pass in release-cancel-recovery-check.log. Remaining failures include stale extraction/source assertions and translation coverage; not all are confirmed runtime defects.",
+      "translationAudit": "Removed four verified non-user-facing CSS/media-query/comment false positives from source exclusions. Actual missing interface translations remain in release-missing-messages.json; no English fallback inserted to bypass checks."
+    },
+    "status": "Release authorized, not published. Build, regression, visual and device gates remain open."
+  },
+  "releaseRegressionRepair": {
+    "date": "2026-10-04",
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c",
+    "changes": [
+      "Cancellation tests now extract the double-submit guarded handler and provide a valid required cancellation reason.",
+      "Base-price test executes the actual addDraftServing helper after the inline editor refactor.",
+      "Active-order test scopes the getListKot search to the current request and verifies the transparent local loading status."
+    ],
+    "verification": "release-regression-repair.log: 18 passed; cancellation success/rejection/network/render failures, open-ticket filters, nonblocking loading and menu base price. No application behavior weakened to pass tests.",
+    "remaining": "Source-scope test false positive and translation failures remain; complete browser/native/visual gates still open."
+  },
+  "cancelDialogContrast": {
+    "change": "Cancellation dialog surfaces, titles, description and labels share theme tokens in floor/history; dark close icon corrected. Item cancellation included.",
+    "verification": "cancel-contrast-check.log: 4 passed; floor and history at 390px light/dark, >=4.5 text contrast. Dark screenshot inspected. Final captures wait for full modal opacity.",
+    "release": "Local preview; no server changes."
+  },
+  "pickerSurfaceRepair": {
+    "change": "Search wrapper uses theme surface-sunk before/after focus. Picker is opaque, fixed chrome does not shrink; category rail remains fully visible, list alone scrolls and footer is flush.",
+    "verification": "picker-surfaces-check.log: 2 passed at 390x740 light/dark. Geometry checks verify contiguous search/rail/list/footer, rail minimum height, footer within viewport, unchanged search background on focus. Dark screenshot inspected: test-artifacts/picker-surfaces-dark.png.",
+    "release": "Local preview only."
+  },
+  "moveDialogContrast": {
+    "change": "Move-table modal, table tiles, selected/busy states, custom action and footer pair theme surfaces/text. Disabled submit remains readable; close icon dark theme corrected.",
+    "verification": "move-contrast-check.log: 2 passed light/dark at 390px. Title, current table, status, actions and table labels meet 4.5 contrast. Selecting another table enables move. Dark screenshot reviewed: test-artifacts/move-table-dark.png.",
+    "release": "Local preview."
+  },
+  "billSplitSurfaceScroll": {
+    "change": "Bill dialog gets definite viewport-bounded height and independent scroll body with fixed header/footer. Split header/footer cannot shrink; selected modes use theme accent-soft and readable ink, including helper text.",
+    "verification": "bill-scroll-check.log: 2 passed at 390/768x640 dark. Actual wheel scroll through 25 lines reaches totals while footer stays fixed and visible. Split footer within viewport; selected mode no longer white. Screenshot split-dark-390.png reviewed.",
+    "release": "Local preview."
+  },
+  "homeThemeShortcut": {
+    "change": "Accessible sun/moon button beside connection icons toggles effective theme and persists explicit preference. Settings retains System/Light/Dark. SVG visibility uses hidden attributes. Connection group now contains Wi-Fi and Internet only. Appearance follows outside the group, separated by a subtle divider; DOM and visual order agree.",
+    "verification": "theme-shortcut-check.log: 1 passed at 320px; both directions, reload persistence, Settings consistency, icon visibility and no horizontal overflow. node syntax passed. theme-group-check.log: narrow-phone toggle/persistence/no-overflow check passed after regrouping. Screenshot reviewed.",
+    "release": "Local preview."
+  },
+  "seatingRefinement": {
+    "change": "Rebuilt table entry presentation with two-column phone/four-column tablet icon cards, explicit availability/capacity, themed disabled states and compact dashed custom-table row. Guest presets use compact consistent tiles; extra stepper is disclosed under More guests instead of duplicated on screen. Earlier entry CSS archived. Existing table capacity, order limits and direct-to-menu behavior retained. Latest correction: compact 68px cards, three columns on phones/five on tablets; tiny inline table icons and availability, capacity omitted visually to reduce height. Ten tables occupy four short rows. Table labels sorted with numeric locale collation so T10 follows T9 and T6A/T6B follow T6. Soft outline table icon now spans the two text rows, 22–26px wide; guest presets use matching outline person icons. Small phones visually omit repeated Table prefix while retaining accessible text; compact heights preserved. Dine-in and Take away now use matching 18px outline table/bag icons with currentColor for both themes and selection. Latest user correction: Custom table now takes one normal grid cell, matching 68px tile height and column width; no dedicated row. Table/guest help text now shares the heading row where space permits, with responsive wrapping on narrow screens; reduced section spacing.",
+    "verification": "seating-refinement-final.log: 5 passed; table/guest flow at 320/768, takeaway bypass, light/dark available/unavailable cards, custom field, hidden/revealed guest stepper and no horizontal overflow. Dark screenshot visually reviewed. compact-ten-tables.log: 3 passed; compact-ten-tables-final.log: final 10-table screenshot/geometry test passed at 390px. All ten cards visible, grid under 300px tall, no horizontal overflow. seating-icons-check.log: 5 passed; phone/tablet order entry, light/dark custom guest control and ten-table compact grid. Final dark screenshot reviewed. entry-type-icons.log: table/guest phone/tablet and takeaway bypass checks; 320px screenshot reviewed with both labels/icons fitting. custom-table-tile.log: passed, verifies matching tile dimensions, same row as tenth table and custom label entry. seating-hints-compact.log passed; inspected 390x844 dark screenshot with ten tables, custom tile, six guest presets and More guests all above pinned Next.",
+    "acceptance": "New local design ready for user review, not claimed visually accepted or released."
+  },
+  "releaseTranslationProgress": {
+    "date": "2026-10-04",
+    "change": "Added real translations for both theme-toggle labels and More guests in all 30 offline catalogues; rebuilt bundled languages.js. No placeholder English translations used to bypass release checks.",
+    "verification": "release-theme-translations.log: 30 languages, 1058 messages each, placeholders intact; offline bundle regenerated.",
+    "remainingSourceMessages": 83,
+    "status": "Translation work in progress; full production build and other release gates remain open."
+  },
+  "seatingOccupiedIcon": {
+    "change": "Applied actual occupied people badge with Occupied label; Available retains table outline. Held uses clock and Cleaning brush, with one state label. Current table order limits and disabled logic unchanged. Occupied tile backgrounds and borders now subtly recede with theme-aware mixed surfaces; labels retain full opacity and table outline is softer. Availability/disabled rules unchanged.",
+    "verification": "occupied-icon-check.log: 2 light/dark checks passed. Badge repositioned after screenshot review to avoid label overlap; final tests in occupied-icon-final.log. occupied-muted-surface.log covers both light/dark occupied states and guest controls.",
+    "release": "Local preview."
+  },
+  "menuBubbleFeedback": {
+    "change": "Latest selected variant: plus uses single green heart float/pop (460ms); minus uses sad face with longer visible hold and gentle drop/fade (900ms). Add retains short floating glass bubble (460ms). Effects follow successful quantity updates and respect reduced motion.",
+    "verification": "menu-heart-sad.log: browser checks for Add, plus and minus quantities and distinct effects, cleanup, reduced motion and glass bubble light/dark.",
+    "release": "Local preview; not released."
+  },
+  "selectedTableContrast": {
+    "change": "Selected dark-mode table number, availability, icon and custom label share accent foreground; removes inherited muted text on blue selection.",
+    "verification": "selected-table-contrast.log: passed. Waits for selection transition and checks >=4.5 contrast for name, status and icon at 560px.",
+    "release": "Local preview."
+  },
+  "kitchenSendFeedback": {
+    "change": "Latest user request: full-screen lightly transparent overlay, large 64px paper plane on a curved cross-screen path into a 100–170px serving dish, playful receiving bounce, 2-second duration. Pointer-transparent, only confirmed sends, reduced motion suppressed.",
+    "verification": "kitchen-flight-screen.log: five browser checks for success, rejection, reduced motion and light/dark confirmation events; assert full viewport coverage, 2000ms duration, pointer transparency and cleanup. Dark capture inspected.",
+    "release": "Local preview; not released."
+  },
+  "connectionRefinement": {
+    "change": "Connection choices reordered in DOM to match visual/tab order: Wi-Fi, account, address, QR/pairing, settings. Themed secondary cards, step indicators and discovery cards. Configured entry is titled Change server. Address entry is a focused view; Back preserves draft. Opening setup focuses visible heading rather than hidden address.",
+    "verification": "connection-refinement-final.log: 7 targeted browser tests passed including small-phone layout, save addresses, direct address versus discovery, pairing/settings back navigation, same-server credentials, light/dark screenshots and draft retention. Dark choices screenshot inspected.",
+    "release": "Local preview; not released."
+  },
+  "releaseRegression20261004": {
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c",
+    "changes": "Restored strike-through on fully cancelled legacy floor lines and removed actions on cancelled lines/orders. Partial cancellations retain readable active names. Replaced false-positive global root regex with AST checks of actual UMD factory scope.",
+    "checks": {
+      "connection-full-regression.log": "46/46 browser checks passed",
+      "cancellation-strike-repair.log": "12/12 passed including real compact renderer execution",
+      "self-test-scope-repair.log": "8/8 passed",
+      "release-unit-current.log": "649/651 passed; two remaining failures are translation coverage",
+      "release-build-current.log": "Blocked by source-message translation audit; 30 catalogue placeholder checks pass"
+    },
+    "remaining": "Translate new source messages across supported catalogues; remaining visual acceptance and native/runtime/cloud verification still required. No release performed."
+  },
+  "busyKitchenChef": {
+    "change": "At >=70% occupancy of unique configured tables, confirmed send uses chef carrying a dish, quick bouncing dash and thumbs-up finish over 2s. Below threshold or unknown occupancy retains plane. Full-floor occupancy independent of area/filter; takeaway/custom unconfigured tables do not affect denominator. Held/cleaning alone are not occupied. Reduced-motion and failure suppression retained.",
+    "verification": "kitchen-chef-check.log: 6 passed for threshold 6/7/10 of ten, successful/rejected send and reduced motion. kitchen-chef-occupancy.log: 2 passed, real dashboard snapshot with duplicate/held/cleaning rows, filter independence, 70% screenshot.",
+    "release": "Local preview; not released."
+  },
+  "orderTaxDetails": {
+    "change": "Dine-in totals use supported table bill read endpoint, validate single-order identity or isolate server line IDs for shared tables. Takeaway uses saleId. Preserves authoritative line components, total reconciliation, owner guards and retry. Fixed incorrect dine-in saleId request.",
+    "verification": "order-tax-check.log: 3 passed covering light/dark named tax and discount amounts plus API failure/retry to zero-tax bill. test-artifacts/order-tax-dark.png inspected.",
+    "release": "Local preview; not released."
+  },
+  "connectionReturnNavigation": {
+    "change": "Signed-in unlocked staff get persistent Back to orders action across connection subviews. After successful settings save, primary Back to orders appears; Save becomes secondary. Setup steps hidden for already signed-in staff. Existing close action aborts in-flight connection work and clears setup state; unauthenticated/locked users retain onboarding.",
+    "verification": "connection-return-check.log: 5 passed including first setup, locked save, subview Back, authenticated save and direct return light/dark. connection-return-visual.log: 2 passed after action hierarchy polish. Dark screenshot reviewed.",
+    "release": "Local preview; not released."
+  },
+  "releaseProgress20261004T1034": {
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c",
+    "implemented": [
+      "Appearance/System/Light/Dark/Back to orders translated in all 30 catalogues; rebuilt offline language bundle",
+      "Separated decorative navigation arrows from translated text",
+      "Inline bill response requires complete components summing to authoritative total; detached, locked or changed-owner responses ignored",
+      "Device check always builds current sources before install; subprocess deadlines prevent indefinite stalls"
+    ],
+    "verification": {
+      "translationCheck": "30 languages, 1063 messages each; placeholders intact",
+      "order-tax-integrity.log": "5/5 browser tests passed",
+      "self-test-device-build.log": "8/8 unit tests passed",
+      "release-missing-messages.json": "85 source messages remain uncovered",
+      "release-device-current-source.log": "Current-source build fails translation audit before install"
+    },
+    "device": "emulator-5554 connected. First check tried existing 05:57 debug APK; installation stalled and was interrupted. Not current runtime evidence. Fixed check no longer reuses stale APK.",
+    "remaining": "Full translation completion, visual comparison/acceptance, current Android and iOS runtime checks, cloud integrations and releases remain open. No release."
+  },
+  "collectionEntryFix": {
+    "change": "Collect payment remains visible as primary footer action. Capability check still gates combined serve-and-collect; actual payment API permissions and branch enablement remain enforced. Disabled collection explains desktop cashier and links Payment settings.",
+    "verification": "collection-entry-final.log: 6 passed for enabled/disabled collection and inline bills. order-shared-tax.log: shared-table order isolation check. Live read-only IAB verified T5 subtotal 1779, tax 0, total 1779 and visible Collect payment; data-collection-available false. No payment attempt or configuration changes.",
+    "release": "Local preview; not released."
+  },
+  "paymentDefaults20261004": {
+    "decision": "User requested payment collection and all methods on by default; allow opt-out in Payment settings. Overrides optional-default-off only for collection.",
+    "implementation": "Shared server eligibility defaults unset enabled to true; Cash/Card/Upi already default all. Saved false and selected methods respected. Module disabled and permission/branch gates preserved. Sale editing and payment edit leases use the same eligibility.",
+    "worktree": "C:/Users/Kayal/.codex/worktrees/takeaway-completion-20261003",
+    "branch": "codex/takeaway-completion-20261003",
+    "verification": {
+      "paymentService": "41 tests passed including default-on preparation/edit reservation, saved on/off, disabled module and existing payment integrity tests",
+      "lint": "0 errors; 21 existing warnings in sale.service.js",
+      "routeSettings": "Blocked by missing @aws-sdk/client-textract dependency in existing runtime"
+    },
+    "release": "Not deployed; cloud server retains current behavior until backend release. No live settings or payments changed."
+  },
+  "releaseProgress20261004T1104": {
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c",
+    "change": "Kitchen success animation now obtains authenticated table occupancy when floor dashboard getter is absent or not ready. 500ms bounded lookup falls back to plane on failure. Deduplicates configured tables; stale results ignored after owner, branch, lock or newer animation change. Existing appearance/timing unchanged.",
+    "evidence": {
+      "kitchen-cross-page-check.log": "10 passed; lock fixture failed because it assigned to an absent test object. Fixture corrected.",
+      "kitchen-cross-page-lock.log": "Corrected lock test passed. Combined coverage 11 cases: thresholds 60/70/100%, floor filters, successful/rejected/reduced-motion send, missing-floor busy/quiet/unavailable/locked.",
+      "syntax": "node --check assets/common/kitchen-send-feedback.js passed",
+      "screenshot": "test-artifacts/kitchen-chef-busy.png inspected; actual overlay present."
+    },
+    "limits": "No live order submitted. This fixes a confirmed missing-getter path; does not establish the exact cause of the user screenshot. Full phone/tablet/light/dark visual comparisons, translation build gate, current native runtime, cloud and release verification remain open. Not released."
+  },
+  "paymentGoldCelebration": {
+    "decision": "User explicitly requested fun gold coins/money burst and gave design freedom.",
+    "implementation": "Eight gold coins radiate around gold success checkmark for 1.5 seconds only after matching server-confirmed payment request. Runs after receipt render, inside open dialog for partial payment/change or above floor for completed payment. Pointer events disabled, aria-hidden, reduced-motion skips, cleanup automatic. Existing Payment recorded message remains authoritative; no Paid claim for partial payments.",
+    "verification": "payment-gold-check.log: 6 browser cases passed (light, dark, partial, rejected, unconfirmed, reduced motion); syntax check passed. Light/dark screenshots inspected. No live payment recorded.",
+    "screenshots": [
+      "test-artifacts/payment-gold-light.png",
+      "test-artifacts/payment-gold-dark.png",
+      "test-artifacts/payment-gold-partial.png"
+    ],
+    "release": "Local preview, awaiting user review; not released."
+  },
+  "floorItemCounts": {
+    "change": "Floor summary shows total item quantity rather than ticket count; sums current item quantities, excluding cancelled/returned lines. Uses item_count when provided; older servers read paginated scoped sale details. Unknown counts omitted. Existing amount retained. Owner/branch/lock checked after reads. Takeaway uses individual sale identity.",
+    "verification": "floor-item-count-unit.log: 16 passed. floor-item-count-browser.log: card shows 12 items for two lines of six. No live writes.",
+    "release": "Local preview; not released."
+  },
+  "floorPayableTotal": {
+    "decision": "User requests card amount including tax, total payable.",
+    "change": "Loads authenticated bill snapshot for each table or individual takeaway, displays totalMinor with snapshot currency precision. Includes server tax/discount/adjustments, never adds tax locally. Shows full bill total, not partial-payment remaining balance. Invalid/unavailable bill omits amount rather than displaying unverified subtotal. Owner/branch/lock guarded before rendering.",
+    "tests": "floor-payable-check.log: 3 passed; floor-payable-unit.log: 16 passed. Tests verify 462 tax-inclusive total even when remaining due is 362, and bill failure omission. No live payments or orders changed.",
+    "status": "Local preview, not released."
+  },
+  "pickerSingleCategoryRail": {
+    "decision": "User rejected category buttons wrapping into many rows in Add to the order.",
+    "change": "Picker category container now explicit flex nowrap with spacing, horizontal scrolling and nonshrinking chips; hides vertical overflow. Existing Menu index and selected-category behavior unchanged.",
+    "verification": "picker-single-rail-check.log: 4 passed, phone light/dark solid surfaces and 18-category single row including horizontal reachability. Screenshots inspected.",
+    "release": "Local preview, not released."
+  },
+  "pickerMenuLayerFix": {
+    "change": "Raised Menu index scrim above sticky section headings. Bounded scrollable category list with fixed header and close control.",
+    "verification": "picker-menu-click.log: 2 light/dark browser tests passed: open index, header hit-test unobstructed, click last category and jump. Dark screenshot inspected before/after confirmed overlapping headers resolved.",
+    "release": "Local preview; not released."
+  },
+  "releaseProgress20261004T1435": {
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c",
+    "implemented": [
+      "Menu category names/keys escaped before HTML insertion.",
+      "Menu index gets named dialog semantics, background controls inert, focus enters close button and cycles within panel.",
+      "Escape/device Back dismiss only category index and restore Menu button focus; closing picker clears index state.",
+      "Menu list resets to top on reopening."
+    ],
+    "verification": {
+      "picker-menu-access.log": "6 browser tests passed: selection/jump and keyboard/safe-name handling at 390/820 widths in light/dark.",
+      "syntax": "script.js and editor.js passed node --check",
+      "visual": "test-artifacts/menu-access-820-dark.png inspected; fixed header/list scroll visible. Other phone/tablet/light/dark artifacts captured."
+    },
+    "remaining": "Per-screen reference comparisons/acceptance, translations/build gate, native runtime/cloud checks, Android/TestFlight/POS packaging and release remain incomplete. No live customer writes; no release."
+  },
+  "chefLoadingSelection": {
+    "decision": "User approved random Chef hat hop, Gentle steam and Chef stirring; excluded service bell.",
+    "implementation": "Shared three-variant loader decorates existing page/section/floor/menu loading indicators on connection, Orders, history, products and cart. Random variant per created indicator; no service bell; no extra network calls or waits. Existing show/hide lifecycle preserved; retained-content refresh behavior unchanged. Theme surface overlays, aria-hidden decoration and loading status, reduced-motion static.",
+    "verification": "chef-loading-check.log: 7 passed: all variants light/dark, loader hide, dynamically inserted indicators decorated only once, reduced motion. Captured screenshots after visible opacity and inspected dark steam.",
+    "release": "Local preview; not released."
+  },
+  "releaseProgress20261004T1505": {
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c",
+    "implemented": [
+      "Translated Add again, Already ordered, Already sent, New · Not sent, Review new items and Loading orders… in all 30 language catalogues.",
+      "Rebuilt bundled offline languages.",
+      "Excluded five non-display CSS/class values and five caught internal bill-validation errors from interface translation audit; verified errors resolve to translated user-facing bill failure message."
+    ],
+    "verification": {
+      "check:translations": "30 languages, 1069 messages each; placeholders intact",
+      "release-order-translations.log": "Browser menu action/quantity updates passed across all 30 languages",
+      "i18n:audit": "75 genuine interface messages still missing; gate correctly remains failing"
+    },
+    "remaining": "Translate remaining 75 messages; exact visual comparisons and user acceptance; current Android/iOS runtime, cloud integrations, APK/TestFlight/POS packaging. Not released."
+  },
+  "releaseProgress20261004T1535": {
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c",
+    "implemented": "Translated Cancel item, Remove item, Item note, Save note, Order items, Payment settings, Serve all and Custom table across all 30 languages; rebuilt offline bundle.",
+    "verification": {
+      "check:translations": "30 languages, 1077 messages each; placeholders intact",
+      "release-order-controls-translations.log": "Browser verified visible order heading plus seven control lookups in all 30 languages",
+      "i18n:audit": "67 interface messages remain missing; build gate remains failing"
+    },
+    "remaining": "Remaining translations, exact visual comparisons/acceptance, Android/iOS runtime, cloud scan/voice checks and packaging/releases. No live orders or payments changed. Not released."
+  },
+  "explicitReleaseAttempt20261004": {
+    "requested": "User explicitly requested build and release current changes.",
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c",
+    "build": "npm run build failed at i18n:audit: 67 missing interface messages. release-build-request.log",
+    "tests": "npm test: 650 passed, 2 failed; both failures are untranslated visible markup. release-request-unit.log",
+    "attribution": "npm run check:attribution completed successfully; release-request-attribution.log",
+    "publication": "No tag, upload or release created. Native packaging not started with a failed web build. Existing release workflow inspected; supports Android and signed TestFlight once checks pass.",
+    "remaining": "Finish translations and rerun checks, then native runtime and required visual/integration acceptance before publish."
+  },
+  "translationAndRegressionCompletion20261004": {
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c",
+    "publication": "Not published. Signed local test candidate only; existing draft release was not changed.",
+    "implemented": [
+      "Completed all 67 missing interface messages in all 30 supported languages; offline bundle rebuilt, 1144 messages per locale.",
+      "Fixed partial cancellation: remaining quantity stays live and is included in the saved order even when cancelled quantity equals or exceeds it.",
+      "Restored previously ordered menu shortcuts independently of new-addition quantity controls.",
+      "Updated cancellation tests to provide a reason and initialize the actual edit snapshot; updated approved Order sync wording in multilingual tests.",
+      "Wait for the returned translated floor screen before taking language screenshots."
+    ],
+    "checks": {
+      "release-fixed-unit.log": "653 passed, zero failures",
+      "release-fixed-build.log": "Production build, 30-language placeholder check, offline bundle and visible-message audit pass; zero missing keys",
+      "release-fixed-browser.log": "29 passed: cancellation quantities/payloads, six-language offline ordering, menu shortcuts, 320px/800px bill review",
+      "release-cancellation-translation-browser.log": "Earlier run: 11 passed including every-language menu actions and main Tamil journeys; the partial cancellation failure from that run was fixed and passes in release-fixed-browser.log",
+      "release-native-approval-browser.log": "1 passed on isolated rerun; native account browser-launch retry and CORS bypass",
+      "release-tamil-visual.log": "1 passed; Tamil floor after offline order and back navigation; screenshot inspected",
+      "release-fixed-attribution.log": "Passed",
+      "release-partial-cancel-unit.log": "25 passed",
+      "../takeaway-completion-20261003/payment-defaults-recheck.log": "44 backend payment/settings tests passed after installing missing declared Textract dependency in isolated verification directory; shared main POS node_modules unchanged",
+      "release-full-browser.log": "Broad run stopped for repairs after 155 passing and 14 failing results; not a full-suite pass. Targeted repairs rerun separately."
+    },
+    "android": {
+      "version": "1.3.42-rc.20261004",
+      "path": "android/app/build/outputs/apk/release/app-release.apk",
+      "sha256": "ca83accdd5888fe826c925e4202253170b40a1766edfdc14b46e9d3c23b6847c",
+      "log": "release-candidate-android.log",
+      "signature": "apksigner verifies v1/v2; one signer",
+      "toolchain": "Java 21 and existing captain/.android-build-tools/android-sdk used through process-local environment only",
+      "runtime": "Legacy C:/Android/adb.exe 1.0.32 conflicted with current SDK bridge. Dedicated bridge port 5038 and emulator reboot restored package service. Package manager reported updated debug Captain at 21:57:59. Native self-test stop/relaunch command was rejected by automatic approval review: blocked by policy, no additional reason. No native runtime pass claimed.",
+      "download": "test-builds/captain-1.3.42-rc.20261004-ca83accd.apk"
+    },
+    "remaining": [
+      "Finish full current browser suite and all per-screen reference comparisons; no overall visual acceptance claimed.",
+      "Native runtime verification and processed TestFlight build remain incomplete.",
+      "Cloud paper scanning, cloud voice delivery, physical printing and local POS installer verification still required by full goal."
+    ]
+  },
+  "pendingCancellationUndo20261004": {
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c",
+    "status": "Implemented and browser verified; uncommitted integration work",
+    "behavior": "Undo only unsent cancellation on that item; retains item note and additional items, restores original cancellation metadata, rejects changes while saving.",
+    "checks": {
+      "build": "undo-build.log: pass; 30 locales, 1145 messages",
+      "unit": "undo-unit.log: 653 passed",
+      "browser": "undo-browser.log: 6 passed including full/partial Undo and phone/tablet light/dark captures"
+    },
+    "release": "Not released. Prior APK predates same-line controls and Undo; rebuild needed. Existing native runtime policy block and full visual acceptance gaps remain."
+  },
+  "footerAlignment20261004": {
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c",
+    "status": "Implemented, uncommitted integration changes",
+    "build": "footer-alignment-build.log: production build and translation audit passed",
+    "browser": "Six targeted scenarios passed across initial run and isolated rerun: phone/tablet light/dark, scrolling/resizing, full/partial Undo preserving edits.",
+    "release": "Not released. Current candidate APK predates these UI changes. Native runtime, processed TestFlight, remaining visual and integration release gates still open."
+  },
+  "draftFooterHeight20261004": {
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c",
+    "changes": "Measured footer clearance, observer cleanup on draft close, dark draft quantity contrast",
+    "checks": "8 browser scenarios passed: normal 390/768 light/dark with resizing/scroll; large text 320/768 light/dark with final item visibility and discard cleanup. Production build passed.",
+    "logs": [
+      "footer-height-final-browser.log",
+      "footer-height-build.log"
+    ],
+    "release": "Uncommitted integration work. Not released; APK rebuild and remaining native, TestFlight, visual and integration gates still required."
+  },
+  "releaseCompletion20261005": {
+    "branch": "codex/ios-test-build",
+    "baseCommit": "af4cf7c",
+    "status": "Local Android and POS candidates built; all 905 named browser cases passed across recorded batches; not published",
+    "implemented": [
+      "Clear stale ready badges/counts after failed or malformed readiness refresh. Retain content during refresh without treating expired readiness as current.",
+      "Limit packaged classic JavaScript to app assets and config/indexedDB entry scripts; exclude tests, build helpers and archived presentations. Stamp build metadata for ordinary web builds too.",
+      "Build gate checks all 365 local script references resolve and unwanted source directories are absent. Unchanged language bundle is not rewritten, preventing needless preview reload.",
+      "Rapid editor reopen waits for both closing modal and history cleanup; only the latest reopen request wins. Prevents Bootstrap disposing an active hide transition.",
+      "Legacy order rows retain saved kitchen notes, safely escaped, including explicit cleared-note semantics. Light/dark text contrast checked at 4.5:1."
+    ],
+    "checks": {
+      "release-current-unit.log": "653 passed",
+      "release-clean-package-build.log": "Production build, 30 locales with 1145 keys, translation audit and package check passed",
+      "release-current-attribution.log": "Passed",
+      "release-real-flow.log": "Actual Captain browser -> isolated POS HTTP -> Mongo: sign-in, new dine-in order, item note modification, confirmed cash payment. No mocked API and no customer data.",
+      "POS/captain-release-api.log": "74 passed: payment, bill, takeaway completion, voice archive, payment settings",
+      "POS/captain-release-http.log": "22 real HTTP integration tests passed; manager setup initially skipped, then separately passed",
+      "POS/captain-release-manager-setup.log": "1 passed: actual manager session/CSRF/QR setup",
+      "POS/captain-release-tables-transfer.log": "164 passed: tables, transfer, takeaway number, pricing contract",
+      "release-transition-unit.log": "653 passed after transition fix",
+      "release-editor-transition.log": "Rapid reopen, Arabic action placement and transfer reopen passed. Restored-data reopening check subsequently passed in remaining-suite runs.",
+      "release-legacy-note-capacity.log": "Legacy-note light/dark contrast, capacity and table-first navigation passed. Arabic takeaway fixture corrected and passed in remaining-suite run.",
+      "release-final-unit.log": "653 passed after legacy-note fix",
+      "release-final-android.log": "Web build, translation audit, 365 script dependency checks, Android signed release build and signature verification passed",
+      "release-final-attribution.log": "Passed",
+      "browserRegression": {
+        "total": 905,
+        "passed": 905,
+        "files": 86,
+        "method": "Named-case reconciliation against current Playwright inventory, across recorded batches and targeted reruns; not a single clean full-suite run.",
+        "inventory": "release-test-inventory.txt",
+        "passedCases": "test-artifacts/release-passed-tests.txt",
+        "lastRun": "release-remaining-browser-9.log"
+      },
+      "release-full-check.log": "Interrupted to implement the user-requested Quick sale tax correction. No full-suite success claimed."
+    },
+    "android": {
+      "version": "1.3.43-rc.20261005",
+      "file": "test-builds/captain-1.3.43-rc.20261005-382fd2a0.apk",
+      "sha256": "382fd2a0278cf30062732329f35920c6d01a29845233caa55ede7e6150d4316c",
+      "signature": "apksigner verifies v1/v2, one signer",
+      "source": "Uncommitted changes on af4cf7c including rapid editor reopen, legacy notes and cancelled-note strike-through",
+      "current": false,
+      "publication": "Local signed candidate only; not a GitHub or TestFlight release",
+      "runtime": "Current candidate not runtime verified on Android/iOS; previous native relaunch attempt was blocked by automatic approval review.",
+      "supersededReason": "Quick sale tax changes after this APK; rebuild required."
+    },
+    "pos": {
+      "branch": "codex/takeaway-completion-20261003",
+      "baseCommit": "2eed9cbb",
+      "packaging": "Local NSIS installer complete (exit 0), 219062028 bytes. No public POS release. Installer unsigned; no Windows certificate configured.",
+      "dependencyAudit": "API and shell production dependency audit: zero vulnerabilities",
+      "installer": "C:/Users/Kayal/.codex/worktrees/takeaway-completion-20261003/dist/Posnic-1.9.2-windows-x64-installer.exe",
+      "sha256": "b85fa597c2105633de40925ee5afa0df890f61b402d06f5507a9721debc8d691",
+      "packageChecks": "444 runtime dependencies, 78 local modules, 29 native binaries checked; required VC runtime is bundled."
+    },
+    "remaining": [
+      "A single full npm run check is still required by the release commit hook; current evidence is 905 named cases across batches.",
+      "Complete per-screen paired reference/actual visual review at matching phone/tablet widths in light/dark.",
+      "Current native Android/iOS runtime verification, TestFlight build/upload/processing and physical print/audio checks.",
+      "Review changes, commit with human identity, update PR, respect branch protections and publish only after release gates."
+    ]
+  },
+  "quickSaleTax20261005": {
+    "status": "Implemented and verified locally; requires paired POS API deployment. Not released.",
+    "captainBranch": "codex/ios-test-build",
+    "posBranch": "codex/takeaway-completion-20261003",
+    "behavior": [
+      "Quick sale uses the branch-scoped default tax; entered amount is exclusive of tax.",
+      "Entry sheet shows amount, tax name/rate/amount and total. Cart retains base, tax and final amount separately.",
+      "Server resolves tax independently and rejects changed quotes. Missing default blocks Quick sale; explicit configured zero rate is supported.",
+      "Existing-order Quick sale uses the same quote and creation helpers."
+    ],
+    "checks": {
+      "browser": "quick-sale-tax-browser.log: 13 passed",
+      "unit": "quick-sale-tax-unit.log: 653 passed",
+      "api": "POS/quick-sale-tax-api.log: 18 passed",
+      "realIntegration": "quick-sale-real-flow.log: actual isolated POS/Mongo order creation and cash payment confirmed: 100 base + 5 tax = 105 collected.",
+      "build": "quick-sale-tax-build.log: translation audit and production web package passed",
+      "lint": "POS/quick-sale-lint.log: zero errors, existing warnings",
+      "themes": "quick-sale-tax-theme.log: 3 passed; light/dark preview and bill checked"
+    },
+    "evidence": [
+      "test-artifacts/quick-sale-tax-preview.png",
+      "test-artifacts/quick-sale-tax-bill.png",
+      "test-artifacts/quick-sale-real-payment.png"
+    ]
+  },
+  "userReleaseDirection20261005": {
+    "request": "Merge all task changes through develop into main and publish APK on GitHub for user testing. Stop local POS installer work.",
+    "scope": "User testing release. Native, physical device and remaining visual checks are disclosed, not represented as complete.",
+    "repositories": [
+      "Posnic/captain",
+      "Posnic/POS"
+    ],
+    "protections": "Respect required checks and POS main reviewer approval."
+  }
+}
