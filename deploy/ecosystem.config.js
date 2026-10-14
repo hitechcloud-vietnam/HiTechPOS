@@ -10,13 +10,16 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 
 /* KEY=VALUE lines; comments and blanks ignored. Read here rather than through
-   a PM2 option so it works on every PM2 version. Missing file -> {}. */
+   a PM2 option so it works on every PM2 version. Missing file -> {}; a file
+   that exists but cannot be read (e.g. root-owned 0600 while PM2 runs as
+   another user) is an error, not a silently empty environment. */
 function envFile(file) {
   let text = '';
   try {
     text = fs.readFileSync(file, 'utf8');
-  } catch {
-    return {};
+  } catch (e) {
+    if (e.code === 'ENOENT') return {};
+    throw new Error(`cannot read ${file} (${e.code}): give the PM2 user read access, see docs/DEPLOYMENT.md#quyền-tệp`);
   }
   const out = {};
   for (const line of text.split(/\r?\n/)) {

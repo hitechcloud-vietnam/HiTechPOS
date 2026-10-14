@@ -21,6 +21,7 @@ SHOP_BASE_DOMAINS=hitechpos.vn
 POSNIC_KEY=$POSNIC_KEY
 POSNIC_SECRET=$POSNIC_SECRET
 HITECH_PAY_URL=http://127.0.0.1:4100
+SESSION_SECRET=$(hex 32)
 ENV
 cat > "$DIR/control-plane.env" <<ENV
 PUBLIC_URL=https://app.hitechpos.vn

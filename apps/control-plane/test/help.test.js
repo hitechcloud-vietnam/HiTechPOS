@@ -148,3 +148,13 @@ test('the gateway returnUrl /billing/return lands on a page that leads back to /
   assert.match(res.body, /<script src="\/billing\/return\.js"><\/script>/);
   assert.equal((await get('/billing/return.js')).status, 200);
 });
+
+test('the gateway cancelUrl /billing/cancel lands on a page that leads back to /account', async (t) => {
+  const { get } = await boot(t);
+  const res = await get('/billing/cancel?orderCode=1791966752534703');
+  assert.equal(res.status, 200);
+  assert.match(res.body, /Chưa thanh toán gói cước/);
+  assert.match(res.body, /href="\/account"/);
+  assert.match(res.body, /<script src="\/billing\/cancel\.js"><\/script>/);
+  assert.equal((await get('/billing/cancel.js')).status, 200);
+});
