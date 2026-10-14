@@ -32,6 +32,7 @@ const MESSAGES = {
   billing_cycle_invalid: 'Chu kỳ thanh toán không hợp lệ.',
   tenant_install_failed: 'Khởi tạo cửa hàng thất bại, bộ phận kỹ thuật đã được thông báo.',
   bank_invalid: 'Ngân hàng không hợp lệ.',
+  bank_feed_token_weak: 'Mã bảo mật webhook ngân hàng cần ít nhất 16 ký tự.',
   bank_account_invalid: 'Số tài khoản không hợp lệ.',
   payment_method_not_configured: 'Phương thức thanh toán này chưa được cấu hình cho cửa hàng.',
   payment_method_invalid: 'Phương thức thanh toán không hợp lệ.',
@@ -72,6 +73,14 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
 
   /* A shop's own payOS/Pay2S account calls back here; verified with that
      shop's keys, so one shop can never settle another shop's payment. */
+  app.post('/webhooks/shop/:tenantId/bank-feed', express.raw({ type: '*/*', limit: '512kb' }), async (req, res) => {
+    try {
+      res.json({ success: true, ...(await counter.handleBankFeed(req.params.tenantId, { body: req.body.toString('utf8'), headers: req.headers })) });
+    } catch (e) {
+      logger.warn(`[webhook:shop:bank-feed] rejected: ${e.code || e.message}`);
+      res.status(e.status && e.status < 500 ? e.status : 400).json({ success: false, code: e.code || 'invalid' });
+    }
+  });
   app.post('/webhooks/shop/:tenantId/:method', express.raw({ type: '*/*', limit: '256kb' }), async (req, res) => {
     try {
       const result = await counter.handleCallback(req.params.tenantId, req.params.method, { body: req.body.toString('utf8'), headers: req.headers });

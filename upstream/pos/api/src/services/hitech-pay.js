@@ -125,9 +125,14 @@ async function status(id) {
   };
 }
 
+async function confirm(id, { by } = {}) {
+  const payment = await request('POST', `/pos/v1/payments/${encodeURIComponent(id.slice(PREFIX.length))}/confirm`, { by });
+  return { status: true, data: { id, status: payment.status }, message: 'Payment confirmed' };
+}
+
 async function close(id) {
   await request('POST', `/pos/v1/payments/${encodeURIComponent(id.slice(PREFIX.length))}/cancel`, {});
   return { status: true, data: { id }, message: 'QR closed' };
 }
 
-module.exports = { isHitechConfig, isHitechId, generate, status, close, toVnd, PREFIX };
+module.exports = { isHitechConfig, isHitechId, generate, status, confirm, close, toVnd, PREFIX };

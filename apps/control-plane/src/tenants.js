@@ -42,7 +42,7 @@ function tenantDbName(subdomain, prefix = 'hitech_t_') {
  * The installer is injected so tests (and a future queue worker) can replace
  * the HTTP call.
  */
-function createTenantService({ store, config, installer, now = () => new Date() }) {
+function createTenantService({ store, config, installer, onboarding = null, now = () => new Date(), logger = console }) {
   async function availability(subdomain) {
     const n = normalizeSubdomain(subdomain);
     if (!n.ok) return { available: false, reason: n.reason };
@@ -91,12 +91,33 @@ function createTenantService({ store, config, installer, now = () => new Date() 
        for the installer to reach it. Until the installer has created the
        owner there is nobody who can sign in, so the brief window serves an
        empty login page and nothing else. A failed install is suspended. */
+    let active;
     try {
       await installer.install({ tenant, owner: input.owner, industry: presets.resolveInstallPayload(industry.id) });
-      return store.tenants.update(tenant._id, { status: 'active', suspended: false, activatedAt: now().toISOString() });
+      active = await store.tenants.update(tenant._id, { status: 'active', suspended: false, activatedAt: now().toISOString() });
     } catch (e) {
       await store.tenants.update(tenant._id, { status: 'install_failed', suspended: true, suspendedReason: 'install_failed', installError: String(e.code || e.message).slice(0, 200) });
       throw Object.assign(new Error('tenant_install_failed'), { code: 'tenant_install_failed', status: 502, cause: e });
+    }
+    return onboard(active || tenant, input.owner, industry.id);
+  }
+
+  /* Post-install Vietnamese/industry setup (./onboarding.js). The shop is
+     already installed and usable, so nothing here may fail the signup: the
+     per-step report is stored on the tenant for support to read and re-run. */
+  async function onboard(tenant, owner, presetId) {
+    if (!onboarding) return tenant;
+    let report;
+    try {
+      report = await onboarding.run({ tenant, owner, preset: presetId });
+    } catch (e) {
+      report = { error: `failed: ${String(e.message || e).slice(0, 200)}` };
+    }
+    try {
+      return (await store.tenants.update(tenant._id, { onboarding: { ...report, at: now().toISOString() } })) || tenant;
+    } catch (e) {
+      logger.error?.('[control-plane] onboarding report not stored', e);
+      return tenant;
     }
   }
 

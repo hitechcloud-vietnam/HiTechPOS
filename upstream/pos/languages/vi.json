@@ -4741,5 +4741,7 @@
   "lang_paid_bill_use_return": "Nếu số tiền ban đầu đã thực sự được thu thập, hãy sử dụng các mặt hàng trả lại để ghi lại khoản hoàn lại.",
   "lang_paid_bill_previous": "Được ghi lại trước đây",
   "lang_paid_bill_corrected": "Hóa đơn đã sửa",
-  "lang_reload_this_page_to_review_the_paid_bill_c": "Tải lại trang này để xem lại việc chỉnh sửa hóa đơn đã thanh toán."
+  "lang_reload_this_page_to_review_the_paid_bill_c": "Tải lại trang này để xem lại việc chỉnh sửa hóa đơn đã thanh toán.",
+  "lang_qr_customer_display": "Màn hình khách",
+  "lang_qr_money_received": "Đã nhận tiền"
 }

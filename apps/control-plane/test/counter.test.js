@@ -113,3 +113,32 @@ test("payOS at the counter uses the shop's own keys and webhook", async (t) => {
   assert.equal((await call('GET', `/api/public/pay/${shop.id}/${pay.orderCode}`)).json.status, 'paid');
   assert.equal((await call('GET', '/api/shop/payments', undefined, shop.token)).json[0].status, 'paid');
 });
+
+test('Pay2S bank feed settles VietQR payments by order code', async (t) => {
+  const { call, server, signup } = await boot();
+  t.after(() => server.close());
+  const shop = await signup('photue');
+  const token = 'bank-feed-token-0123456789';
+  const s = (await call('PUT', '/api/shop/payment-settings', { vietqr: { bank: '970422', accountNumber: '0912345678', accountName: 'Pho Tue' }, bankFeed: { token } }, shop.token)).json;
+  assert.deepEqual(s.bankFeed, { provider: 'pay2s', token: '••••••••' });
+  assert.match(s.webhooks.bankFeed, new RegExp(`/webhooks/shop/${shop.id}/bank-feed$`));
+  const key = (await call('POST', '/api/shop/api-keys', {}, shop.token)).json.key;
+  const pos = { authorization: `Bearer ${key}` };
+  const a = (await call('POST', '/pos/v1/payments', { saleRef: 'A', amount: 85000 }, pos)).json;
+  const b = (await call('POST', '/pos/v1/payments', { saleRef: 'B', amount: 50000 }, pos)).json;
+
+  const feed = (transactions, auth = `Bearer ${token}`) => call('POST', `/webhooks/shop/${shop.id}/bank-feed`, { transactions }, { authorization: auth });
+  assert.equal((await feed([], 'Bearer wrong')).status, 401);
+  const r = await feed([
+    { id: 1, accountNumber: '0912345678', content: `MBVCB.123.${a.orderCode} photue A`, transferType: 'IN', transferAmount: 85000 },
+    { id: 2, accountNumber: '0912345678', content: `${b.orderCode}`, transferType: 'IN', transferAmount: 5000 },
+    { id: 3, accountNumber: '0912345678', content: `${a.orderCode}`, transferType: 'OUT', transferAmount: 85000 },
+    { id: 4, accountNumber: '9999999999', content: `${b.orderCode}`, transferType: 'IN', transferAmount: 50000 },
+  ]);
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.json.matched.map((m) => [m.orderCode, m.status]), [[a.orderCode, 'paid'], [b.orderCode, 'review']]);
+  assert.equal((await call('GET', `/pos/v1/payments/${a.orderCode}`, undefined, pos)).json.status, 'paid');
+  /* Same bank transaction delivered twice is applied once. */
+  const again = await feed([{ id: 1, accountNumber: '0912345678', content: `${a.orderCode}`, transferType: 'IN', transferAmount: 85000 }]);
+  assert.equal(again.json.matched[0].ignored, 'duplicate');
+});

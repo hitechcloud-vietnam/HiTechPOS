@@ -28,4 +28,7 @@ Quy tắc:
 | `pos/api/src/models/sale.model.js` | Nhánh HiTechPOS trong `generateQrCodeModel`, `getQrStatusModel`, `qrCodeCloseModel`; nạp `../config` sau nhánh này | Ô QR của màn hình bán hàng dùng cổng HiTechPOS (VietQR/payOS/Pay2S) thay Razorpay; `config/index.js` đòi biến môi trường đơn shop | Một phần (lazy config) |
 | `pos/api/src/services/hitech-pay.js` | Tệp mới – adapter gọi control plane bằng khoá `HITECH_POS_KEY` của shop | Như trên | Không |
 | `pos/frontend/static/script/js/modules/js/sales.js` | Nhãn ô Qrpay dùng i18n `lang_razorpay` | Hiển thị “QR chuyển khoản” | Có |
-| `pos/languages/vi.json` | `lang_qrpay`, `lang_razorpay` → “QR chuyển khoản” | Việt hoá | Không |
+| `pos/languages/vi.json`, `_english.json` | `lang_qrpay`, `lang_razorpay` → “QR chuyển khoản”; khoá mới `lang_qr_customer_display`, `lang_qr_money_received` | Việt hoá, nút mới trong hộp thoại QR | Không |
+| `pos/frontend/modals/sales.html`, `sales.js` | Nút “Màn hình khách” và “Đã nhận tiền” trong hộp thoại QR khi id là `htp_…` | Thu ngân xác nhận VietQR chuyển khoản trực tiếp | Không |
+| `pos/api/src/routes/sales.routes.js` | Route `GET /sales/hitechQrConfirm` (quyền `sales.write`) | Như trên | Không |
+| `pos/api/src/constants/categories.constants.js` | Mẫu tên danh mục chấp nhận chữ/số mọi ngôn ngữ (`\p{L}\p{M}\p{N}`) | Tên “Cà phê” bị từ chối – chặn chủ shop Việt nhập danh mục | Có |

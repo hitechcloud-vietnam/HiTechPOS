@@ -462,6 +462,11 @@
             </div>
             <div class="modal-footer">
                 <input type="hidden" id="qrcode_id">
+                <!-- HiTechPOS: direct VietQR transfers are confirmed by the cashier
+                     unless the shop's bank feed confirms them first. -->
+                <a id="qr_hitech_display" class="btn btn-light mr-auto" target="_blank" rel="noopener" style="display:none;"><lang class="lang_qr_customer_display">Customer display</lang></a>
+                <button type="button" id="qr_hitech_confirm" class="btn btn-success" style="display:none;"
+                    onclick="return PosnicPro.sales.qr.hitechConfirm();"><lang class="lang_qr_money_received">Money received</lang></button>
                 <button type="button" id="qr_done" class="btn btn-danger" data-dismiss="modal"
                     onclick="return PosnicPro.sales.qr.qrClose();"><lang class="lang_cancel_payment">Cancel Payment</lang></button>
             </div>

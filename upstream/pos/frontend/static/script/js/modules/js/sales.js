@@ -10840,6 +10840,21 @@ $(function () {
 /******** START SALES RECENT ADD EDIT SALES MENU & RECENT ADDED ITEMS MENU ********/
 PosnicPro.sales.qr = {
     "intervalId": null,
+    hitechConfirm: function () {
+        var id = $('#qrcode_id').val();
+        if (!id || id.indexOf('htp_') !== 0) { return false; }
+        PosnicPro.get({ url: 'sales/hitechQrConfirm', data: { id: id } }, function (response) {
+            if (response.type === 'success') {
+                PosnicPro.sales.qr.qrStatusUpdate({ id: id });
+            } else {
+                PosnicPro.alert(response.type, response.message);
+            }
+        }, function (xhr) {
+            var response = jQuery.parseJSON(xhr.responseText);
+            PosnicPro.alert(response.type, response.message);
+        });
+        return false;
+    },
     /*Touchsale recent Sales details*/
     generate: function () {
         $('#save_btn').attr("disabled", true).css({ cursor: 'not-allowed', color: '#d8d3d3' });
@@ -10860,6 +10875,11 @@ PosnicPro.sales.qr = {
                 var data = response.data;
                 $('#qr_view').modal('show');
                 $('#qrcode_id').val(data.id);
+                /* HiTechPOS counter payments: offer the customer display and,
+                   for direct VietQR, a manual "money received" button. */
+                var isHitech = typeof data.id === 'string' && data.id.indexOf('htp_') === 0;
+                $('#qr_hitech_confirm').toggle(isHitech);
+                $('#qr_hitech_display').toggle(isHitech && !!data.display_url).attr('href', data.display_url || '#');
 
                 var qrContainer = document.querySelector('#qr_view .modal-body') || document.getElementById("qr_view");
                 qrContainer.innerHTML = '<div style="width:100%;height:100%;background:#f0f0f0;border-radius:20px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:24px;"><lang class="lang_loading_qr">Loading QR...</lang></div>';

@@ -99,6 +99,15 @@
       <button>Lưu Pay2S</button>
     </form>
     <p class="muted">IPN Pay2S: <code id="pay2sHook"></code></p>
+    <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+    <form id="bankFeedForm" class="row">
+      <label>Tự động xác nhận VietQR qua biến động số dư Pay2S – mã bảo mật webhook (≥ 16 ký tự)
+        <input name="token" type="password" autocomplete="new-password" minlength="16"></label>
+      <button>Lưu</button>
+    </form>
+    <p class="muted">Trong Pay2S, tạo webhook giao dịch trỏ tới <code id="bankFeedHook"></code> với xác thực <code>Bearer &lt;mã bảo mật&gt;</code>. Tiền vào tài khoản VietQR có mã đơn trong nội dung sẽ tự xác nhận hoá đơn. Trạng thái: <b id="bankFeedState">chưa bật</b></p>
+    <p class="muted">Ô “QR chuyển khoản” trên màn hình bán hàng dùng:
+      <select id="defaultMethod"><option value="">Tự chọn</option><option value="vietqr">VietQR</option><option value="payos">payOS</option><option value="pay2s">Pay2S</option></select></p>
     <p class="msg" id="settingsMsg"></p>
     <p class="muted">Đang bật: <b id="methods">–</b></p>
   </section>
@@ -183,6 +192,8 @@ async function saveSettings(body, form) {
 }
 $('#vietqrForm').onsubmit = (e) => { e.preventDefault(); saveSettings({ vietqr: Object.fromEntries(new FormData(e.target)) }, e.target); };
 $('#payosForm').onsubmit = (e) => { e.preventDefault(); saveSettings({ payos: Object.fromEntries(new FormData(e.target)) }, e.target); };
+$('#bankFeedForm').onsubmit = (e) => { e.preventDefault(); saveSettings({ bankFeed: Object.fromEntries(new FormData(e.target)) }, e.target); };
+$('#defaultMethod').onchange = (e) => saveSettings({ defaultMethod: e.target.value || null }, $('#defaultMethod').form || document.body);
 $('#pay2sForm').onsubmit = (e) => { e.preventDefault(); saveSettings({ pay2s: Object.fromEntries(new FormData(e.target)) }, e.target); };
 
 function renderSettings(s) {
@@ -191,6 +202,9 @@ function renderSettings(s) {
   if (s.pay2s) { $('#pay2sForm').partnerCode.value = s.pay2s.partnerCode; $('#pay2sForm').environment.value = s.pay2s.environment; }
   $('#payosHook').textContent = s.webhooks.payos;
   $('#pay2sHook').textContent = s.webhooks.pay2s;
+  $('#bankFeedHook').textContent = s.webhooks.bankFeed;
+  $('#bankFeedState').textContent = s.bankFeed ? 'đang bật' : 'chưa bật';
+  $('#defaultMethod').value = s.defaultMethod || '';
   $('#methods').textContent = s.methods.length ? s.methods.map((m) => ({ vietqr: 'VietQR', payos: 'payOS', pay2s: 'Pay2S' }[m])).join(', ') : 'chưa cấu hình';
 }
 

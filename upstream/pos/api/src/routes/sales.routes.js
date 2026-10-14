@@ -810,6 +810,22 @@ router.post('/salesPaymentClose', bindController(salesController.salesPaymentClo
 // PHP: qrCodeClose() - Close QR code
 router.get('/qrCodeClose', bindController(salesController.qrCodeClose));
 
+// HiTechPOS: cashier confirms a direct VietQR transfer (services/hitech-pay.js)
+router.get('/hitechQrConfirm', async (req, res) => {
+  if (req.user?.access?.sales?.write !== true) {
+    return res.status(403).json({ type: 'error', message: 'Unauthorized', data: null });
+  }
+  try {
+    const hitechPay = require('../services/hitech-pay');
+    const id = String(req.query.id || '');
+    if (!hitechPay.isHitechId(id)) return res.status(400).json({ type: 'error', message: 'Invalid QR id', data: null });
+    const out = await hitechPay.confirm(id, { by: req.user?.username || req.user?.email || 'cashier' });
+    return res.json({ type: 'success', message: out.message, data: out.data });
+  } catch (error) {
+    return res.status(502).json({ type: 'error', message: error.message, data: null });
+  }
+});
+
 // PHP: qrSalePayementUpdate() - Update QR sale payment
 router.get('/qrSalePayementUpdate', bindController(salesController.qrSalePayementUpdate));
 

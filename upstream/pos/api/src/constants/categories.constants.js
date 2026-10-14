@@ -78,7 +78,9 @@ const FIELD_LIMITS = {
 
 // Validation patterns
 const VALIDATION_PATTERNS = {
-  NAME: /^[a-zA-Z0-9\s\-_&()]+$/,
+  /* Any script's letters and digits (\p{L}\p{M}\p{N}): Vietnamese "Cà phê", Hindi,
+     Arabic... the ASCII-only class refused every non-English shop. (HiTechPOS fix.) */
+  NAME: /^[\p{L}\p{M}\p{N}\s\-_&()]+$/u,
   IMAGE_URL: /^[a-zA-Z0-9\-_./]+$/,
 };
 

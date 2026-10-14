@@ -3,7 +3,7 @@
 const crypto = require('node:crypto');
 const { createJournal, generateOrderCode, fail, PAYMENT_STATUS: S, transferDescription } = require('@hitechpos/payment-core');
 const { createPayOSProvider } = require('@hitechpos/payment-payos');
-const { createPay2SProvider } = require('@hitechpos/payment-pay2s');
+const { createPay2SProvider, parseBankFeed } = require('@hitechpos/payment-pay2s');
 const { buildVietQR } = require('@hitechpos/vietqr');
 const { findBank } = require('@hitechpos/vn-locale');
 const { seal, open } = require('./secrets');
@@ -79,6 +79,13 @@ function createCounterService({ store, config, now = () => new Date(), providerO
         next.pay2s = { accessKey: accessKey.trim(), partnerCode: partnerCode.trim(), environment, secretKey: seal(secretKey.trim(), key) };
       } else next.pay2s = null;
     }
+    if (input.bankFeed !== undefined) {
+      if (input.bankFeed) {
+        const token = String(input.bankFeed.token || '').trim();
+        if (token.length < 16) fail('bank_feed_token_weak', 422);
+        next.bankFeed = { provider: 'pay2s', token: seal(token, key) };
+      } else next.bankFeed = null;
+    }
     if (input.defaultMethod !== undefined) {
       if (input.defaultMethod && !METHODS.includes(input.defaultMethod)) fail('payment_method_invalid', 422);
       next.defaultMethod = input.defaultMethod || null;
@@ -107,29 +114,29 @@ function createCounterService({ store, config, now = () => new Date(), providerO
         logger.warn(`[counter] could not update the POS QR switch for ${tenant.subdomain}: ${e.message}`);
       }
     }
-    return describeSettings(next);
+    return describeSettings(next, String(tenant._id));
   }
 
   /* Never returns a secret, only enough to recognise which one is set. */
-  function describeSettings(s = {}) {
+  function describeSettings(s = {}, tenantId = '{tenantId}') {
     return {
       vietqr: s.vietqr || null,
       payos: s.payos ? { clientId: s.payos.clientId, apiKey: '••••••••', checksumKey: '••••••••' } : null,
       pay2s: s.pay2s ? { accessKey: mask(s.pay2s.accessKey), partnerCode: s.pay2s.partnerCode, environment: s.pay2s.environment, secretKey: '••••••••' } : null,
+      bankFeed: s.bankFeed ? { provider: s.bankFeed.provider, token: '••••••••' } : null,
       methods: METHODS.filter((m) => s[m]),
       defaultMethod: defaultMethodOf(s),
       webhooks: {
-        payos: `${config.publicUrl}/webhooks/shop/{tenantId}/payos`,
-        pay2s: `${config.publicUrl}/webhooks/shop/{tenantId}/pay2s`,
+        payos: `${config.publicUrl}/webhooks/shop/${tenantId}/payos`,
+        pay2s: `${config.publicUrl}/webhooks/shop/${tenantId}/pay2s`,
+        bankFeed: `${config.publicUrl}/webhooks/shop/${tenantId}/bank-feed`,
       },
     };
   }
 
   async function getSettings(tenantId) {
     const tenant = await tenantOrFail(tenantId);
-    const out = describeSettings(tenant.paymentSettings);
-    for (const k of Object.keys(out.webhooks)) out.webhooks[k] = out.webhooks[k].replace('{tenantId}', String(tenant._id));
-    return out;
+    return describeSettings(tenant.paymentSettings, String(tenant._id));
   }
 
   /* payOS and Pay2S confirm by themselves; plain VietQR needs the cashier. */
@@ -292,6 +299,35 @@ function createCounterService({ store, config, now = () => new Date(), providerO
     return { acknowledged: true, status: r.payment.status, ignored: r.ignored };
   }
 
+  /*
+   * Bank movements on the shop's own account (Pay2S "biến động số dư").
+   * A VietQR payment's transfer content starts with its order code, so an
+   * incoming transfer is matched by any order code it mentions, on this
+   * shop, to the same account. The amount check stays in the journal: a
+   * short transfer lands in review, never in paid.
+   */
+  async function handleBankFeed(tenantId, request) {
+    const tenant = await tenantOrFail(tenantId);
+    const feed = tenant.paymentSettings && tenant.paymentSettings.bankFeed;
+    const token = feed ? open(feed.token, config.tenantSecretKey) : '';
+    const txs = parseBankFeed(request.body, { authorization: request.headers.authorization, token });
+    const account = tenant.paymentSettings && tenant.paymentSettings.vietqr && tenant.paymentSettings.vietqr.accountNumber;
+    const results = [];
+    for (const tx of txs) {
+      if (tx.direction !== 'in') continue;
+      if (account && tx.accountNumber && tx.accountNumber !== account && tx.virtualAccount !== account) continue;
+      const codes = [...new Set((tx.content.match(/\d{13,16}/g) || []).map(Number))];
+      for (const orderCode of codes) {
+        const p = await journal.get(orderCode);
+        if (!p || p.reference !== String(tenant._id) || p.purpose !== 'sale' || p.provider !== 'vietqr') continue;
+        const r = await journal.apply({ provider: 'vietqr', orderCode, status: S.PAID, amount: tx.amount, transactionId: tx.id, paidAt: null, eventKey: `bankfeed:${tx.id}` });
+        results.push({ transaction: tx.id, orderCode, status: r.payment.status, ignored: r.ignored });
+        break;
+      }
+    }
+    return { acknowledged: true, matched: results };
+  }
+
   /* Public, unauthenticated view for the customer-facing display: amount,
      QR and status only - no sale reference, no shop internals. */
   async function publicView(tenantId, orderCode) {
@@ -303,7 +339,7 @@ function createCounterService({ store, config, now = () => new Date(), providerO
       description: (p.metadata && (p.metadata.transferContent || p.metadata.description)) || null };
   }
 
-  return { METHODS, updateSettings, getSettings, createApiKey, revokeApiKey, listApiKeys, authenticate, createPayment, getPayment, confirmManually, cancel, handleCallback, publicView, journal };
+  return { METHODS, updateSettings, getSettings, createApiKey, revokeApiKey, listApiKeys, authenticate, createPayment, getPayment, confirmManually, cancel, handleCallback, handleBankFeed, publicView, journal };
 }
 
 module.exports = { createCounterService, hashKey, KEY_PREFIX };
