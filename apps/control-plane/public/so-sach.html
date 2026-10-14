@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sổ sách &amp; báo cáo thuế – HiTechPOS</title>
+<link rel="stylesheet" href="/so-sach.css">
+<script src="/so-sach.js" defer></script>
+</head>
+<body>
+<header class="noprint">
+  <strong>HiTechPOS · Sổ sách &amp; báo cáo thuế</strong>
+  <span><a href="/account">← Quản lý cửa hàng</a> <a href="#" id="logout" hidden>Đăng xuất</a></span>
+</header>
+
+<section class="card noprint" id="login" hidden>
+  <h2>Đăng nhập</h2>
+  <form id="loginForm" class="row">
+    <label>Email <input name="email" type="email" autocomplete="username" required></label>
+    <label>Mật khẩu <input name="password" type="password" autocomplete="current-password" required></label>
+    <button>Đăng nhập</button>
+  </form>
+  <p class="msg" id="loginMsg"></p>
+  <p class="muted"><a href="/reset">Quên mật khẩu?</a></p>
+</section>
+
+<main id="app" hidden>
+  <div class="notice" role="note"><b>Số liệu tham khảo – cần kế toán xác nhận.</b> Tỷ lệ thuế, ngưỡng doanh thu và mẫu sổ trong trang này là số tham khảo, cần kế toán xác nhận trước khi kê khai.</div>
+
+  <section class="card noprint">
+    <h2>Chọn kỳ</h2>
+    <form id="periodForm" class="row">
+      <label>Loại kỳ
+        <select name="type" id="ptype">
+          <option value="month">Tháng</option>
+          <option value="quarter">Quý</option>
+          <option value="year">Năm</option>
+        </select>
+      </label>
+      <label id="monthWrap">Tháng <select name="month" id="pmonth"></select></label>
+      <label id="quarterWrap" hidden>Quý
+        <select name="quarter" id="pquarter">
+          <option value="1">Quý I</option><option value="2">Quý II</option><option value="3">Quý III</option><option value="4">Quý IV</option>
+        </select>
+      </label>
+      <label>Năm <input name="year" id="pyear" type="number" min="2000" max="2100" required></label>
+      <label>Ghi sổ
+        <select name="detail" id="pdetail">
+          <option value="day">Mỗi ngày một dòng</option>
+          <option value="sale">Mỗi đơn một dòng</option>
+        </select>
+      </label>
+      <button>Xem sổ</button>
+    </form>
+    <p class="msg" id="periodMsg"></p>
+  </section>
+
+  <section id="report" hidden>
+    <div class="card printhead">
+      <div class="headrow">
+        <div>
+          <div><b>Hộ, cá nhân kinh doanh:</b> <span id="shopName"></span></div>
+          <div><b>Mã số thuế:</b> <span id="shopTax"></span></div>
+          <div><b>Địa chỉ:</b> <span id="shopAddr"></span></div>
+        </div>
+        <div class="form">Mẫu số S1-HKD<br><span class="muted">(Thông tư 88/2021/TT-BTC)</span></div>
+      </div>
+      <h2 class="center">SỔ CHI TIẾT DOANH THU BÁN HÀNG HÓA, DỊCH VỤ</h2>
+      <p class="center" id="periodLabel"></p>
+      <div class="actions noprint">
+        <label>Dấu phân cách CSV
+          <select id="csvSep">
+            <option value="comma">Dấu phẩy (,)</option>
+            <option value="semicolon">Dấu chấm phẩy (;) – Excel tiếng Việt</option>
+          </select>
+        </label>
+        <button type="button" id="csvBtn">Tải CSV</button>
+        <button type="button" class="ghost" id="htmlBtn">Tải bản in (HTML)</button>
+        <button type="button" class="ghost" id="printBtn">In</button>
+      </div>
+      <p class="msg noprint" id="exportMsg"></p>
+    </div>
+
+    <div class="card">
+      <h2>Tổng hợp kỳ để tự khai thuế</h2>
+      <div class="notice small">Số liệu tham khảo – cần kế toán xác nhận</div>
+      <div class="wrap">
+        <table id="summary">
+          <thead><tr><th>Nhóm ngành nghề</th><th class="n">Doanh thu</th><th class="n">Tỷ lệ GTGT</th><th class="n">Thuế GTGT</th><th class="n">Tỷ lệ TNCN</th><th class="n">Thuế TNCN</th></tr></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+      <p id="threshold"></p>
+      <p><b>Thuế phải nộp tạm tính của kỳ:</b> <span id="payable"></span></p>
+      <ul id="warnings" class="warn"></ul>
+      <p class="muted" id="counts"></p>
+    </div>
+
+    <div class="card">
+      <h2>Sổ doanh thu theo nhóm ngành nghề</h2>
+      <div class="wrap">
+        <table id="book" class="book">
+          <thead></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+      <div class="sign printonly">
+        <div><b>NGƯỜI LẬP BIỂU</b><i>(Ký, họ tên)</i></div>
+        <div><b>NGƯỜI ĐẠI DIỆN HỘ KINH DOANH</b><i>(Ký, họ tên, đóng dấu nếu có)</i></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card noprint">
+    <h2>Nhóm ngành nghề theo danh mục hàng</h2>
+    <p class="muted">Mặc định theo ngành của cửa hàng; chủ cửa hàng có thể đổi cho từng danh mục. Việc xếp nhóm cũng cần kế toán xác nhận.</p>
+    <form id="mapForm">
+      <div class="row">
+        <label>Nhóm mặc định <select name="defaultGroup" id="defaultGroup"></select></label>
+        <label>Nhóm cho phụ phí (phí giao hàng, phục vụ…) <select name="chargeGroup" id="chargeGroup"></select></label>
+      </div>
+      <div class="wrap">
+        <table id="mapTable">
+          <thead><tr><th>Danh mục</th><th>Nhóm ngành nghề</th><th>Nguồn</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p><button>Lưu cách xếp nhóm</button></p>
+    </form>
+    <p class="msg" id="mapMsg"></p>
+  </section>
+</main>
+<footer class="noprint">HiTechPOS · Phần mềm nguồn mở AGPL-3.0, dựa trên Posnic · <a href="/source">Mã nguồn</a></footer>
+</body>
+</html>

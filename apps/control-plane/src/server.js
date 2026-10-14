@@ -31,7 +31,8 @@ async function main() {
   const einvoiceInterval = process.env.EINVOICE_WORKER_INTERVAL_MS === undefined ? 60000 : Number(process.env.EINVOICE_WORKER_INTERVAL_MS);
   const einvoiceWorkerOn = config.store !== 'memory' && Number.isFinite(einvoiceInterval) && einvoiceInterval > 0;
   let tenantClient = null;
-  if ((config.shardUrl || einvoiceWorkerOn) && config.store !== 'memory') {
+  /* Also read by the tax ledger (sales of the owner's shop). */
+  if (config.store !== 'memory') {
     const { MongoClient } = require('mongodb');
     tenantClient = await MongoClient.connect(process.env.TENANT_MONGO_URI || config.mongoUri);
   }
@@ -42,7 +43,8 @@ async function main() {
   /* /readyz pings and /metrics counts read the control DB through a small
      client of their own; the driver connects on first use. */
   const opsClient = config.store !== 'memory' ? new (require('mongodb').MongoClient)(config.mongoUri, { maxPoolSize: 2, serverSelectionTimeoutMS: 5000 }) : null;
-  const { app, billing, einvoices, notifier, ops } = createApp({ store, config, providers, installer, onboarding, ops: { controlDb: opsClient && opsClient.db(config.controlDb) } });
+  const { app, billing, einvoices, notifier, ops } = createApp({ store, config, providers, installer, onboarding, ops: { controlDb: opsClient && opsClient.db(config.controlDb) },
+    tenantDb: tenantClient ? (tenant) => tenantClient.db(tenant.tenantDb) : null });
 
   const server = app.listen(config.port, config.host, () => {
     console.log(`[control-plane] http://${config.host}:${config.port} store=${store.kind} providers=${providers.list().join(',') || 'none'}`);

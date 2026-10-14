@@ -18,6 +18,7 @@ const { hashPassword, verifyPassword } = require('./passwords');
 const { signToken, verifyToken } = require('./tokens');
 const { createOps } = require('./ops');
 const { createAdminConsoleRouter } = require('./admin-console');
+const { createTaxLedgerRouter } = require('./tax-ledger-router');
 
 
 /* Error codes map to Vietnamese messages for the signup/billing UI. */
@@ -81,7 +82,7 @@ function httpError(code, status) {
   return Object.assign(new Error(code), { code, status });
 }
 
-function createApp({ store, config, providers, installer, onboarding, now = () => new Date(), logger = console, counterOptions = {}, einvoiceOptions = {}, mailTransport, resolveTxt, ops: opsOptions = {} }) {
+function createApp({ store, config, providers, installer, onboarding, now = () => new Date(), logger = console, counterOptions = {}, einvoiceOptions = {}, mailTransport, resolveTxt, ops: opsOptions = {}, tenantDb = null }) {
   const tenants = createTenantService({ store, config, installer, onboarding, now });
   const domains = createDomainService({ store, config, now, ...(resolveTxt ? { resolveTxt } : {}) });
   const einvoices = createEInvoiceService({ store, config, now, providerOptions: einvoiceOptions, logger });
@@ -295,6 +296,10 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
     if (!local) return res.status(403).end();
     res.status((await domains.allowed(req.query.domain)) ? 200 : 404).end();
   });
+
+  /* Sổ sách & báo cáo thuế: S1-HKD revenue book and tax summary of the
+     owner's own shop (src/tax-ledger*.js). */
+  app.use('/api/shop/tax-ledger', auth, createTaxLedgerRouter({ store, tenantDb, now }));
 
   /* Data portability / self-held backup: the whole shop database as
      gzipped NDJSON (store/mongo.js exportShop). */
