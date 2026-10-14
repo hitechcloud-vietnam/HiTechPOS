@@ -1,0 +1,189 @@
+.order-workspace{max-width:880px;margin:auto;color:var(--ink,#17243b)}
+.order-workspace .order-sheet{background:var(--surface,#fff);border:0;border-radius:0;padding:20px;margin:0;box-shadow:none}
+.order-identity,.order-items-heading,.order-summary,.order-secondary{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.order-identity{font-size:13px;color:var(--muted,#64748b);padding-bottom:20px;border-bottom:1px solid var(--line,#e2e8f0)}
+.order-items-heading{margin:20px 0}.order-items-heading h2{font-size:19px;margin:0}
+.order-workspace button{font:inherit;min-height:44px;border-radius:12px;border:1px solid var(--line,#dce3ee);padding:10px 14px;background:var(--surface,#fff);color:inherit;cursor:pointer}
+.order-workspace .order-add{background:var(--accent,#2455e8);color:white;border-color:transparent;font-weight:700}
+.order-note{width:100%;text-align:start;margin:16px 0;color:var(--accent,#2455e8)!important}
+.order-summary{border-top:1px solid var(--line,#e2e8f0);padding:18px 0;margin-top:18px}.order-summary strong{font-size:22px}
+.order-secondary{justify-content:flex-start;flex-wrap:wrap}.order-workspace .order-cancel{color:#d52238;border-color:transparent}
+.order-financial{position:sticky;bottom:0;background:var(--surface,#fff);padding:12px 20px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line,#e2e8f0);z-index:3}
+.order-financial .kot-details-header{display:block;margin:0;padding:0;border:0}.order-financial .active-kot-badge{display:none}
+.order-financial .floor-bill-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0}.order-financial .floor-bill-actions[hidden]{display:none}
+.order-financial .floor-bill-btn{flex:1;white-space:normal}.order-financial [data-collect-table]:not([hidden]){flex-basis:100%;background:var(--accent,#2455e8);color:#fff;order:2;font-weight:700}
+.order-legacy-line{display:flex;flex-wrap:wrap;gap:12px;padding:18px 0;border-bottom:1px solid var(--line,#e2e8f0)}
+@media(min-width:760px){.order-workspace .order-sheet{padding:24px 32px}.order-financial{padding-inline:32px}}
+/* The order owns one scroll area; actions remain outside it. */
+body.floor-screen:has(.kot-sliding-panel.open){overflow:hidden}
+.kot-sliding-panel:has(.order-workspace){overflow:hidden;box-sizing:border-box}
+.sliding-panel-content:has(.order-workspace){display:flex;overflow:hidden;padding:0;min-height:0}
+.order-workspace{display:flex;flex-direction:column;width:100%;min-height:0;margin:0 auto}
+.order-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-bottom:8px}
+.order-financial{position:static;flex-shrink:0}
+.order-workspace .order-sheet{padding:16px 20px}
+.order-identity{padding-bottom:12px;flex-wrap:wrap}
+.order-items-heading{margin:16px 0 12px}
+.order-workspace .service-round{margin:12px 0}
+.order-workspace .service-round h3{margin:0;padding:10px 0;font-size:12px;color:var(--muted,#64748b)}
+.order-workspace .service-line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:12px 0}
+.order-workspace .service-dish{min-width:0;overflow-wrap:anywhere}
+.order-workspace .service-dish strong{font-size:15px}
+.order-workspace .service-quantity{align-self:start;font-weight:700}
+.order-workspace .floor-line-actions{padding:0;gap:4px}
+.order-workspace .floor-line-actions button{padding:8px;min-width:44px;font-size:13px}
+.order-workspace .floor-line-actions [data-line-action=note],.order-workspace .floor-line-actions [data-line-action=cancel]{border-color:transparent;background:transparent}
+.order-workspace .floor-line-quantity{gap:0;border:1px solid var(--line,#dce3ee);border-radius:10px;overflow:hidden}
+.order-workspace .floor-line-quantity button{border:0;border-radius:0}
+.order-workspace .service-line>.service-action{grid-column:1/-1;width:auto;justify-content:flex-end}
+.order-workspace .service-action button{min-height:44px;padding:8px 12px;font-size:13px}
+.order-workspace .service-order-action{padding:4px 0}
+.order-workspace .service-order-options{font-size:13px;padding:4px 0}
+.order-workspace .service-toolbar{display:flex;align-items:start;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.order-workspace .service-toolbar:empty{display:none}
+.order-workspace .service-toolbar>.service-order-action{width:auto;margin-inline-start:auto}
+.order-workspace .service-toolbar>.service-order-options{margin:0;flex:1;min-width:120px}
+.order-workspace .service-toolbar>.service-order-options[open]{flex-basis:100%}
+.order-workspace .order-summary{padding:12px 0;margin-top:12px}
+@media(min-width:760px){.order-workspace .order-sheet{padding:20px 32px}}
+/* Approved fast-order mockup: ticket cards, typography and colour tokens. */
+.order-workspace{--ink:#172335;--muted:#626f81;--line:#e2e7ee;--surface:#fff;--soft:#f4f6fa;--accent:#2458dc;font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.4}
+.order-workspace .order-sheet{padding:18px}
+.order-workspace .order-items-heading{margin:22px 0 10px}
+.order-workspace .order-items-heading h2{font-size:17px;font-weight:650}
+.order-workspace .order-add{border-radius:11px;padding:12px 16px;font-weight:600}
+.order-workspace .service-round{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:0 0 12px}
+.order-workspace .service-round h3{background:var(--soft);padding:10px 12px;border:0;font-weight:400}
+.order-workspace .service-line{margin:0 12px;padding:12px 0}
+.order-workspace .service-line:last-child{border-bottom:0}
+.order-workspace .service-dish strong{font-weight:600;line-height:1.4}
+.order-workspace .order-financial{padding:14px 18px max(20px,env(safe-area-inset-bottom));box-shadow:0 -5px 16px #1723350a}
+html[data-color-scheme="dark"] .order-workspace{--ink:#eef3fa;--muted:#aebbd0;--line:#354154;--surface:#151c27;--soft:#212d3f;--accent:#8bb3ff}
+html[data-color-scheme="dark"] .order-workspace .order-add,html[data-color-scheme="dark"] .order-workspace [data-collect-table]:not([hidden]){color:#102343}
+
+#editOrderModal.inline-order-editor{position:static;inset:auto;z-index:auto;width:100%;height:auto;padding:0!important;overflow:visible;opacity:1;transform:none}
+#editOrderModal.inline-order-editor .modal-dialog{margin:0;width:100%;max-width:none;transform:none;pointer-events:auto}
+#editOrderModal.inline-order-editor .modal-content{height:auto;min-height:0;border:0;border-radius:0;overflow:visible;box-shadow:none}
+#editOrderModal.inline-order-editor .modal-header,#editOrderModal.inline-order-editor .editor-summary{display:none}
+#editOrderModal.inline-order-editor .modal-body{padding:0;overflow:visible}
+#editOrderModal.inline-order-editor .editor-footer{position:sticky;bottom:0;background:var(--surface);z-index:5;padding:12px 0;border-top:1px solid var(--line)}
+#editOrderModal.inline-order-editor .editor-items-heading h6{font-size:18px;font-weight:600}
+.inline-editing .order-sheet [hidden]{display:none!important}
+
+#editOrderModal.inline-order-editor .editor-footer{position:fixed;bottom:0;left:var(--order-footer-left,0px);right:auto;width:var(--order-footer-width,100%);max-width:none;box-sizing:border-box;margin:0;padding:12px 18px;padding-bottom:calc(12px + env(safe-area-inset-bottom));z-index:1060}
+#editOrderModal.inline-order-editor .modal-body{padding-bottom:calc(var(--order-footer-height,180px) + 16px)}
+
+/* Action hierarchy: edits together, service separate, cancellation quiet. */
+.order-workspace .order-add,.order-workspace .service-action button,.order-workspace .order-secondary button,.order-workspace .floor-line-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.order-workspace button i{font-size:14px;flex-shrink:0}
+.order-workspace .floor-line-actions{display:flex;flex-wrap:nowrap;gap:6px;border-top:0;margin-top:4px}
+.order-workspace .floor-line-actions [data-line-action=note]{padding:8px 10px;background:var(--soft);border:0;border-radius:9px;font-weight:500}
+.order-workspace .floor-line-actions [data-line-action=cancel]{width:40px;min-width:40px;padding:8px;color:var(--muted);background:transparent;border:0}
+.order-workspace .floor-line-actions [data-line-action=cancel]:hover{color:#c6283e;background:#fff1f3}
+.order-workspace .floor-line-quantity{margin-inline-start:auto;border:0;gap:6px;overflow:visible}
+.order-workspace .floor-line-quantity [data-line-action=less]{border:1px solid var(--line);border-radius:9px;min-width:36px;width:36px;color:var(--muted)}
+.order-workspace .floor-line-actions [data-line-action=more]{background:var(--soft);color:var(--accent);border:0;border-radius:9px;padding:8px 10px;font-weight:500}
+.order-workspace .service-line>.service-action{padding-top:8px;margin-top:2px;border-top:1px dashed var(--line)}
+.order-workspace .service-line>.service-action button{background:var(--soft);border:0;color:var(--ink);font-weight:500;min-height:40px;padding:8px 12px}
+.order-workspace .service-toolbar{align-items:center;padding:6px 0 12px;gap:8px}
+.order-workspace .service-toolbar .service-order-action button{border:0;background:var(--soft);color:var(--accent);font-weight:500}
+.order-workspace .service-order-options summary{display:flex;align-items:center;gap:7px;min-height:40px;cursor:pointer;color:var(--muted);font-size:12px;list-style:none}
+.order-workspace .service-order-options summary::after{content:'⌄';font-size:15px}
+.order-workspace .order-secondary{justify-content:flex-start;gap:12px;border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.order-workspace .order-secondary .order-cancel{border:0;background:transparent;font-weight:500;font-size:13px;color:#bf3349;padding-inline:4px}
+@media(max-width:360px){.order-workspace .order-sheet{padding:12px}.order-workspace .service-line{margin-inline:10px}.order-workspace .floor-line-actions{gap:4px}.order-workspace .floor-line-actions button{font-size:12px}.order-workspace .floor-line-quantity{gap:4px}}
+
+.order-workspace .floor-bill-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:13px;font-weight:500}
+
+/* Keep editing and partial service together on one compact action row. */
+.order-workspace .service-line:has(>.floor-line-actions)>.floor-line-actions {
+  grid-column:1; min-width:0; margin-top:4px;
+}
+.order-workspace .service-line:has(>.floor-line-actions)>.service-action {
+  grid-column:2; align-self:center; width:auto; padding:0; margin:4px 0 0; border:0;
+}
+.order-workspace .service-line>.service-action input{width:44px;min-width:44px;min-height:44px;padding:6px;text-align:center}
+.order-workspace .service-line>.service-quantity{justify-self:end}
+.order-workspace .service-line>[class="service-action"] [data-serve-line] {
+  width:44px; height:44px; min-height:44px; padding:10px;
+  background:var(--accent-soft,#edf2ff); color:var(--accent); border:1px solid var(--line); border-radius:10px;
+}
+.serve-item-icon { width:23px; height:23px; flex:none; }
+.order-workspace [data-serve-line]>span { position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap; }
+.order-workspace .service-line { column-gap:8px; }
+@media(max-width:430px) {
+  .order-workspace .service-line:has(>.service-action input) [data-line-action=note] span{display:none}
+  .order-workspace .service-line:has(>.service-action input) [data-line-action=note]{width:40px;min-width:40px;padding:8px}
+  .order-workspace .service-line:has(>.service-action input) [data-line-action=cancel]{width:32px;min-width:32px;padding:6px}
+  .order-workspace .service-line:has([data-serve-line]) [data-line-action=more] span {display:none}
+  .order-workspace .service-line:has([data-serve-line]) [data-line-action=more] {width:44px;min-width:44px;padding:10px}
+}
+@media(max-width:360px) {
+  .order-workspace .service-line:has(>.service-action input){margin-inline:6px;column-gap:4px}
+  .order-workspace .service-line:has(>.service-action input) :is(.floor-line-actions,.floor-line-quantity,.service-action){gap:4px}
+  .order-workspace .service-line:has([data-serve-line]) [data-line-action=note] span {display:none}
+  .order-workspace .service-line:has([data-serve-line]) [data-line-action=note] {width:44px;min-width:44px;padding:10px}
+}
+
+/* Add again appends a draft below the unchanged kitchen batches. */
+#editOrderModal.inline-additions [data-draft-line="false"],
+#editOrderModal.inline-additions [data-draft-heading="false"],
+#editOrderModal.inline-additions #order-editor-items > .editor-items-heading{display:none}
+#editOrderModal.inline-additions{border-top:1px solid var(--line);margin-top:12px}
+
+.order-sheet .is-draft-cancelled strong{text-decoration:line-through;color:var(--ink-soft)}
+.draft-cancel-label{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#b42336;margin-top:8px}
+.draft-cancel-label button{min-height:36px;padding:6px 12px;border:1px solid currentColor;border-radius:10px;background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer}
+
+/* Sent and unsent items share the service ticket structure and type scale. */
+#editOrderModal.inline-additions{border-top:0;margin-top:12px}
+#editOrderModal.inline-additions .draft-round{margin:0}
+#editOrderModal.inline-additions #current-order-items .editor-items-heading{padding:10px 12px;margin:0;background:var(--soft);font-size:12px;line-height:1.4;font-weight:400;color:var(--muted)}
+#editOrderModal.inline-additions .compact-draft-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:12px 0;margin:0 12px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent}
+#editOrderModal.inline-additions .compact-draft-row:last-child{border-bottom:0}
+#editOrderModal .compact-draft-row .item-notes{margin:4px 0 0;font-size:13px;line-height:1.4}
+#editOrderModal .compact-draft-row .draft-controls{grid-column:1/-1;display:flex;align-items:center;gap:6px;margin-top:4px}
+#editOrderModal .compact-draft-row .editor-note-link{display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;width:auto;padding:8px 10px;min-height:44px;height:44px;box-sizing:border-box;border:0;font-size:13px;font-weight:500;border-radius:9px;background:var(--soft);color:var(--ink)}
+#editOrderModal .compact-draft-row .draft-remove,#editOrderModal .compact-draft-row .editor-preparation-action{display:inline-flex;align-items:center;justify-content:center;min-width:40px;width:40px;height:44px;padding:8px;margin:0;border:0;border-radius:9px;background:transparent;color:var(--muted)}
+#editOrderModal .compact-draft-row .item-controls{display:flex;flex-wrap:nowrap;margin-inline-start:auto;gap:0;max-width:none}
+#editOrderModal .compact-draft-row .qty-btn{width:36px;min-width:36px;height:44px;padding:8px;background:var(--surface);font-size:16px}
+#editOrderModal .compact-draft-row .qty-display{min-width:24px;font-size:14px;color:var(--ink)}
+@media(max-width:360px){
+ #editOrderModal .compact-draft-row .editor-note-link span{display:none}
+ #editOrderModal .compact-draft-row .editor-note-link{width:44px;min-width:44px;padding:10px}
+ #editOrderModal .compact-draft-row .draft-remove,#editOrderModal .compact-draft-row .editor-preparation-action{width:32px;min-width:32px}
+}
+
+@media(max-width:360px){
+ #editOrderModal.inline-order-editor .editor-footer-actions{gap:8px}
+ #editOrderModal.inline-order-editor .editor-footer-actions button{padding:10px 8px;font-size:13px;line-height:1.4}
+ #editOrderModal.inline-order-editor .editor-cancel{flex-basis:90px}
+}
+
+.inline-editing .order-scroll{scroll-padding-bottom:calc(var(--order-footer-height,170px) + 16px)}
+
+/* Override the generic modal touch size for shared kitchen-row actions. */
+#editOrderModal.inline-additions .compact-draft-row button{min-height:44px!important;height:44px;box-sizing:border-box}
+
+.order-sheet .draft-cancel-label{grid-column:1/-1;flex-basis:100%}
+
+html[data-color-scheme="dark"] .draft-cancel-label{color:#ff9eab}
+
+.item-change-highlight{animation:item-change-glow 1.8s ease-out}
+@keyframes item-change-glow{0%,35%{background:var(--accent-soft,#edf3ff)}100%{background:transparent}}
+@media(prefers-reduced-motion:reduce){.item-change-highlight{animation:none;outline:2px solid var(--accent,#2458dc);outline-offset:-2px}}
+
+.order-legacy-line.is-cancelled > strong{text-decoration:line-through;color:var(--ink-soft)}
+
+.order-tax-summary{border-top:1px solid var(--line);margin-top:20px;padding-top:14px;min-height:104px}
+.order-tax-breakdown{margin:0;display:grid;gap:10px;font-size:14px;color:var(--ink-soft)}
+.order-tax-breakdown>div{display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+.order-tax-breakdown dt{font-weight:400;overflow-wrap:anywhere}.order-tax-breakdown dd{margin:0;white-space:nowrap;color:var(--ink)}
+.order-tax-breakdown .order-tax-total{padding-top:12px;border-top:1px solid var(--line);color:var(--ink);font-size:18px}.order-tax-total dt,.order-tax-total dd{font-weight:650}
+.order-tax-status{font-size:13px;color:var(--ink-soft)}.order-tax-status button{background:var(--surface);color:var(--accent);border:1px solid var(--line);border-radius:8px;min-height:40px;padding:6px 12px}
+
+.order-financial [data-collect-table]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);flex:1 0 100%;order:-1;min-height:48px;font-weight:650}
+#captain-payments .cp-settings{display:inline-flex;align-items:center;min-height:44px;color:var(--accent);text-decoration:underline}
+
+.order-legacy-note{flex-basis:100%;margin:0;color:var(--ink-soft,#475569);font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.order-legacy-line.is-cancelled .order-legacy-note{text-decoration:line-through}

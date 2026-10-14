@@ -1,0 +1,32 @@
+# Dependency updates, proposed as pull requests.
+#
+# One package tree here, plus the Actions the workflows pin. Grouped, because
+# ungrouped this would open a handful of pull requests a week for a project
+# this size, which is how dependency updates stop being read and start being
+# rubber-stamped: the opposite of the point.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      # Capacitor moves as a set. Updating one package without the others is
+      # how a native build starts failing for reasons that read as unrelated.
+      capacitor:
+        patterns: ['@capacitor/*']
+      # Everything else that is only a patch or minor bump, in one pull
+      # request, because reviewing them one at a time teaches nobody anything.
+      minor-and-patch:
+        update-types: ['minor', 'patch']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ['*']

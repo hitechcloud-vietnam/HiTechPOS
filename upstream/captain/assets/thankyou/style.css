@@ -1,0 +1,288 @@
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+    font-family: monospace;
+    background: #f8f8f8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.center-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+}
+
+.thank-you-box {
+    background: #fff;
+    padding: 20px;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 4px 20px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+.kfc-logo {
+    width: 100px;
+    max-width: 100%;
+    margin-bottom: 20px;
+}
+
+.success-circle {
+    font-size: 48px;
+    color: #28a745;
+    margin-bottom: 20px;
+}
+
+.thank-you-box h1 {
+    font-weight: 900;
+    color: #d3232a;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+}
+
+.thank-you-box p {
+    color: #333;
+    margin: 10px 0;
+    font-size: 1rem;
+}
+
+.button-group .btn {
+    flex: 1 1 auto;
+    min-width: 130px;
+}
+
+.btn {
+    font-size: 1rem;
+    padding: 10px 16px;
+    border-radius: 8px;
+}
+
+/* Order Info Card */
+
+.order-id-display {
+    font-size: 2.5rem;
+    font-weight: 900;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: 2px;
+}
+
+.order-time-display {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 500;
+}
+
+/* Success Animation */
+.success-animation {
+    animation: scaleIn 0.5s ease-out;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.success-circle-large {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.checkmark {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 3;
+    stroke: #28a745;
+    stroke-miterlimit: 10;
+    box-shadow: inset 0px 0px 0px #28a745;
+    animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+}
+
+.checkmark-circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 3;
+    stroke-miterlimit: 10;
+    stroke: #28a745;
+    fill: none;
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.checkmark-check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    stroke-width: 3;
+    stroke: #fff;
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes stroke {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes scale {
+
+    0%,
+    100% {
+        transform: none;
+    }
+
+    50% {
+        transform: scale3d(1.1, 1.1, 1);
+    }
+}
+
+@keyframes fill {
+    100% {
+        box-shadow: inset 0px 0px 0px 60px #28a745;
+    }
+}
+
+.receipt-section {
+    width: 100%;
+    max-width: 500px;
+    padding: 15px;
+    background-color: white;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+}
+
+.receipt-line {
+    border-top: 1px dashed #000;
+    margin: 6px 0;
+}
+
+
+.totals {
+    margin-top: 10px;
+}
+
+.center {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 4px 0;
+}
+
+.item-name {
+    flex: 2;
+}
+
+.item-qty {
+    flex: 1;
+    text-align: center;
+}
+
+.item-amt {
+    flex: 1;
+    text-align: right;
+}
+
+
+.sub-info {
+    font-size: 9px;
+    color: #555;
+    margin-top: -4px;
+    margin-bottom: 6px;
+}
+
+/* POWERED BY */
+.powered {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 9px;
+}
+
+
+.meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: bold;
+    margin: 4px 0 2px;
+    padding: 0 2px;
+}
+
+/* Print styles */
+@media print {
+    body {
+        width: 72mm;
+        font-size: 12px;
+        margin: 0;
+        padding: 0;
+        display: block !important;
+        background: #fff !important;
+    }
+
+    .center-wrapper,
+    #printButton {
+        display: none !important;
+    }
+
+    .receipt-section {
+        display: block !important;
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .thank-you-box {
+        padding: 16px;
+    }
+
+    .thank-you-box h1 {
+        font-size: 1.25rem;
+    }
+
+    .thank-you-box p,
+    .token-number,
+    .order-time {
+        font-size: 0.95rem;
+    }
+
+    .success-circle {
+        font-size: 40px;
+    }
+
+    .btn {
+        font-size: 0.9rem;
+        padding: 8px 14px;
+    }
+
+    .button-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .receipt-section {
+        padding: 10px;
+    }
+}

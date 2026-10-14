@@ -1,0 +1,387 @@
+{
+  "releaseGate": "All approved screens must have reviewed reference/actual captures; unresolved discrepancies block release.",
+  "screens": {
+    "existing-item-note": {
+      "status": "review-in-progress",
+      "reference": "captain-fast-order.html notes route in approved 11-flow review",
+      "actual": "kot-management.html #editItemNotesModal; shared with order-history.html",
+      "comparison": "test-artifacts/item-note-comparison.html",
+      "widths": [
+        390,
+        768
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "resolved": [
+        "Orange legacy action and focus ring",
+        "Incorrect Apply & Add wording",
+        "Small 13px modal heading",
+        "Invisible dark close icon",
+        "Generic heavy note text",
+        "Mismatched primary colours"
+      ],
+      "userDirectedDifferences": [
+        "Keep order visible and avoid a separate editor screen; note is a dialog."
+      ],
+      "open": [
+        "Expanded preset list retained from current implementation; exact preset density not yet accepted.",
+        "Other order shell/header/footer differences remain subject to their own screen audit.",
+        "Native keyboard/viewport behavior not tested on Android/iOS."
+      ]
+    },
+    "pending-item-cancellation": {
+      "status": "review-in-progress",
+      "comparison": "test-artifacts/partial-cancel-comparison.html",
+      "widths": [
+        390,
+        768
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "resolved": [
+        "Sent minus no longer replaces compact rows with full editor",
+        "Partial reductions request reason and show a pending count",
+        "Pending cancellation label uses readable dark colour",
+        "Per-item Undo restores pending partial/full cancellations without discarding notes or new items; translated in all 30 languages.",
+        "Pinned draft footer follows the order panel bounds on tablet and phone, including resize and scrolling."
+      ],
+      "userDirectedDifferences": [
+        "Keep confirmed rows in place rather than using a separate Modify order screen."
+      ],
+      "open": [
+        "Order shell, toolbar and pinned footer differ from reference and remain unaccepted.",
+        "Reference cancel example is one full ticket; implementation example is partial quantity."
+      ],
+      "undoVerification20261004": {
+        "checks": "undo-browser.log: 6 passed; undo-unit.log: 653 passed; undo-build.log: successful with translation audit",
+        "screenshots": "Refreshed paired actual/reference captures at 390 and 768, light/dark in test-artifacts/partial-cancel-comparison.html",
+        "remaining": "Native runtime and remaining shell/toolbar/full-flow visual acceptance gaps remain open."
+      },
+      "footerAlignment20261004": {
+        "implementation": "Measure workspace bounds with ResizeObserver; disconnect on editor close; fixed footer uses measured left and width instead of viewport-centred 680px layout.",
+        "checks": "footer-alignment-browser.log: 5 passed, one interrupted by build-triggered page reload. footer-alignment-rerun.log: interrupted dark-phone check passed. All six scenarios now pass; no source build during rerun.",
+        "visual": "Refreshed reference/actual 390 and 768 light/dark captures in test-artifacts/partial-cancel-comparison.html. Actual tablet dark screenshot inspected against reference; footer now contained in panel. No overall mockup equivalence claimed."
+      }
+    },
+    "kitchen-voice": {
+      "status": "implemented-local-review",
+      "reference": "Latest user direction: WhatsApp-familiar voice recording, green playback and saved replay",
+      "actual": "kitchen-message.html",
+      "screenshots": [
+        "test-artifacts/kitchen-voice-320.png",
+        "test-artifacts/kitchen-voice-900.png",
+        "test-artifacts/voice-message-replay-dark.png"
+      ],
+      "resolved": [
+        "Oversized boxed recording status replaced by compact waveform composer",
+        "Green circular record, play and send controls",
+        "Compact saved recording bubbles with seek and timestamp",
+        "Hold/release, slide cancel and lock interactions verified"
+      ],
+      "open": [
+        "Full light/dark reference comparison still required before broader release",
+        "Native Android/iOS touch recording and audio output need device checks"
+      ]
+    },
+    "table-guests-refinement": {
+      "status": "awaiting-user-review",
+      "reference": "Latest user rejection of table/pax styling overrides earlier entry presentation",
+      "actual": "discount.html with assets/table/entry.css",
+      "screenshots": [
+        "test-artifacts/seating-refined-light.png",
+        "test-artifacts/seating-refined-dark.png"
+      ],
+      "resolved": [
+        "Inconsistent table styling",
+        "Unreadable gray occupied tiles",
+        "Oversized Other tile",
+        "Duplicate visible guest stepper"
+      ],
+      "open": [
+        "User visual acceptance of refined seating layout"
+      ]
+    }
+  },
+  "kitchenSendFeedback": {
+    "status": "awaiting-user-review",
+    "reference": "User requests larger full-screen lightly transparent kitchen flight, slower and playful.",
+    "actual": [
+      "test-artifacts/kitchen-flight-light.png",
+      "test-artifacts/kitchen-flight-dark.png"
+    ],
+    "open": [
+      "User acceptance of animation timing and placement"
+    ],
+    "verified": "Full viewport overlay, 2s flight, light/dark browser checks; dark screenshot inspected."
+  },
+  "menuFloatingBubble": {
+    "status": "implemented-user-selected-variant",
+    "reference": "User selects Green heart pop for plus and requests longer sad face on minus; Add keeps short glass bubble.",
+    "actual": [
+      "test-artifacts/floating-bubble-light.png",
+      "test-artifacts/floating-bubble-dark.png"
+    ],
+    "resolved": [
+      "Replaced multiple small bubbles with a single floating glass bubble",
+      "Added final expansion burst"
+    ],
+    "open": [
+      "User review of 900ms sad-face timing"
+    ]
+  },
+  "connectionRefinement": {
+    "status": "awaiting-user-review",
+    "reference": "Latest user screenshot and request for Change server colours and flow",
+    "actual": [
+      "test-artifacts/connection-choices-light.png",
+      "test-artifacts/connection-choices-dark.png",
+      "test-artifacts/connection-address-light.png",
+      "test-artifacts/connection-address-dark.png"
+    ],
+    "resolved": [
+      "White QR/code cards in dark theme",
+      "Low-contrast step indicator and settings link",
+      "Visual order differed from keyboard navigation",
+      "Competing connection methods beside address entry",
+      "Hidden input focused when opening Change server"
+    ],
+    "open": [
+      "User review of refined connection choices"
+    ]
+  },
+  "cancelledLegacyLines": {
+    "status": "implementation-fixed-runtime-render-tested",
+    "resolved": [
+      "Compact floor legacy renderer lost cancellation strike-through",
+      "Cancelled legacy lines exposed item actions"
+    ],
+    "verification": "12 cancellation tests pass; actual template rendering checked for full/partial/order cancellation and readable quantity.",
+    "open": [
+      "Phone/tablet screenshot comparison of cancelled legacy lines"
+    ]
+  },
+  "busyKitchenChef": {
+    "status": "awaiting-user-review",
+    "reference": "User approved positive-energy chef at >=70% occupancy",
+    "actual": [
+      "test-artifacts/kitchen-chef-busy.png"
+    ],
+    "open": [
+      "User visual acceptance of chef motion and finish"
+    ],
+    "verified": "Threshold and full configured-table count browser checks pass; screenshot inspected."
+  },
+  "orderTaxDetails": {
+    "status": "awaiting-user-review",
+    "reference": "User screenshot: missing taxes inside expanded order",
+    "actual": [
+      "test-artifacts/order-tax-light.png",
+      "test-artifacts/order-tax-dark.png"
+    ],
+    "resolved": [
+      "Total-only summary omitted subtotal and tax details"
+    ],
+    "open": [
+      "User acceptance of inline financial breakdown"
+    ],
+    "verified": "Three browser checks passed; dark screenshot inspected."
+  },
+  "connectionReturnNavigation": {
+    "status": "awaiting-user-review",
+    "reference": "User screenshot asks for clear navigation from saved connection settings to main page",
+    "actual": [
+      "test-artifacts/connection-return-light.png",
+      "test-artifacts/connection-return-dark.png"
+    ],
+    "resolved": [
+      "No direct return to Orders",
+      "Setup progress misleading for authenticated staff",
+      "No clear next step after Saved"
+    ],
+    "open": [
+      "User review of return action placement"
+    ]
+  },
+  "collectionEntryFix": {
+    "status": "awaiting-user-review",
+    "reference": "User screenshot missing collect/settlement and bill failed",
+    "resolved": [
+      "Hidden Collect payment when unavailable",
+      "Dine-in per-sale bill endpoint incompatibility"
+    ],
+    "verified": "Live T5 UI shows Collect payment and valid subtotal/tax/total. Server availability false; no payment recorded.",
+    "open": [
+      "User review of payment action placement"
+    ]
+  },
+  "busyChefCrossPage": {
+    "status": "trigger-fixed-awaiting-user-review",
+    "reference": "User-approved positive busy chef at >=70% table occupancy; user reports no variation at nearly full tables.",
+    "resolved": [
+      "Missing floor occupancy getter on cart/history/pending paths now uses bounded authenticated table lookup."
+    ],
+    "actual": [
+      "test-artifacts/kitchen-chef-busy.png"
+    ],
+    "open": [
+      "Confirm visibility on user device after sending; full phone/tablet and light/dark comparison outstanding."
+    ],
+    "release": "Not released"
+  },
+  "paymentGoldCelebration": {
+    "status": "awaiting-user-review",
+    "reference": "User requested gold coin/money celebration with design freedom.",
+    "actual": [
+      "test-artifacts/payment-gold-light.png",
+      "test-artifacts/payment-gold-dark.png",
+      "test-artifacts/payment-gold-partial.png"
+    ],
+    "open": [
+      "User review of motion and timing."
+    ]
+  },
+  "pickerSingleCategoryRail": {
+    "status": "awaiting-user-review",
+    "reference": "User screenshot of wrapped category buttons consuming menu space",
+    "actual": [
+      "test-artifacts/picker-single-rail-light.png",
+      "test-artifacts/picker-single-rail-dark.png"
+    ],
+    "resolved": [
+      "Categories no longer wrap or expand header to multiple rows."
+    ],
+    "open": [
+      "User review."
+    ]
+  },
+  "pickerMenuLayerFix": {
+    "status": "awaiting-user-review",
+    "resolved": [
+      "Sticky product category headings rendered above Menu index."
+    ],
+    "actual": [
+      "test-artifacts/picker-menu-open-light.png",
+      "test-artifacts/picker-menu-open-dark.png"
+    ],
+    "open": [
+      "User review."
+    ]
+  },
+  "pickerMenuNavigation": {
+    "status": "awaiting-reference-comparison-and-user-review",
+    "resolved": [
+      "Keyboard can escape Menu focus boundary.",
+      "Back can close parent rather than category panel.",
+      "Category text interpreted as markup."
+    ],
+    "actual": [
+      "test-artifacts/menu-access-390-light.png",
+      "test-artifacts/menu-access-390-dark.png",
+      "test-artifacts/menu-access-820-light.png",
+      "test-artifacts/menu-access-820-dark.png"
+    ],
+    "open": [
+      "Exact reference comparisons and user acceptance remain outstanding."
+    ]
+  },
+  "chefLoadingSelection": {
+    "status": "implemented-awaiting-user-review",
+    "reference": "captain-loading-choices.html; user approved three random variants excluding service bell",
+    "actual": [
+      "test-artifacts/chef-loading-hat-light.png",
+      "test-artifacts/chef-loading-hat-dark.png",
+      "test-artifacts/chef-loading-steam-light.png",
+      "test-artifacts/chef-loading-steam-dark.png",
+      "test-artifacts/chef-loading-stir-light.png",
+      "test-artifacts/chef-loading-stir-dark.png"
+    ],
+    "resolved": [
+      "Generic spinner replaced with approved chef themes; themed overlay avoids white box in dark mode."
+    ],
+    "open": [
+      "User review of in-app loaders; full matched reference comparison remains outstanding."
+    ]
+  },
+  "translationCompletion20261004": {
+    "status": "targeted-browser-verified",
+    "coverage": "67 additional messages in every locale; 30 languages, 1144 messages each; no audit gaps",
+    "screenshots": [
+      "test-artifacts/captain-ta-pending.png"
+    ],
+    "resolved": [
+      "Tamil Order sync status now translated and wraps within phone width.",
+      "Language screenshot waits for navigation and translated floor controls instead of capturing an empty loading frame."
+    ],
+    "open": [
+      "Full matched reference/actual comparisons across all screens and themes remain.",
+      "Native keyboard and viewport behavior unverified."
+    ]
+  },
+  "sameLineServiceControls": {
+    "status": "implemented-user-request",
+    "resolved": [
+      "Serve quantity and serve action share the item edit row. Removed separate dashed action row. Narrow phones use labelled icons and compact spacing."
+    ],
+    "verification": [
+      "same-line-service-check.log: 4 phone/tablet light/dark checks passed",
+      "same-line-service-narrow.log: 2 checks at 320px passed; same-row alignment and no horizontal overflow asserted"
+    ],
+    "screenshots": [
+      "test-artifacts/partial-cancel-actual-390-light.png",
+      "test-artifacts/partial-cancel-actual-320-dark.png"
+    ]
+  },
+  "draftFooterHeight20261004": {
+    "status": "Implemented and browser verified; full visual gate still open",
+    "resolved": [
+      "Draft content and scroll padding follow measured footer height, including larger text and wrapping translations.",
+      "New-item quantity uses readable foreground in dark mode."
+    ],
+    "evidence": [
+      "footer-height-final-browser.log: 8 passed",
+      "footer-height-build.log: build and translation audit passed",
+      "test-artifacts/draft-footer-large-text-320-dark.png visually inspected; quantity visible and final item above footer",
+      "test-artifacts/partial-cancel-comparison.html refreshed phone/tablet light/dark reference and actual screenshots"
+    ],
+    "limits": "Larger text simulated in browser at 24px. No native font-scaling or keyboard pass claimed. Existing shell/toolbar differences remain open."
+  },
+  "readinessRefresh20261005": {
+    "status": "Fixed and targeted browser verified",
+    "resolved": [
+      "A failed table/readiness refresh no longer leaves stale ready badges or totals visible as current."
+    ],
+    "evidence": [
+      "release-readiness-final.log: outage handling passed",
+      "release-readiness-fix.log: floor design phone/tablet checks passed"
+    ],
+    "limits": "Does not establish full visual parity; remaining per-screen comparisons stay open."
+  },
+  "legacyNotes20261005": {
+    "status": "Fixed and visually inspected in light/dark",
+    "resolved": [
+      "Saved legacy item notes were omitted from the compact detail renderer. Now rendered as escaped, wrapping text under the item."
+    ],
+    "evidence": [
+      "table-detail-light.png",
+      "table-detail-dark.png",
+      "Light/dark contrast tests pass at 4.5:1 for name, quantity, note, identity and total."
+    ],
+    "limits": "Fixtures intentionally show bill retry; no successful tax response implied by these screenshots."
+  },
+  "quickSaleTax20261005": {
+    "status": "New user-requested tax breakdown; light/dark phone captures reviewed locally",
+    "captures": [
+      "test-artifacts/quick-sale-tax-preview-light.png",
+      "test-artifacts/quick-sale-tax-preview-dark.png",
+      "test-artifacts/quick-sale-tax-bill-light.png",
+      "test-artifacts/quick-sale-tax-bill-dark.png"
+    ],
+    "remaining": [
+      "Native keyboard checks and paired API deployment remain pending."
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <script src="assets/common/appearance.js"></script><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Collect payment</title>
+<link rel="stylesheet" href="assets/common/design.css"><link rel="stylesheet" href="assets/common/ui-theme.css"><link rel="stylesheet" href="assets/me/style.css"><link rel="stylesheet" href="assets/common/i18n.css"><link rel="stylesheet" href="assets/common/app-design.css">
+<script src="assets/common/i18n.js"></script><script src="assets/common/languages.js"></script><link rel="stylesheet" href="assets/common/confirm.css">
+<script src="assets/common/confirm.js"></script>
+<script src="assets/common/access.js"></script><script src="assets/common/money.js"></script><script src="assets/common/phone-preferences.js"></script>
+    <link rel="stylesheet" href="assets/common/kitchen-notices.css">
+    <script src="assets/common/kitchen-notices.js" defer></script><script src="config.js"></script><script src="assets/common/lock.js"></script><script src="assets/me/payment-settings.js" defer></script>    <link rel="stylesheet" href="assets/common/appearance.css">
+</head>
+<body data-offline-page><header class="me-head"><button type="button" class="me-back" id="payment-settings-back" aria-label="Back">&#8592;</button><h1 class="me-title">Collect payment</h1></header>
+<main class="me-body"><p id="payment-settings-message" role="status"></p><button type="button" class="profile-secondary" id="payment-settings-retry" hidden>Retry</button>
+<form id="payment-settings-form" hidden>
+<section class="me-card"><label class="me-row"><span class="me-row-label">Collect payment</span><input type="checkbox" role="switch" id="payment-settings-enabled"></label></section>
+<div id="payment-settings-options">
+<fieldset class="me-card payment-method-settings"><legend>Payment details</legend>
+<label class="me-row"><span>Cash</span><input type="checkbox" name="method" value="Cash"></label>
+<label class="me-row"><span>Card</span><input type="checkbox" name="method" value="Card"></label>
+<label class="me-row"><span>UPI</span><input type="checkbox" name="method" value="Upi"></label>
+</fieldset>
+<p class="me-note" id="payment-settings-method-error" role="status" hidden>Choose at least one payment method.</p>
+<p class="me-note">Set up UPI in Branch details. UPI QR payments require INR.</p><a href="branch-details.html?source=payments">Branch details</a>
+<section class="me-card"><label class="me-row"><span class="me-row-label">Print the bill</span><input type="checkbox" role="switch" id="payment-settings-print"></label></section>
+</div>
+<p class="me-note" id="payment-settings-cashier">Payment is collected at the desktop cashier.</p>
+<div class="profile-actions"><button type="button" class="profile-secondary" id="payment-settings-cancel">Cancel</button><button type="submit" class="profile-primary" id="payment-settings-save">Save</button></div>
+</form></main></body></html>

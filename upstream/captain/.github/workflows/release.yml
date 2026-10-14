@@ -1,0 +1,327 @@
+# Publish installable builds where people can actually get them.
+#
+# Run artifacts expire in 30 days and need a GitHub login to download, which is
+# no use for handing a waiter an app or for anyone who found this project and
+# wants to try it. A release is permanent, public and linkable.
+#
+# Tag a version and this builds Android and iOS and attaches both:
+#
+#     git tag v1.0.0 && git push origin v1.0.0
+#
+# Both platforms build whatever credentials exist. Signing is decided by what
+# is present, never by a flag, so a fork gets a working pipeline that produces
+# unsigned builds rather than a red X it cannot fix.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build and release (e.g. v1.0.0)'
+        required: true
+      platform:
+        description: 'Platform to build'
+        type: choice
+        options: [all, android, ios]
+        default: all
+      publish:
+        description: 'Publish artifacts to a GitHub release'
+        type: boolean
+        default: false
+      version:
+        description: 'Numeric version when building a branch or commit (e.g. 1.3.42)'
+        required: false
+      testflight:
+        description: 'Sign iOS for App Store Connect and upload to TestFlight'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    name: Android
+    if: github.event_name != 'workflow_dispatch' || inputs.platform != 'ios'
+    runs-on: ubuntu-latest
+    outputs:
+      signed: ${{ steps.build.outputs.signed }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - uses: actions/setup-node@v7
+        with:
+          # CAPACITOR 8 REQUIRES NODE >= 22, and said so by failing.
+          #
+          # `npx cap add android` exits 1 on Node 20 with no message of its
+          # own, so the log reads as a build that broke for no reason. Both
+          # platforms failed identically on v1.2.23 and neither said why.
+          #
+          # The machine this was developed on runs Node 24, which is why every
+          # local check passed. That gap is now closed in two places: the
+          # engines field below refuses an old Node with a sentence, and
+          # `npm run check:native` says so before anybody tags anything.
+          node-version: 22
+          cache: npm
+
+      # Android Gradle Plugin wants 17. The runner default has moved past it
+      # before now, and the failure names a Gradle internal rather than the JDK.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          # CAPACITOR 8's ANDROID LIBRARY IS COMPILED FOR JAVA 21.
+          #
+          # On 17 the build reaches gradle and dies with `invalid source
+          # release: 21` inside :capacitor-android, which reads as a problem
+          # with this app rather than with the JDK the runner was handed.
+          #
+          # check:native compares this number against what the Capacitor
+          # templates actually ask for, so the two cannot drift apart again
+          # without somebody being told before they tag anything.
+          java-version: 21
+
+      # THE `tools` PACKAGE NO LONGER EXISTS, so do not ask for it.
+      #
+      # setup-android installs `tools platform-tools` by default, and Google
+      # has removed `tools` from the SDK repository - it was deprecated for
+      # years and finally went. The action runs `sdkmanager tools`, gets exit
+      # code 1, and the whole job dies before a line of our code is reached.
+      #
+      # Nothing here needs it. The runner image already carries the SDK, and
+      # Gradle fetches the platform and build-tools it wants on its own.
+      #
+      # It broke on the runner, not in this repository: the same workflow
+      # passed yesterday on the same commit shape, and started failing at
+      # 07:54 on 2026-09-15 for every branch at once. That is the signature of
+      # an image or a repository change rather than a regression.
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: ''
+
+      - run: npm ci
+
+      # A keystore in a secret, never in the repo. Without it the release
+      # carries a debug build, clearly named so nobody mistakes one for the
+      # other: a debug APK cannot be updated in place by a signed one later,
+      # because Android treats a different signature as a different app.
+      - name: Restore signing key
+        id: signing
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE" ]; then
+            echo "have=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No ANDROID_KEYSTORE_BASE64 secret; building a debug APK."
+            exit 0
+          fi
+          mkdir -p "$HOME/.posnic/captain-signing"
+          echo "$KEYSTORE" | base64 -d > "$HOME/.posnic/captain-signing/captain-release.jks"
+          cat > "$HOME/.posnic/captain-signing/release-signing.properties" <<EOF
+          storeFile=$HOME/.posnic/captain-signing/captain-release.jks
+          storePassword=$STORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+          echo "have=true" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        id: build
+        env:
+          POSNIC_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "${{ steps.signing.outputs.have }}" = "true" ]; then
+            node build-apk.js --release
+            cp android/app/build/outputs/apk/release/app-release.apk captain.apk
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          else
+            node build-apk.js
+            cp android/app/build/outputs/apk/debug/app-debug.apk captain-debug.apk
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android
+          path: captain*.apk
+          if-no-files-found: error
+
+  ios:
+    name: iOS
+    if: github.event_name != 'workflow_dispatch' || inputs.platform != 'android'
+    # Xcode exists on nothing else. This is the only reason the job is here
+    # rather than alongside Android.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - uses: actions/setup-node@v7
+        with:
+          # CAPACITOR 8 REQUIRES NODE >= 22, and said so by failing.
+          #
+          # `npx cap add android` exits 1 on Node 20 with no message of its
+          # own, so the log reads as a build that broke for no reason. Both
+          # platforms failed identically on v1.2.23 and neither said why.
+          #
+          # The machine this was developed on runs Node 24, which is why every
+          # local check passed. That gap is now closed in two places: the
+          # engines field below refuses an old Node with a sentence, and
+          # `npm run check:native` says so before anybody tags anything.
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Signing material, when it exists. An iOS DISTRIBUTION certificate, not
+      # the Developer ID one the desktop app uses for macOS - they are
+      # different certificates from the same account, and the Mac one cannot
+      # sign an iPhone build.
+      - name: Install signing certificate
+        id: signing
+        env:
+          CERT_P12: ${{ secrets.IOS_CERT_P12 }}
+          CERT_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
+          PROFILE: ${{ inputs.testflight && secrets.IOS_APPSTORE_PROVISIONING_PROFILE || secrets.IOS_PROVISIONING_PROFILE }}
+          TESTFLIGHT: ${{ inputs.testflight }}
+        run: |
+          if [ "$TESTFLIGHT" = "true" ] && { [ -z "$CERT_P12" ] || [ -z "$PROFILE" ]; }; then
+            echo "::error::TestFlight requires a distribution certificate and App Store profile."
+            exit 1
+          fi
+          if [ -z "$CERT_P12" ]; then
+            echo "have=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No IOS_CERT_P12 secret; building unsigned (will not install on a device)."
+            exit 0
+          fi
+          KEYCHAIN="$RUNNER_TEMP/captain.keychain-db"
+          KEYCHAIN_PASSWORD=$(uuidgen)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 900 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          echo "$CERT_P12" | base64 -d > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P "$CERT_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security list-keychain -d user -s "$KEYCHAIN" login.keychain-db
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          echo "$PROFILE" | base64 -d > "$HOME/Library/MobileDevice/Provisioning Profiles/captain.mobileprovision"
+          rm -f "$RUNNER_TEMP/cert.p12"
+          echo "have=true" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        env:
+          POSNIC_VERSION: ${{ inputs.version }}
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          # The profile is named, not identified by UUID: xcodebuild's export
+          # options take the name, and a name survives the profile being
+          # regenerated (adding a device does that) where a UUID does not.
+          IOS_PROVISIONING_PROFILE_NAME: ${{ inputs.testflight && secrets.IOS_APPSTORE_PROVISIONING_PROFILE_NAME || secrets.IOS_PROVISIONING_PROFILE_NAME }}
+          IOS_EXPORT_METHOD: ${{ inputs.testflight && 'app-store-connect' || vars.IOS_EXPORT_METHOD || 'ad-hoc' }}
+        run: node build-ipa.js
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ios
+          path: build-output/*.ipa
+          if-no-files-found: error
+
+      - name: Upload to TestFlight
+        if: inputs.testflight
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER: ${{ secrets.ASC_API_ISSUER }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          test -n "$ASC_API_KEY_ID"
+          test -n "$ASC_API_ISSUER"
+          test -n "$ASC_API_KEY_P8"
+          KEY_DIR="$HOME/.appstoreconnect/private_keys"
+          mkdir -p "$KEY_DIR"
+          KEY_FILE="$KEY_DIR/AuthKey_${ASC_API_KEY_ID}.p8"
+          trap 'rm -f "$KEY_FILE"' EXIT
+          printf '%s' "$ASC_API_KEY_P8" > "$KEY_FILE"
+          chmod 600 "$KEY_FILE"
+          xcrun altool --upload-app --type ios --file build-output/Captain.ipa \
+            --apiKey "$ASC_API_KEY_ID" --apiIssuer "$ASC_API_ISSUER"
+
+  publish:
+    name: Publish release
+    needs: [android, ios]
+    # Android alone is enough to release.
+    #
+    # This required both, so the first tag produced a working, signed Android
+    # build and shipped nothing at all, because iOS could not compile. One
+    # platform being unbuildable - no certificate, an Xcode version gone,
+    # Apple changing something - should not withhold the other from the people
+    # waiting for it. The notes say which platforms are actually attached.
+    if: always() && (github.event_name != 'workflow_dispatch' || inputs.publish) && needs.android.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: downloads
+        # A missing iOS artifact is a normal outcome here, not an error.
+        continue-on-error: true
+
+      - name: Collect
+        run: |
+          mkdir -p release
+          find downloads -type f \( -name '*.apk' -o -name '*.ipa' \) -exec cp {} release/ \;
+          ls -la release
+          sha256sum release/* > release/SHA256SUMS.txt
+
+      # Says plainly what each file is, because "which of these do I install"
+      # is the first question a download page has to answer.
+      - name: Compose the notes
+        run: |
+          {
+            echo "## Install"
+            echo
+            if [ -f release/captain.apk ]; then
+              echo "**Android** - \`captain.apk\`, signed. Download it on the phone and open it."
+            else
+              echo "**Android** - \`captain-debug.apk\`, a debug build. Android will warn about an unknown source."
+              echo "> A debug build cannot be replaced in place by a signed one later: Android treats a different"
+              echo "> signature as a different app, so it has to be uninstalled first."
+            fi
+            echo
+            if [ -f release/Captain.ipa ]; then
+              echo "**iOS** - \`Captain.ipa\`, signed."
+            elif [ -f release/Captain-unsigned.ipa ]; then
+              echo "**iOS** - \`Captain-unsigned.ipa\`. Proves the app builds for iOS; it will **not** install on a device."
+            else
+              echo "**iOS** - not in this release; the iOS build did not succeed."
+            fi
+            echo
+            echo "Checksums in \`SHA256SUMS.txt\`."
+            echo
+            echo "## Choosing a server"
+            echo
+            echo "**Android and iOS:** choose **Sign in with your account**, approve Captain in your browser, and select the branch and staff member."
+            echo
+            echo "You can also enter a shop code or server address, search the shop Wi-Fi, or scan its QR. Both platforms also support pairing codes."
+            echo
+            echo "First-time setup and Change server use the same screen. Expand **Connection settings** to update the local and internet addresses, including before staff sign-in."
+            echo
+            echo "Approved local connections are preferred; the verified internet connection is used when needed. Unsent orders stay saved. An order with an uncertain delivery result waits for its original server to prevent duplicate kitchen orders."
+            echo
+            echo "**iOS:** secure browser approval, pairing and local Wi-Fi discovery are supported. An unsigned IPA still requires signing before installation."
+          } > notes.md
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: Captain ${{ github.event.inputs.tag || github.ref_name }}
+          body_path: notes.md
+          files: release/*
+          draft: false
+          prerelease: ${{ contains(github.event.inputs.tag || github.ref_name, '-') }}

@@ -1,0 +1,236 @@
+:root {
+    --primary: #ff7a3c;
+    --primary-soft: #ffe0cf;
+    --bg: #0f172a;
+}
+
+#captain-onboarding { display:grid; gap:12px; margin-bottom:20px; }
+#captain-onboarding p { color:var(--ink-soft); font-size:14px; line-height:1.55; margin:0 0 8px; }
+#captain-onboarding h3 { margin:0; }
+#captain-onboarding h4 { font-size:17px; margin:0 0 8px; }
+#captain-onboarding summary, #captain-legacy > summary { min-height:48px; padding:14px 0; cursor:pointer; font-size:14px; }
+#captain-onboarding .ui-btn-quiet { min-height:48px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:var(--surface-sunk); color:var(--ink); margin:4px 0; font-size:14px; }
+#captain-code-options label { display:block; margin:12px 0 6px; color:var(--ink-soft); font-size:14px; }
+#captain-code-options input[type="checkbox"] { width:20px; height:20px; vertical-align:middle; margin-right:6px; }
+#captain-note:empty { display:none; }
+.brand-circle { background:var(--accent) !important; }
+.auth-page { max-width:520px; margin:0 auto; }
+.auth-card { background:var(--surface) !important; color:var(--ink); box-shadow:none !important; border-color:var(--line) !important; }
+.auth-card .section-title { color:var(--ink); }
+
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(circle at top, #1f2937 0, #020617 55%);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f9fafb;
+}
+
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 14px 90px;
+    /* leave space for branch footer */
+}
+
+.auth-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+    margin-bottom: 20px;
+}
+
+.brand-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.brand-initials {
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.brand-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.brand-subtitle {
+    margin: 0;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.auth-card {
+    background: #020617;
+    border-radius: 18px;
+    padding: 18px 16px 20px;
+    /* The app draws under the status bar from Android 15 on, so the first
+       thing a waiter sees has to step around the clock rather than sit
+       behind it. */
+    margin-top: env(safe-area-inset-top, 0px);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #e5e7eb;
+}
+
+.section-help {
+    font-size: 13px;
+    color: #9ca3af;
+}
+
+.auth-input {
+    background: #020617;
+    border-radius: 12px;
+    border: 1px solid #374151;
+    color: #f9fafb;
+    font-size: 14px;
+}
+
+.auth-input::placeholder {
+    color: #6b7280;
+}
+
+.auth-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 1px rgba(255, 122, 60, 0.4);
+}
+
+.btn-login {
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(135deg, #ff7a3c, #ffb347);
+    color: #111827;
+    font-weight: 600;
+    padding: 10px 0;
+    font-size: 15px;
+}
+
+.btn-login:active {
+    transform: scale(0.985);
+}
+
+.branch-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 14px 14px;
+    background: linear-gradient(to top, rgba(2, 6, 23, 0.98), rgba(2, 6, 23, 0.8));
+    border-top: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.page-loader {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+/* Branch list layout */
+#branch-list-container {
+    max-height: 65vh;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* Nice modern branch cards */
+.branch-card {
+    background: #020617;
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    overflow: hidden;
+    box-shadow: 0 16px 35px rgba(15, 23, 42, 0.85);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.branch-card img.card-img-top {
+    height: 110px;
+    width: 100%;
+    object-fit: cover;
+}
+
+.branch-card .card-body {
+    padding: 10px 10px 12px;
+}
+
+.branch-card .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin: 0;
+}
+
+/* Hover / tap effect */
+.branch-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 1);
+    border-color: var(--primary);
+}
+
+/* Mobile spacing */
+@media (max-width: 576px) {
+    .branch-card img.card-img-top {
+        height: 220px;
+    }
+}
+
+#error-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+#error-popup {
+    background: #fff;
+    padding: 16px 18px;
+    border-radius: 12px;
+    width: 80%;
+    max-width: 320px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+    text-align: center;
+}
+
+#error-popup-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 16px;
+    color: #d60000;
+}
+
+#error-popup-message {
+    font-size: 14px;
+    margin-bottom: 14px;
+    color: #333;  
+}
+
+#error-popup-close {
+    border: none;
+    border-radius: 999px;
+    padding: 8px 18px;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 500;
+    font-size: 14px;
+}

@@ -1,0 +1,29 @@
+html.mobile-refresh-enabled { overscroll-behavior-y: none; }
+#mobile-refresh-status {
+    position: fixed; z-index: 1050; top: calc(env(safe-area-inset-top, 0px) + var(--pull-distance, 56px));
+    left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px;
+    max-width: calc(100vw - 32px); padding: 10px 16px; border-radius: 24px;
+    background: var(--surface, #fff); color: var(--ink, #162338);
+    box-shadow: 0 2px 12px #0002; pointer-events: none; font-size: 14px;
+}
+#mobile-refresh-status[hidden] { display: none; }
+#mobile-refresh-status > span:first-child { font-size: 22px; line-height: 1; }
+#mobile-refresh-status[data-state="ready"] { color: var(--accent, #2563eb); }
+#mobile-refresh-status[data-state="loading"] > span:first-child { animation: mobile-refresh-spin 1s linear infinite; }
+#mobile-refresh-status[data-state="error"] { color: #a12626; }
+@keyframes mobile-refresh-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+    #mobile-refresh-status[data-state="loading"] > span:first-child { animation: none; }
+}
+/* Keep narrow icon controls as easy to hit as their neighbouring actions. */
+.floor-icon, .header-btn, .back-btn, .refresh-btn { min-width: 44px; min-height: 44px; }
+
+.mobile-sheet-handle { width:36px; height:4px; margin:12px auto 0; border-radius:4px; background:var(--line, #cbd5e1); }
+
+.mobile-detail-nav { display:flex; align-items:center; gap:4px; margin-inline-start:auto; }
+.mobile-detail-nav button { min-width:44px; min-height:44px; border:1px solid var(--line,#d6deeb); border-radius:10px; background:var(--surface,#fff); color:var(--ink,#162338); font-size:24px; }
+.mobile-detail-nav button:disabled { opacity:.35; }
+.mobile-detail-position { min-width:40px; text-align:center; font-size:12px; }
+.sliding-panel-header, #orderDetailsModal .modal-header { flex-wrap:wrap; gap:8px; }
+[dir="rtl"] .mobile-detail-nav [data-detail-step] { transform:scaleX(-1); }
+#mobile-refresh-status { z-index:1100; }

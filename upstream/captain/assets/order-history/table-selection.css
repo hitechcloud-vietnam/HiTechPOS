@@ -1,0 +1,131 @@
+/* Table Selection Screen Styles */
+
+.screen-content {
+    padding: 20px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.screen-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px 0;
+}
+
+.screen-header h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--secondary-color);
+    margin: 0 0 10px 0;
+}
+
+.screen-header p {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+}
+
+/* Table Grid */
+.table-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Table Card */
+.table-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    position: relative;
+    border: 2px solid transparent;
+}
+
+.table-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    border-color: #007bff;
+}
+
+.table-card:active {
+    transform: translateY(-2px);
+}
+
+/* Table Icon */
+.table-icon {
+    font-size: 48px;
+    color: #007bff;
+    margin-bottom: 12px;
+}
+
+/* Table Name */
+.table-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--secondary-color);
+    margin-bottom: 8px;
+}
+
+/* Order Count Badge */
+.order-count {
+    display: inline-block;
+    background: #e7f3ff;
+    color: #007bff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.order-count.has-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.order-count.no-orders {
+    background: #f0f0f0;
+    color: #999;
+}
+
+/* All Tables Card */
+.table-card.all-tables {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.table-card.all-tables .table-icon {
+    color: white;
+}
+
+.table-card.all-tables .table-name {
+    color: white;
+}
+
+.table-card.all-tables .order-count {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.table-card.all-tables:hover {
+    border-color: white;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+    .table-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .table-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}

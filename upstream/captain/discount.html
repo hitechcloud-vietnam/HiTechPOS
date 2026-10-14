@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="assets/common/appearance.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Place Order</title>
+    <link href="assets/bootstrap.min.css" rel="stylesheet">
+    <script src="assets/common/i18n.js"></script>
+    <script src="assets/common/languages.js"></script>
+    <script src="assets/jquery-3.6.0.min.js"></script>
+    <script src="assets/common/access.js"></script>
+    <script src="assets/common/money.js"></script>
+    <script src="assets/common/table-details.js"></script>
+    <link rel="stylesheet" href="assets/common/service-details.css">
+    <link rel="stylesheet" href="assets/common/confirm.css">
+<script src="assets/common/confirm.js"></script>
+<script src="assets/common/service-details.js"></script>
+    <script src="assets/common/order-actions.js"></script>
+    <script src="assets/common/phone-preferences.js"></script>
+    <link rel="stylesheet" href="assets/common/kitchen-notices.css">
+    <script src="assets/common/kitchen-notices.js" defer></script>
+    <script src="config.js"></script>
+    <script src="assets/common/popup.js"></script>
+    <script src="assets/common/order-queue.js"></script>
+    <script src="assets/common/item-localization.js"></script>
+    <script src="assets/common/item-language.js"></script>
+    <script src="indexedDB.js"></script>
+    <script src="assets/common/order-queue-ui.js"></script>
+    <!-- What a dish SOUNDS like, for matching a transcript. Before
+         item-search.js, which picks it up if the page has it. -->
+    <script src="assets/common/sounds-like.js"></script>
+    <script src="assets/common/item-search.js"></script>
+    <script src="assets/products/script.js"></script>
+    <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
+    <!-- The decisions every screen shares, made once. -->
+    <link href="assets/common/design.css" rel="stylesheet">
+    <link href="assets/table/style.css" rel="stylesheet">
+    <!-- After style.css, which it replaces for this screen. -->
+    <link href="assets/table/seat.css" rel="stylesheet">
+
+    <style>
+    /*
+     * Why there are no tables. A note, not an alarm: nothing is broken and the
+     * waiter can still work, so it reads as information rather than a failure.
+     */
+    .table-note {
+        max-width: 420px;
+        margin: 0 auto 14px;
+        padding: 12px 14px;
+        border: 1px solid var(--line, #e2e8f0);
+        border-left: 3px solid var(--accent, #4f46e5);
+        border-radius: 10px;
+        background: var(--surface-sunk, #f8fafc);
+        color: var(--ink-soft, #475569);
+        font-size: 13px;
+        line-height: 1.5;
+        text-align: left;
+    }
+    .table-note strong {
+        display: block;
+        margin-bottom: 2px;
+        color: var(--ink, #0f172a);
+        font-size: 14px;
+    }
+    </style>
+    <link rel="stylesheet" href="assets/common/i18n.css">
+    <link rel="stylesheet" href="assets/common/app-design.css">
+    <link rel="stylesheet" href="assets/table/entry.css">
+    <link rel="stylesheet" href="assets/common/appearance.css">
+</head>
+
+<body class="seat-screen">
+    <div class="discount-page">
+        <div class="seat-head">
+            <button type="button" class="route-signal" onclick="goBackToKot()" aria-label="Back">←</button>
+            <span class="seat-head-title">New order</span>
+        </div>
+
+        <div class="discount-container">
+
+            <div class="dine-toggle-wrapper">
+                <div class="dine-toggle">
+                    <input type="radio" name="order_type" id="order_type_dinein" value="Dine-in" checked>
+                    <label for="order_type_dinein" class="dine-option"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="16" height="9" rx="2"/><path d="M7 3h10M7 16v5m10-5v5"/></svg><span>Dine-in</span></label>
+
+                    <input type="radio" name="order_type" id="order_type_takeaway" value="Take away">
+                    <label for="order_type_takeaway" class="dine-option"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l1 12H4L5 8Z M8 9V6a4 4 0 0 1 8 0v3"/></svg><span>Take away</span></label>
+
+                    <span class="dine-toggle-indicator"></span>
+                </div>
+            </div>
+
+            <!-- Discount row -->
+            <div class="discount-row" style="display: none;">
+                <div class="form-group" style="flex: 1 1 100%;">
+                    <label for="discount_value" class="form-label">Discount</label>
+                    <div class="discount-input-wrapper">
+                        <input type="number" step="0.01" min="0" id="discount_value" class="form-control"
+                            placeholder="e.g. 10">
+                        <div class="discount-type-toggle">
+                            <label class="discount-type-option">
+                                <input type="radio" name="discount_type" value="percent" checked>
+                                <span>%</span>
+                            </label>
+                            <label class="discount-type-option">
+                                <input type="radio" name="discount_type" value="amount">
+                                <span>₹</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="display: none;">
+                <label for="discount_description" class="form-label">Discount Description</label>
+                <textarea id="discount_description" class="form-control" rows="2"
+                    placeholder="Reason for discount (optional)"></textarea>
+            </div>
+
+            <div class="table-section-center">
+                <div class="entry-section-heading"><div class="section-title"><i class="fas fa-chair" aria-hidden="true"></i> <span>Which table?</span></div><p class="entry-help">Choose the table shown in the restaurant</p></div>
+                <div id="seat-area-filter" class="seat-area-filter" hidden></div>
+                <div class="table-list">
+                    <!-- JS will fill here -->
+                </div>
+            </div>
+
+            <!-- Person Count -->
+            <!-- Person Count -->
+            <div class="person-count-section">
+                <div class="entry-section-heading"><div class="section-title"><i class="fas fa-user-friends" aria-hidden="true"></i> <span>How many guests?</span></div><p class="entry-help">People seated at this table</p></div>
+
+                <!--
+                    TWO TAPS, AND NO KEYBOARD.
+
+                    Pax was a row of icons for 1 to 6 and a text box for
+                    anything above, so a table of eight meant tapping the box,
+                    raising a numeric keyboard and typing - while standing at
+                    the table. Both old controls are still in the page and
+                    still driven by setPersonCount; the box is hidden by CSS
+                    rather than removed, because handlePersonInput and the
+                    restore-after-poll path both read it.
+                -->
+                <details class="entry-custom-guests"><summary>More guests</summary><div class="pax-stepper">
+                    <button type="button" id="pax_less" aria-label="One fewer">&minus;</button>
+                    <span class="pax-now">
+                        <span class="pax-number" id="pax_number">1</span>
+                        <span class="pax-word" id="pax_word">person</span>
+                    </span>
+                    <button type="button" id="pax_more" aria-label="One more">+</button>
+                </div>
+
+                </details><div class="person-hero" id="person_hero">
+                    <i class="fas fa-user-alt person-hero-icon"></i>
+                </div>
+
+                <!-- icons row 1..N -->
+                <div id="person_icon_container" class="person-icon-container">
+                    <!-- JS will create 1..6 icons here -->
+                </div>
+
+                <!-- Add person textbox -->
+                <input id="person_input" type="text" inputmode="numeric" maxlength="2" class="add-person-btn"
+                    placeholder="No. of persons" oninput="handlePersonInput(this)">
+
+                <!-- hidden real input → JS & backend க்கு -->
+                <input type="hidden" id="person_count" value="1">
+            </div>
+
+            <div class="btn-footer">
+                <button type="button" class="btn btn-next" onclick="goToProductsWithTableCheck()">
+                    Next →
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Error Popup -->
+    <div id="error-popup-overlay" style="display:none;">
+        <div id="error-popup">
+            <div id="error-popup-title">Error</div>
+            <div id="error-popup-message">Something went wrong.</div>
+            <button type="button" id="error-popup-close" onclick="closeErrorPopup()">OK</button>
+        </div>
+    </div>
+    <script>
+        let startingOrder = false;
+        async function goToProductsWithTableCheck() {
+            if (startingOrder) return;
+            startingOrder = true;
+            try {
+            // Get the selected order type
+            const orderType = document.querySelector('input[name="order_type"]:checked')?.value || 'Dine-in';
+
+            const discountValue = parseFloat(document.getElementById('discount_value').value) || 0;
+            const discountType = document.querySelector('input[name="discount_type"]:checked')?.value || 'percent';
+
+            let percentage = 0;
+            let amount = 0;
+            if (discountType === 'percent') {
+                percentage = discountValue;
+            } else {
+                amount = discountValue;
+            }
+
+            const description = document.getElementById('discount_description').value.trim();
+            
+            // Check if tables exist (radio buttons present)
+            const tableRadio = document.querySelector('input[name="table_no"]:checked');
+            const tableInputs = document.querySelectorAll('input[name="table_no"]');
+            const hasTables = tableInputs.length > 0;
+            
+            let tableNo = '';
+            let tableId = '';
+            
+            if (hasTables) {
+                // OLD LOGIC: Tables exist, use radio button selection
+                tableNo = tableRadio ? tableRadio.value : '';
+                tableId = tableRadio ? (tableRadio.dataset.id || '') : '';
+            } else {
+                // NEW LOGIC: No tables, use direct input
+                const manualTableInput = document.getElementById('manual_table_input');
+                tableNo = manualTableInput ? manualTableInput.value.trim().toUpperCase() : '';
+                tableId = '';
+            }
+
+            // ✅ Table is mandatory for Dine-in
+            if (orderType === 'Dine-in' && !tableNo) {
+                showErrorPopup(hasTables ? "Please select a table." : "Please enter a table number.");
+                return;
+            }
+
+            if (orderType === 'Dine-in' && tableRadio?.disabled) {
+                showErrorPopup('Please select a table.');
+                return;
+            }
+
+            // ✅ Validation: discount should not exceed original total
+            const originalTotal = window.discountOriginalTotal || 0;
+            if (originalTotal <= 0 && (percentage > 0 || amount > 0)) {
+                showErrorPopup("Bill amount is zero. Cannot apply discount.");
+                return;
+            }
+
+            let discountAmount = 0;
+            if (discountType === 'percent') {
+                discountAmount = originalTotal * (discountValue / 100);
+            } else {
+                discountAmount = discountValue;
+            }
+
+            if (discountAmount > originalTotal) {
+                showErrorPopup("Discount cannot be more than bill amount.");
+                return;
+            }
+
+            const personCount = parseInt(document.getElementById('person_count').value || '0', 10) || 0;
+            const chosenTable = CaptainTables.cached(tableNo);
+            if (orderType === 'Dine-in' && chosenTable && !CaptainTables.fits(chosenTable,personCount)) {
+                showErrorPopup('Choose a table with enough seats.');
+                return;
+            }
+
+
+            if (!await resolvePreviousDraft()) return;
+
+            // ✅ store in localStorage for checkout() to use later
+            localStorage.setItem('orderType', orderType);
+            localStorage.setItem('kiosk_discount_percentage', percentage);
+            localStorage.setItem('kiosk_discount_amount', amount);
+            localStorage.setItem('kiosk_discount_description', description);
+
+            // Only store table/pax if Dine-in OR if they were selected
+            if (orderType === 'Dine-in') {
+                localStorage.setItem('kiosk_table_no', tableNo);
+                localStorage.setItem('kiosk_table_id', tableId);
+            } else {
+                localStorage.setItem('kiosk_table_no', '');
+                localStorage.setItem('kiosk_table_id', '');
+            }
+
+            if (orderType === 'Dine-in') {
+                localStorage.setItem('kiosk_person_count', personCount);
+            } else {
+                localStorage.setItem('kiosk_person_count', '0');
+            }
+
+            if (orderType === 'Take away') {
+                try { await reserveTakeawayNumber(); }
+                catch (error) { showErrorPopup(error.message || 'Could not assign a takeaway number. Please retry.'); return; }
+            }
+            // finally go to products
+            window.location.href = 'products.html';
+            } catch (error) {
+                showErrorPopup(error.message || 'Could not load the menu');
+            } finally {
+                startingOrder = false;
+            }
+        }
+        /* Delegated once, after the page is up: these two buttons exist for the
+           whole life of the screen, and setPersonCount already clamps 1..99. */
+        document.addEventListener('click', function (event) {
+            const target = event.target.closest && event.target.closest('#pax_less, #pax_more');
+            if (!target) return;
+            const now = parseInt(document.getElementById('person_count').value || '1', 10) || 1;
+            setPersonCount(target.id === 'pax_more' ? now + 1 : now - 1);
+        });
+
+        function handlePersonInput(inputEl) {
+            if (!inputEl) return;
+
+            // allow only digits
+            let v = inputEl.value.replace(/\D/g, '');
+
+            // max 2 digits
+            if (v.length > 2) v = v.slice(0, 2);
+
+            let n = parseInt(v || '0', 10);
+
+            // clamp 1..99
+            if (isNaN(n) || n < 1) n = 1;
+            if (n > 99) n = 99;
+
+            inputEl.value = n.toString();
+            setPersonCount(n);
+        }
+        let pollingInterval = null;
+        let previousOccupiedTablesKey = '';
+        let previousTableordersKey = '';
+
+        /*
+         * The list is rebuilt every few seconds by the poll, and a rebuild
+         * used to throw away whatever the waiter had typed into "Other".
+         *
+         * Owner: "when focus out from table number input box keep saying
+         * enter table number its cleared." Not focus-out at all - the poll
+         * landed, container.innerHTML was replaced, and the typed value went
+         * with it. Then Next read an empty box and nagged. So what a person
+         * has typed or picked is captured before any rebuild and put back
+         * after, and a rebuild that would change nothing is skipped.
+         */
+        function rememberTableChoice() {
+            const typed = document.getElementById('manual_table_input');
+            const picked = document.querySelector('input[name="table_no"]:checked');
+            return {
+                typed: typed ? typed.value : '',
+                picked: picked ? picked.value : null,
+                manual: !!(picked && picked.id === 'table_manual_radio'),
+            };
+        }
+
+        function restoreTableChoice(choice) {
+            if (!choice) return;
+            const typed = document.getElementById('manual_table_input');
+            if (typed && choice.typed) {
+                typed.value = choice.typed;
+                const manualRadio = document.getElementById('table_manual_radio');
+                if (manualRadio && (choice.manual || !choice.picked)) {
+                    manualRadio.value = choice.typed;
+                    manualRadio.checked = true;
+                }
+            }
+            if (choice.picked && !choice.manual) {
+                const radio = document.querySelector(`input[name="table_no"][value="${choice.picked}"]`);
+                if (radio && !radio.disabled) radio.checked = true;
+            }
+        }
+
+        let previousTableMode = '';
+        let tableLoadGeneration = 0;
+        let tableMenuLoad = null;
+
+        async function recoverTableMenu(container) {
+            if (tableMenuLoad) return tableMenuLoad;
+            container.textContent = window.I18N?.t('Loading tables...') || 'Loading tables...';
+            tableMenuLoad = (async () => {
+                try {
+                    const branch = localStorage.getItem('kiosk_selected_branch');
+                    if (!branch) return;
+                    await fetchAndStoreBranch(branch, false, false, true);
+                    if (localStorage.getItem('kiosk_tableorders')) {
+                        await loadTablesFromTableorders(true);
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Could not load the menu:', error);
+                }
+                const message = document.createElement('p');
+                message.setAttribute('role', 'status');
+                message.textContent = window.I18N?.t('Could not load the menu') || 'Could not load the menu';
+                const retry = document.createElement('button');
+                retry.type = 'button';
+                retry.classList.add('btn', 'btn-primary');
+                retry.textContent = window.I18N?.t('Retry') || 'Retry';
+                retry.onclick = () => recoverTableMenu(container);
+                container.replaceChildren(message, retry);
+            })().finally(() => { tableMenuLoad = null; });
+            return tableMenuLoad;
+        }
+
+        async function loadTablesFromTableorders(isPollingUpdate = false) {
+            const generation = ++tableLoadGeneration;
+            const container = document.querySelector('.table-list');
+            if (!container) return;
+            let choice = rememberTableChoice();
+
+            // wrapper <div> that contains BOTH: .section-title + .table-list
+            const sectionWrapper = container.closest('.discount-container > div') || container.parentElement;
+
+            const raw = localStorage.getItem('kiosk_tableorders');
+            if (!raw && !isPollingUpdate) {
+                // Download missing data once; waiting for another screen to do
+                // it restarted the five-second timer forever after failed login.
+                return recoverTableMenu(container);
+            }
+            if (!raw) {
+                // Polling update with no data — skip rendering
+                return;
+            }
+
+            let tableorders;
+            try {
+                tableorders = JSON.parse(raw) || [];
+            } catch (e) {
+                console.error('Failed to parse kiosk_tableorders:', e);
+                if (sectionWrapper) sectionWrapper.style.display = 'none';
+                return;
+            }
+
+            // 🔒 EMPTY → show input box only
+            if (!Array.isArray(tableorders) || tableorders.length === 0) {
+                if (sectionWrapper) sectionWrapper.style.display = '';
+                /* Already showing the box: leave it, and what is typed in it. */
+                if (isPollingUpdate && previousTableMode === 'manual') return;
+                previousTableMode = 'manual';
+
+                /*
+                 * WHY THERE ARE NO TABLES, which is two different answers.
+                 *
+                 * This screen drew the same bare "Enter Table Number" box
+                 * whether the shop had not finished setting its tables up or
+                 * did not do table service at all - so a waiter at a
+                 * restaurant mid-setup and somebody signing in at a grocer got
+                 * the same blank box, and neither was told which they were
+                 * looking at.
+                 *
+                 * The server now sends the branch's own Restaurant switch. The
+                 * box stays either way, because typing a table number by hand
+                 * has to keep working while somebody goes and fixes the
+                 * setting - a message that BLOCKS the order helps nobody
+                 * standing at a table.
+                 */
+                const tableService = localStorage.getItem('kiosk_table_service');
+                const notice = tableService === 'no'
+                    ? `<div class="table-note" role="status">
+                           <strong>Restaurant is turned off for this shop.</strong>
+                           Turn on Restaurant in Posnic (Manage &rsaquo; Features &rsaquo; Restaurant)
+                           to lay out your tables. You can still type a table number below.
+                       </div>`
+                    : `<div class="table-note" role="status">
+                           <strong>No tables set up yet.</strong>
+                           Add them in Posnic under Manage &rsaquo; Restaurant.
+                           You can still type a table number below.
+                       </div>`;
+
+                let html = notice + `
+                    <div class="table-input-wrapper" style="display: flex; justify-content: center; margin-top: 10px;">
+                        <input type="text"
+                            id="manual_table_input"
+                            class="form-control"
+                            placeholder="Enter Table Number"
+                            autocomplete="off"
+                            maxlength="6"
+                            style="max-width: 300px; text-align: center; font-size: 16px; padding: 12px; border: 2px solid #ff7a3c; border-radius: 8px;">
+                    </div>
+                `;
+                
+                container.innerHTML = html;
+            CaptainTables.updateChoices(document.getElementById('person_count').value);
+            CaptainTables.areaFilter();
+                
+                // Setup input validation
+                const manualInput = document.getElementById('manual_table_input');
+                if (manualInput) {
+                    manualInput.addEventListener('input', function () {
+                        let v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+                        this.value = v;
+                    });
+                }
+                restoreTableChoice(choice);
+                return;
+            }
+
+            /*
+             * WHICH TABLES ARE FULL - which is not the same as which are busy.
+             *
+             * This greyed out every table that had an order on it, which was
+             * right only because the shop rule happened to be one order per
+             * table. That rule is now a setting: one (the default), no limit,
+             * or at most N.
+             *
+             * So the question changes from "does this table have an order?" to
+             * "has this table reached its limit?", and the answer needs the
+             * count, not just the name. getTablesWithActiveOrders carries a
+             * per-table count and the limit beside it, so one request answers
+             * both.
+             *
+             * A server too old to send the limit leaves it undefined and the
+             * fallback below is 1 - exactly what this screen did before. The
+             * server refuses an over-limit order either way; this is only so a
+             * waiter finds out before walking to the table and typing.
+             *
+             * Ported from Table_Order, where it was written first.
+             */
+            // Menu metadata is cached; table service state can change at the till
+            // without a menu refresh. Read it before offering a table to staff.
+            try {
+                const live = await POSNIC.api.get('/captain/v1/tables');
+                if (Array.isArray(live?.tables)) {
+                    const liveTables = CaptainTables.liveRows(live);
+                    tableorders = tableorders.map(table => {
+                        const current = liveTables.find(row => String(row.tableorder_value) === String(table.tableorder_value));
+                        if (!current) return {...table, service_state: CaptainTables.serviceState(table.service_state, live.cleaningEnabled)};
+                        return {...table, service_state: current.closing ? 'held' :
+                            (current.status === 'occupied' ? 'available' : current.status || table.service_state)};
+                    });
+                }
+            } catch (error) {
+                // Older servers still enforce availability when accepting orders.
+                console.warn('Could not refresh table service state:', error.message);
+            }
+            if (generation !== tableLoadGeneration) return;
+
+            let occupiedTables = [];
+            let openPerTable = {};
+            let tableOrderLimit = 1;
+            try {
+                const branchId = localStorage.getItem('branch_id') || null;
+                const data = await POSNIC.api.post('/sales/getTablesWithActiveOrders', {
+                    branch_id: branchId
+                });
+                if (data.type === 'success' && data.data && data.data.tables) {
+                    occupiedTables = data.data.tables;
+                    (data.data.table_details || []).forEach(function (row) {
+                        openPerTable[String(row.table_number)] = Number(row.orders) || 0;
+                    });
+                    /* Number.isFinite, not `||`. Zero is a real answer here -
+                       it means no limit - and `||` would turn a shop that
+                       deliberately allows any number back into a one-order
+                       shop. */
+                    var served = data.data.table_order_limit;
+                    tableOrderLimit = Number.isFinite(Number(served)) ? Number(served) : 1;
+                }
+            } catch (error) {
+                console.error('Failed to fetch active orders:', error);
+            }
+            if (generation !== tableLoadGeneration) return;
+            // A delayed occupancy lookup must not overwrite newer typing or
+            // dismiss the keyboard. The next poll refreshes after editing ends.
+            if (document.activeElement?.id === 'manual_table_input') return;
+            choice = rememberTableChoice();
+
+            /* How many orders this table already has. Falls back to the name
+               list for a server that sends no per-table detail: one order is
+               the safe reading, because it is what greys the table out under
+               the default rule. */
+            const openOn = (value) =>
+                Object.prototype.hasOwnProperty.call(openPerTable, value)
+                    ? openPerTable[value]
+                    : (occupiedTables.includes(value) ? 1 : 0);
+
+            /* 0 means no limit, so nothing is ever full. */
+            const isFull = (value) => tableOrderLimit > 0 && openOn(value) >= tableOrderLimit;
+
+            // ✅ OPTIMIZATION: Only update DOM if occupied tables OR configured tables changed
+            /*
+             * The COUNTS, not just the names. This screen redraws only when
+             * this key changes, and under "at most N" a table going from one
+             * order to two changes no name at all - so the badge would freeze
+             * at whatever it said when the screen opened, and a table reaching
+             * its limit would stay tappable right up to the refusal.
+             */
+            const newOccupiedKey = JSON.stringify(
+                [...occupiedTables].sort().map((name) => name + ':' + openOn(name))
+            ) + '|' + tableOrderLimit;
+            const newTableordersKey = JSON.stringify(tableorders.map(t => [t.id || t.tableorder_id || t.tableorder_value,t.capacity,t.max_capacity,t.area,t.shape,t.service_state]));
+            if (isPollingUpdate && previousTableMode === 'list') {
+                if (newOccupiedKey === previousOccupiedTablesKey && newTableordersKey === previousTableordersKey) {
+                    return; // No changes, skip DOM update
+                }
+            }
+            previousTableMode = 'list';
+
+            // Store current state for next comparison
+            previousOccupiedTablesKey = newOccupiedKey;
+            previousTableordersKey = newTableordersKey;
+
+            // Save currently selected table before re-rendering
+            const currentSelection = document.querySelector('input[name="table_no"]:checked');
+            const selectedValue = currentSelection ? currentSelection.value : null;
+
+            // ✅ We have tables → show OLD LOGIC with table buttons + OTHER option
+            if (sectionWrapper) sectionWrapper.style.display = '';
+
+            let html = '';
+            const tableNumberOrder = new Intl.Collator(undefined, {numeric:true, sensitivity:'base'});
+            tableorders = [...tableorders].sort((a,b) => tableNumberOrder.compare(String(a.tableorder_value ?? ''), String(b.tableorder_value ?? '')));
+            tableorders.forEach((t, index) => {
+                const value = (t.tableorder_value ?? (index + 1)).toString();
+                const id = `table_${value}`;
+                const isOccupied = isFull(value) || ['held','cleaning'].includes(t.service_state);
+                const openHere = openOn(value);
+                const displayState = ['held','cleaning'].includes(t.service_state) ? t.service_state : (openHere > 0 || isFull(value) ? 'occupied' : 'available');
+                const stateLabel = {available:'Available',occupied:'Occupied',held:'Held',cleaning:'Cleaning'}[displayState];
+                const statePaths = {occupied:'<circle cx="8" cy="7" r="3"/><path d="M2 20v-2a6 6 0 0 1 12 0v2M16 4a3 3 0 0 1 0 6m2 3a5 5 0 0 1 4 5v2"/>',held:'<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>',cleaning:'<path d="m15 3 6 6-9 9-6-6Z M6 12l-4 8 8-2M4 16l4 4"/>'};
+                const stateBadge = statePaths[displayState] ? `<svg class="entry-state-badge" data-table-state="${displayState}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${statePaths[displayState]}</svg>` : '';
+                /* Under "at most N" a table can be busy and still take another
+                   order, and a waiter has no way to know how close it is. The
+                   count is already here, so it is shown. Not under the default
+                   rule, where a table is either free or full and a "1" beside
+                   every occupied table would be noise on a screen read at
+                   speed. */
+                const countBadge = (tableOrderLimit !== 1 && openHere > 0)
+                    ? `<span class="table-open-count">${openHere}</span>`
+                    : '';
+
+                html += `
+                    <div class="table-item ${isOccupied ? 'table-occupied' : ''}" data-dining-area="${CaptainTables.esc(t.area || '')}">
+                        <input type="radio" class="table-radio"
+                            id="${id}"
+                            name="table_no"
+                            value="${value}"
+                            data-id="${CaptainTables.esc(t.id || t.tableorder_id || '')}"
+                            data-capacity="${CaptainTables.metadata(t).max}" data-occupied="${isOccupied}" data-service-state="${CaptainTables.esc(t.service_state || '')}"
+                            ${isOccupied ? 'disabled' : ''}>
+                        <label for="${id}" class="table-label ${isOccupied ? 'disabled' : ''}"
+                            title="${CaptainTables.esc(window.I18N?.t(t.service_state === 'cleaning' ? 'Cleaning' : t.service_state === 'held' ? 'Held' : isOccupied ? 'This table is full' : '') || '')}"><svg class="entry-table-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="4" y="7" width="16" height="9" rx="2"/><path d="M7 3h10M7 16v5m10-5v5"/></svg>${stateBadge}<span class="entry-table-name"><span class="entry-table-prefix">Table </span><span translate="no">${CaptainTables.esc(value)}</span></span>${countBadge}<span class="entry-availability">${CaptainTables.esc(window.I18N?.t(stateLabel) || stateLabel)}</span><small class="table-seat-info">${CaptainTables.esc(CaptainTables.description(t))}</small></label>
+                    </div>
+                `;
+            });
+
+            // 👉 EXTRA: Manual table input – always at last
+            html += `
+                <div class="table-item manual-table">
+                    <input type="radio" class="table-radio"
+                        id="table_manual_radio"
+                        name="table_no"
+                        value=""
+                        data-id="">
+                    <label for="table_manual_radio" class="table-label manual-label"><span class="entry-custom-label">Custom table</span>
+                        <input type="text"
+                            id="manual_table_input"
+                            class="manual-table-input"
+                            placeholder="e.g. 6A" aria-label="Custom table"
+                            autocomplete="off"
+                            maxlength="6">
+                    </label>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            CaptainTables.updateChoices(document.getElementById('person_count').value);
+            CaptainTables.areaFilter();
+            
+            // ✅ Restore previous selection if still valid
+            if (selectedValue) {
+                const restoredRadio = document.querySelector(`input[name="table_no"][value="${selectedValue}"]`);
+                if (restoredRadio && !restoredRadio.disabled) {
+                    restoredRadio.checked = true;
+                }
+            }
+            /* And what was typed into Other, which the block above never
+               covered: its radio's value was "" until somebody typed, so a
+               rebuild between keystrokes lost the keystrokes. */
+            restoreTableChoice(choice);
+            
+            // 👉 Setup manual input behaviour
+            const manualInput = document.getElementById('manual_table_input');
+            const manualRadio = document.getElementById('table_manual_radio');
+
+            if (manualInput && manualRadio) {
+                manualInput.addEventListener('input', function () {
+                    // Only A–Z and 0–9, max 6 chars
+                    let v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+                    this.value = v;
+
+                    if (v.length > 0) {
+                        manualRadio.value = v;
+                        manualRadio.dataset.id = '';
+                        manualRadio.checked = true;
+                    } else {
+                        manualRadio.value = '';
+                        manualRadio.checked = false;
+                    }
+                });
+
+                manualInput.addEventListener('focus', function () {
+                    manualRadio.checked = true;
+                });
+            }
+        }
+
+        // ✅ Start polling for backend changes
+        function startTableStatusPolling() {
+            // Clear any existing interval
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+            }
+
+            // Poll every 5 seconds (optimized to not slow down app)
+            pollingInterval = setInterval(async () => {
+                try {
+                    await loadTablesFromTableorders(true);
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            }, 5000);
+        }
+
+        // ✅ Stop polling when page is hidden/unloaded
+        function stopTableStatusPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+        }
+
+        // ✅ Handle page visibility changes to optimize performance
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                stopTableStatusPolling();
+            } else {
+                startTableStatusPolling();
+            }
+        });
+
+        // ✅ Cleanup on page unload
+        window.addEventListener('beforeunload', stopTableStatusPolling);
+
+        // load cart summary for footer
+        (async function loadDiscountCartSummary() {
+            try {
+                const cartItems = await getData("cart");
+                let qty = 0;
+                let total = 0;
+
+                for (const item of cartItems) {
+                    const q = item.qty || item.quantity || 0;
+                    const price = item.price || item.selling_price || 0;
+                    qty += q;
+                    total += q * price;
+                }
+
+                // document.getElementById("discount-cart-qty").textContent = qty;
+                // document.getElementById("discount-cart-total").textContent = total.toFixed(2);
+
+                // ORIGINAL total store pannunga
+                window.discountOriginalTotal = total;
+                updateDiscountedTotal();   // <- only here
+            } catch (e) {
+                console.error("Failed to load cart summary on discount page:", e);
+            }
+        })();
+        // discount input / type change panna odane total update
+        document.addEventListener('DOMContentLoaded', function () {
+            const discountInput = document.getElementById('discount_value');
+            const discountTypeRadios = document.querySelectorAll('input[name="discount_type"]');
+
+            if (discountInput) {
+                discountInput.addEventListener('input', updateDiscountedTotal);
+            }
+
+            discountTypeRadios.forEach(radio => {
+                radio.addEventListener('change', updateDiscountedTotal);
+            });
+            
+            // Load tables initially
+            loadTablesFromTableorders();
+            
+            // ✅ Start real-time polling for backend changes
+            startTableStatusPolling();
+        });
+        // Block direct access to this page if not logged in / branch not selected
+        (function () {
+            const activeBranch = localStorage.getItem('kiosk_selected_branch');
+            if (!activeBranch) {
+                window.location.href = 'index.html';
+            }
+        })();
+        function updateDiscountedTotal() {
+            const originalTotal = window.discountOriginalTotal || 0;
+
+            const discountValue = parseFloat(document.getElementById('discount_value').value) || 0;
+            const discountType = document.querySelector('input[name="discount_type"]:checked')?.value || 'percent';
+
+            let discountedTotal = originalTotal;
+
+            if (discountType === 'percent') {
+                // example: 4 total, 1% discount => 4 - (4 * 1 / 100) = 3.96
+                const discountAmount = originalTotal * (discountValue / 100);
+                discountedTotal = originalTotal - discountAmount;
+            } else {
+                // amount: example 4 - 1 = 3
+                discountedTotal = originalTotal - discountValue;
+            }
+
+            if (discountedTotal < 0) discountedTotal = 0;
+
+            // const totalEl = document.getElementById("discount-cart-total");
+            // if (totalEl) {
+            //     totalEl.textContent = discountedTotal.toFixed(2);
+            // }
+        }
+        async function placeOrder() {
+            const discountValue = parseFloat(document.getElementById('discount_value').value) || 0;
+            const discountType = document.querySelector('input[name="discount_type"]:checked')?.value || 'percent';
+
+            let percentage = 0;
+            let amount = 0;
+            if (discountType === 'percent') {
+                percentage = discountValue;
+            } else {
+                amount = discountValue;
+            }
+            const description = document.getElementById('discount_description').value.trim();
+            const tableRadio = document.querySelector('input[name="table_no"]:checked');
+            const tableInputs = document.querySelectorAll('input[name="table_no"]');
+            const hasTables = tableInputs.length > 0;
+            const tableNo = tableRadio ? tableRadio.value : '';
+            const tableId = tableRadio ? (tableRadio.dataset.id || '') : '';
+
+            // ✅ Only mandatory when tables are configured
+            if (hasTables && !tableNo) {
+                showErrorPopup("Please select a table.");
+                return;
+            }
+
+            // ✅ Validation: discount should not exceed original total
+            const originalTotal = window.discountOriginalTotal || 0;
+
+            if (originalTotal <= 0) {
+                showErrorPopup("Bill amount is zero. Cannot apply discount.");
+                return;
+            }
+
+            let discountAmount = 0;
+            if (discountType === 'percent') {
+                discountAmount = originalTotal * (discountValue / 100);
+            } else {
+                discountAmount = discountValue;
+            }
+
+            if (discountAmount > originalTotal) {
+                showErrorPopup("Discount cannot be more than bill amount.");
+                return; // ❌ stop placing order
+            }
+            const personCount = parseInt(document.getElementById('person_count').value || '0', 10) || 0;
+
+            // store in localStorage for checkout() to use
+            localStorage.setItem('kiosk_discount_percentage', percentage);
+            localStorage.setItem('kiosk_discount_amount', amount);
+            localStorage.setItem('kiosk_discount_description', description);
+            localStorage.setItem('kiosk_table_no', tableNo);
+            localStorage.setItem('kiosk_table_id', tableId);
+            localStorage.setItem('kiosk_person_count', personCount);
+
+            try {
+                // use existing checkout logic from indexedDB.js
+                const transactionId = generateUniqueToken(); // or any logic you use
+                await checkout(transactionId);
+            } catch (e) {
+                console.error("Error during checkout:", e);
+                showErrorPopup("Failed to place order. Please try again.");
+            }
+        }
+        // Call this once on page load
+        function initDineTypeToggle() {
+            // Always default to Dine-in (no localStorage persistence)
+            const dineinRadio = document.getElementById('order_type_dinein');
+            const takeawayRadio = document.getElementById('order_type_takeaway');
+
+            // Always set Dine-in as default
+            if (dineinRadio) dineinRadio.checked = true;
+            if (takeawayRadio) takeawayRadio.checked = false;
+
+            // When user changes Dine type, handle selection
+            document.querySelectorAll('input[name="order_type"]').forEach(r => {
+                r.addEventListener('change', function () {
+                    handleOrderTypeChange(); // Call the handler
+                });
+            });
+
+            // Initial call to set defaults based on current mode
+            handleOrderTypeChange();
+        }
+
+        // Choosing a mode stays on this page until the explicit Next action.
+        function handleOrderTypeChange() {
+            const dineIn=document.getElementById('order_type_dinein').checked;
+            document.querySelector('.table-section-center').hidden=!dineIn;
+            document.querySelector('.person-count-section').hidden=!dineIn;
+            if(dineIn && !(Number(document.getElementById('person_count').value)>0))setPersonCount(1);
+        }
+
+        // Call after DOM loaded
+        document.addEventListener('DOMContentLoaded', initDineTypeToggle);
+
+        // TODO: change the above paths to your actual image paths
+
+        function setPersonCount(val) {
+            if (isNaN(val)) val = 0;
+            if (val < 1) val = 1;       // min 1
+            if (val > 99) val = 99;     // max 99
+
+            const hidden = document.getElementById('person_count');
+            if (hidden) hidden.value = val.toString();
+
+            const input = document.getElementById('person_input');
+            if (input) {
+                // keep textbox in sync when changed by buttons
+                if (document.activeElement !== input) {
+                    input.value = val.toString();
+                }
+
+                // >6 → active style, ≤6 → normal
+                if (val > 6) {
+                    input.classList.add('active');
+                } else {
+                    input.classList.remove('active');
+                }
+            }
+
+            /* The stepper reads from the same call every other control does,
+               so nothing can disagree about how many people are at the table. */
+            const shown = document.getElementById('pax_number');
+            if (shown) shown.textContent = val.toString();
+            const word = document.getElementById('pax_word');
+            if (word) word.textContent = val === 1 ? 'person' : 'people';
+            const less = document.getElementById('pax_less');
+            if (less) less.disabled = val <= 1;
+            const more = document.getElementById('pax_more');
+            if (more) more.disabled = val >= 99;
+            window.CaptainTables?.updateChoices(val);
+
+            // highlight small buttons (1..6 only)
+            const container = document.getElementById('person_icon_container');
+            if (container) {
+                container.querySelectorAll('.person-icon-btn').forEach(btn => {
+                    const num = parseInt(btn.getAttribute('data-person') || '0', 10);
+                    btn.classList.toggle('active', num === val);
+                });
+            }
+
+            // hero icons - max 5 icons, then show "5 + X" format
+            const hero = document.getElementById('person_hero');
+            if (hero) {
+                hero.innerHTML = '';
+                const count = Math.max(1, val);
+
+                if (count <= 5) {
+                    // Show 1-5 icons normally
+                    let sizePx;
+                    if (count <= 3) sizePx = 52;
+                    else sizePx = 38;
+
+                    for (let i = 0; i < count; i++) {
+                        const icon = document.createElement('i');
+                        icon.className = 'fas fa-user-alt person-hero-icon';
+                        icon.style.fontSize = sizePx + 'px';
+                        hero.appendChild(icon);
+                    }
+                } else {
+                    // Show 5 icons + text for counts > 5
+                    const sizePx = 32;
+                    
+                    for (let i = 0; i < 5; i++) {
+                        const icon = document.createElement('i');
+                        icon.className = 'fas fa-user-alt person-hero-icon';
+                        icon.style.fontSize = sizePx + 'px';
+                        hero.appendChild(icon);
+                    }
+                    
+                    // Add "+ X" text
+                    const extraCount = count - 5;
+                    const plusText = document.createElement('span');
+                    plusText.className = 'person-hero-plus-text';
+                    plusText.textContent = `+ ${extraCount}`;
+                    plusText.style.fontSize = '24px';
+                    plusText.style.fontWeight = '700';
+                    plusText.style.color = '#5c2d1f';
+                    plusText.style.marginLeft = '8px';
+                    hero.appendChild(plusText);
+                }
+            }
+        }
+
+        function restoreTableAndPaxFromStorage() {
+            try {
+                // Check current order type
+                const orderType = document.querySelector('input[name="order_type"]:checked')?.value || 'Dine-in';
+
+                const savedTableNo = localStorage.getItem('kiosk_table_no') || '';
+                const savedTableId = localStorage.getItem('kiosk_table_id') || '';
+                const savedPersonCount = parseInt(localStorage.getItem('kiosk_person_count') || '0', 10) || 0;
+
+                // Only restore table and pax if in Dine-in mode
+                if (orderType === 'Dine-in') {
+                    // restore table selection
+                    if (savedTableNo) {
+                        const selector = savedTableId
+                            ? `input[name="table_no"][data-id="${savedTableId}"]`
+                            : `input[name="table_no"][value="${savedTableNo}"]`;
+
+                        const radio = document.querySelector(selector);
+                        if (radio) {
+                            radio.checked = true;
+                        }
+                    }
+
+                    // restore pax (person_count)
+                    if (savedPersonCount > 0) {
+                        const hidden = document.getElementById('person_count');
+                        if (hidden) hidden.value = savedPersonCount.toString();
+
+                        if (typeof setPersonCount === 'function') {
+                            setPersonCount(savedPersonCount);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to restore table/pax from storage', e);
+            }
+        }
+
+        function createPersonButton(number) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'person-icon-btn';
+            btn.setAttribute('data-person', number.toString());
+
+            // For 1..6 use image, for others just text
+            btn.classList.add('has-number');
+            btn.innerHTML = '<i class="entry-guest-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></i><span translate="no">' + number + '</span> <span>' + (number === 1 ? 'guest' : 'guests') + '</span>';
+
+            btn.onclick = function () {
+                setPersonCount(number);
+            };
+
+            return btn;
+        }
+
+        function renderPersonIcons(initialMax) {
+            const container = document.getElementById('person_icon_container');
+            if (!container) return;
+
+            container.innerHTML = '';
+            const max = initialMax || 6;
+
+            for (let i = 1; i <= max; i++) {
+                const btn = createPersonButton(i);
+                container.appendChild(btn);
+            }
+        }
+
+        function addPersonIcon() {
+            const container = document.getElementById('person_icon_container');
+            if (!container) return;
+
+            // find current max number
+            let max = 0;
+            container.querySelectorAll('.person-icon-btn').forEach(btn => {
+                const num = parseInt(btn.getAttribute('data-person') || '0', 10);
+                if (!isNaN(num) && num > max) max = num;
+            });
+
+            const next = max + 1;
+
+            const btn = createPersonButton(next);
+            container.appendChild(btn);
+
+            // select the newly added person
+            setPersonCount(next);
+        }
+
+        // initial on DOM load – keep initDineTypeToggle call as you already have
+        document.addEventListener('DOMContentLoaded', function () {
+            initDineTypeToggle();
+
+            const hidden = document.getElementById('person_count');
+            const orderType = document.querySelector('input[name="order_type"]:checked')?.value || 'Dine-in';
+            const initial = (orderType === 'Dine-in') ? (hidden ? parseInt(hidden.value || '1', 10) : 1) : 0;
+
+            renderPersonIcons(6);
+            if (initial > 0) {
+                setPersonCount(initial);
+            }
+
+            const input = document.getElementById('person_input');
+            if (input) {
+                input.addEventListener('focus', function () {
+                    setTimeout(() => this.select(), 0);
+                });
+                input.addEventListener('click', function () {
+                    this.select();
+                });
+            }
+            restoreTableAndPaxFromStorage();
+        });
+
+        async function changeBranch() {
+            try {
+                // Flag: next time index.html opens, go to branch select
+                localStorage.setItem('kiosk_force_branch_select', '1');
+                window.location.href = 'index.html';
+            } catch (e) {
+                console.error('Failed to change branch', e);
+            }
+        }
+
+        function goBackToKot() {
+            window.location.href = 'kot-management.html';
+        }
+        window.addEventListener('captain:back', event => {event.preventDefault();goBackToKot();});
+    </script>
+<script src="assets/table/entry.js"></script>
+</body>
+
+</html>

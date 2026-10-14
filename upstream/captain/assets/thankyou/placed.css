@@ -1,0 +1,179 @@
+/*
+ * The moment after the order goes in.
+ *
+ * The last screen of the journey, and the last one still wearing a different
+ * design: a Bootstrap card with a shadow, a 2.5rem green heading, a hard-coded
+ * orange button and an emoji plate. It said "Order Placed!" and "We're
+ * preparing your delicious food" - which is written at a CUSTOMER, and the
+ * person holding this phone is the waiter who just sent it.
+ *
+ * So it says what happened, to the person it happened for, and gets out of the
+ * way. The only animation in it is the tick, because that is the one beat in
+ * this app worth marking: food has been committed to a kitchen.
+ */
+
+body.placed-screen {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font);
+}
+
+.placed {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--s5) var(--s4);
+  padding-bottom: calc(var(--s5) + env(safe-area-inset-bottom, 0px));
+}
+
+.placed-inner {
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------- the tick */
+
+.placed-tick {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto var(--s5);
+}
+.placed-tick svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tick-ring {
+  stroke: var(--good);
+  stroke-width: 2;
+  stroke-dasharray: 151;
+  stroke-dashoffset: 151;
+  animation: tick-ring 520ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+.tick-mark {
+  stroke: var(--good);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: tick-mark 320ms cubic-bezier(0.22, 0.61, 0.36, 1) 380ms forwards;
+}
+@keyframes tick-ring { to { stroke-dashoffset: 0; } }
+@keyframes tick-mark { to { stroke-dashoffset: 0; } }
+
+/* ---------------------------------------------------------------- the words */
+
+.placed-said {
+  margin: 0;
+  font-size: var(--t-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.placed-why {
+  margin: var(--s2) 0 0;
+  font-size: var(--t-base);
+  color: var(--ink-soft);
+}
+
+/*
+ * The token and the time, as a pair of facts.
+ *
+ * A bordered card with a shadow said these were important enough to lift off
+ * the page. They are a reference somebody reads once if asked; a rule between
+ * them is enough.
+ */
+.placed-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin: var(--s5) 0 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+.placed-facts > div {
+  padding: var(--s4) var(--s3);
+}
+.placed-facts > div + div {
+  border-left: 1px solid var(--line);
+}
+.placed-facts dt {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.placed-facts dd {
+  margin: var(--s2) 0 0;
+  font-size: var(--t-lg);
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* -------------------------------------------------------------- the way on */
+
+.placed-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  margin-top: var(--s5);
+}
+
+.placed-go {
+  min-height: 52px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font);
+  font-size: var(--t-base);
+  font-weight: 700;
+  cursor: pointer;
+}
+.placed-go:active {
+  transform: scale(0.99);
+}
+
+.placed-quiet {
+  min-height: 48px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: var(--font);
+  font-size: var(--t-base);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* The receipt lines, when the screen has them to show. */
+#items:empty {
+  display: none;
+}
+#items {
+  margin-top: var(--s4);
+  text-align: left;
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tick-ring,
+  .tick-mark {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .placed-go:active {
+    transform: none;
+  }
+}

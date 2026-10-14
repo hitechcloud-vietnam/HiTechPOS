@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="assets/common/appearance.js"></script>
+    <meta charset="UTF-8" />
+    <title>Order placed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <link href="assets/bootstrap.min.css" rel="stylesheet">
+    <!-- The decisions every screen shares, made once. -->
+    <link href="assets/common/design.css" rel="stylesheet">
+    <link href="assets/thankyou/style.css" rel="stylesheet">
+    <!-- After style.css, which it replaces. -->
+    <link href="assets/thankyou/placed.css" rel="stylesheet">
+    <link href="assets/common/ui-theme.css" rel="stylesheet">
+    <script src="assets/common/i18n.js"></script>
+    <script src="assets/common/languages.js"></script>
+    <script src="assets/jquery-3.6.0.min.js"></script>
+    <script src="assets/vendor/html2pdf/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
+    <script src="assets/common/access.js"></script>
+    <script src="assets/common/money.js"></script>
+    <link rel="stylesheet" href="assets/common/service-details.css">
+    <link rel="stylesheet" href="assets/common/confirm.css">
+<script src="assets/common/confirm.js"></script>
+<script src="assets/common/service-details.js"></script>
+    <script src="assets/common/order-actions.js"></script>
+    <script src="assets/common/phone-preferences.js"></script>
+    <link rel="stylesheet" href="assets/common/kitchen-notices.css">
+    <script src="assets/common/kitchen-notices.js" defer></script>
+    <script src="config.js"></script>
+    <script src="assets/common/popup.js"></script>
+    <link rel="stylesheet" href="assets/common/i18n.css">
+    <link rel="stylesheet" href="assets/common/app-design.css">
+    <link rel="stylesheet" href="assets/common/appearance.css">
+</head>
+
+<body class="placed-screen">
+
+    <div class="placed">
+        <div class="placed-inner">
+            <!--
+                The tick, drawn rather than declared.
+
+                It is the one moment in this app worth a beat of animation: a
+                waiter has just committed food to a kitchen and wants to know
+                it landed. Off under prefers-reduced-motion, like everything
+                else here that moves.
+            -->
+            <div class="placed-tick" aria-hidden="true">
+                <svg viewBox="0 0 52 52">
+                    <circle class="tick-ring" cx="26" cy="26" r="24" fill="none" />
+                    <path class="tick-mark" fill="none" d="M14.5 27l7.5 7.5 15.5-16" />
+                </svg>
+            </div>
+
+            <h1 class="placed-said">Sent to the kitchen</h1>
+            <p class="placed-why">The order is in. You can start the next one.</p>
+
+            <!--
+                The token and the time: the two things a waiter gets asked for
+                afterwards, which are "which order was that" and "when did it
+                go in". One quiet block rather than a card with a shadow -
+                nothing here needs lifting off the page.
+            -->
+            <dl class="placed-facts">
+                <div>
+                    <dt>Order</dt>
+                    <dd id="orderId">--</dd>
+                </div>
+                <div>
+                    <dt>Time</dt>
+                    <dd id="orderTime">--</dd>
+                </div>
+            </dl>
+
+            <!-- Filled by assets/thankyou/script.js when there is a receipt. -->
+            <div id="items"></div>
+
+            <!--
+                BACK TO THE TABLES IS THE PRIMARY ACTION.
+
+                It was "New Order", which starts another order for the same
+                table - and a waiter who has just sent table four's food is
+                almost always walking back to the floor, not taking a second
+                order from the same seat. Both are here; the common one is the
+                one in the accent.
+            -->
+            <div class="placed-actions">
+                <button type="button" class="placed-go" onclick="clearReceiptAndGo('kot-management.html')">
+                    Back to tables
+                </button>
+                <button type="button" class="placed-quiet" onclick="clearReceiptAndGo('discount.html')">
+                    New order
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/thankyou/script.js"></script>
+</body>
+
+</html>

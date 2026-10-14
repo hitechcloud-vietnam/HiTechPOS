@@ -1,0 +1,162 @@
+.connection-cloud {
+  margin: 24px 0;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line, #e2e8f0);
+}
+.connection-cloud p {
+  margin: 10px 0 0;
+  color: var(--ink-soft, #64748b);
+  font-size: 13px;
+  text-align: center;
+}
+#connection-addresses {
+  margin: 18px 0;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 12px;
+  padding: 14px;
+}
+#connection-addresses summary {
+  min-height: 32px;
+  font-size: 14px;
+  cursor: pointer;
+}
+#connection-addresses .ui-field {
+  width: 100%;
+  min-height: 48px;
+  margin: 6px 0 16px;
+  direction: ltr;
+}
+#connection-message {
+  font-size: 13px;
+  margin-top: 12px;
+}
+#scanSheet[hidden] {
+  display: none !important;
+}
+
+.auth-header {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) minmax(76px, 100px) 44px;
+  gap: 8px;
+}
+.auth-header .setup-language {
+  margin: 0;
+  min-width: 0;
+}
+.auth-header .setup-language select {
+  width: 100%;
+  max-width: 100%;
+  padding-inline: 6px;
+}
+.auth-header .setup-settings {
+  margin: 0;
+}
+#connection-addresses .ui-field {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* One primary local action; cloud approval is a clear alternative. */
+.connection-cloud { margin:20px 0 0; padding:20px 0 0; border-bottom:0; border-top:1px solid var(--line,#e2e8f0); }
+#captain-cloud-login { background:var(--surface,#fff); border:1px solid var(--line,#cbd5e1); color:var(--ink,#17233b); }
+#captain-cloud-login:hover { background:var(--surface-sunk,#f1f5f9); }
+#captain-open-browser:not([hidden]) { display:inline-flex; align-items:center; min-height:48px; padding:12px 16px; border:1px solid var(--line,#cbd5e1); border-radius:10px; margin:12px 0; }
+#captain-note:not(:empty) { scroll-margin-block:20px; }
+
+/* Keep the complete domain readable on narrow phones. */
+.setup-address { flex-wrap:wrap; padding:0; border:0; background:transparent; box-shadow:none; }
+#captain-server { flex:1 0 100%; width:100%; min-height:52px; border:1px solid #cdd6e3; border-radius:12px; padding:14px; direction:ltr; }
+#captain-server:focus { border-color:#2457e7; box-shadow:0 0 0 3px #2457e714; }
+.setup-tools { width:100%; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:12px; }
+.setup-tools button { width:100%; min-height:52px; border:1px solid #dfe5ef; border-radius:10px; background:#f8fafc; }
+.setup-tools button span { font-size:11px; }
+.setup-shop { display:flex; align-items:center; gap:12px; }
+.setup-shop > div { flex:1; min-width:0; }
+.setup-shop .setup-link { flex-shrink:0; padding:8px 0; }
+
+.setup-address:focus-within { box-shadow:none; }
+
+/* Secondary methods never share a form with pairing or address settings. */
+#setup-heading { margin-bottom:24px; }
+#setup-heading:focus { outline:none; }
+.setup-alternatives { display:flex; align-items:center; gap:12px; margin:24px 0 0; color:#69758a; font-size:12px; }
+.setup-alternatives::before, .setup-alternatives::after { content:""; flex:1; height:1px; background:#e3e8f0; }
+.connection-cloud { margin:12px 0 0; padding:0; border:0; }
+#connection-settings { display:block; margin:12px auto 0; color:#52617a; }
+#connection-addresses { margin:0; padding:0; border:0; }
+#connection-addresses > summary { display:none; }
+#captain-code-options { margin-top:20px; }
+#captain-code { display:block; width:100%; min-height:50px; padding:12px; margin-top:8px; box-sizing:border-box; font-size:16px; }
+#captain-search-again { margin-top:16px; }
+#captain-results button { min-height:56px; padding:14px; border:1px solid #cdd6e3; border-radius:12px; background:#fff; color:#17233b; }
+
+/* Wi-Fi first, account sign-in second, address on demand. */
+#captain-onboarding[data-setup-view="start"] #setup-methods { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+#captain-onboarding[data-setup-view="start"] .setup-tools { display:contents; }
+#captain-onboarding[data-setup-view="start"] #captain-search { grid-column:1/-1; order:0; background:var(--brand,#2457e7); color:white; min-height:52px; }
+#captain-onboarding[data-setup-view="start"] .setup-tools span { font-size:14px; }
+#captain-onboarding[data-setup-view="start"] #setup-start-hint { grid-column:1/-1; order:1; text-align:center; margin:0 0 8px; }
+#captain-onboarding[data-setup-view="start"] .connection-cloud { grid-column:1/-1; order:2; margin:0; }
+#captain-onboarding[data-setup-view="start"] #captain-address-toggle { grid-column:1/-1; order:3; min-height:48px; }
+#captain-onboarding[data-setup-view="start"] .setup-alternatives { grid-column:1/-1; order:4; margin:8px 0; }
+#captain-onboarding[data-setup-view="start"] #captain-scan { order:5; }
+#captain-onboarding[data-setup-view="start"] #captain-code-toggle { order:6; }
+#captain-onboarding[data-setup-view="start"] #connection-settings { grid-column:1/-1; order:7; margin:0; min-height:44px; }
+
+/* Discovery and staff authentication are separate, visible steps. */
+.setup-steps { display:flex; gap:16px; list-style:none; padding:0; margin:0 0 24px; }
+.setup-steps li { display:flex; align-items:center; gap:7px; font-size:12px; color:#69758a; flex:1; }
+.setup-steps li > span { display:grid; place-items:center; flex:0 0 25px; height:25px; border-radius:50%; background:#edf1f7; font-weight:700; }
+.setup-steps li[aria-current="step"] { color:#2457e7; font-weight:600; }
+.setup-steps li[aria-current="step"] > span { background:#2457e7; color:#fff; }
+#captain-results .setup-server-card { display:grid; grid-template-columns:38px minmax(0,1fr); align-items:center; gap:12px; width:100%; min-height:88px; text-align:start; cursor:pointer; border:1px solid #c6d4ef; box-shadow:0 2px 5px #17233b08; }
+#captain-results .setup-server-card:hover { background:#f3f7ff; border-color:#2457e7; }
+#captain-results .setup-server-card:disabled { cursor:wait; opacity:.65; }
+.setup-server-icon { display:grid; place-items:center; flex:0 0 38px; height:38px; border-radius:12px; color:#087d52; background:#e7f7ef; }
+.setup-server-icon svg { width:24px; height:24px; }
+.setup-server-info { display:grid; gap:5px; flex:1; min-width:0; }
+.setup-server-info strong { font-size:15px; overflow-wrap:anywhere; direction:ltr; text-align:start; }
+.setup-server-network { color:#087d52; font-size:12px; }
+.setup-server-info small { font-size:11px; color:#69758a; }
+.setup-server-action { grid-column:1/-1; display:flex; align-items:center; justify-content:center; gap:7px; background:#2457e7; color:#fff; border-radius:9px; padding:10px 12px; font-size:13px; font-weight:600; }
+[dir="rtl"] .setup-server-action > span:last-child { transform:scaleX(-1); }
+
+#captain-search-again { background:#fff; color:#2457e7; border:1px solid #cdd6e3; }
+#captain-search-again:hover { background:#f3f7ff; }
+
+/* Connection choices share the app palette in both themes. */
+#captain-onboarding [hidden]{display:none!important}
+#captain-onboarding{gap:12px}
+#captain-onboarding #setup-heading{margin:4px 0 12px;font-size:26px;line-height:1.25}
+#captain-onboarding .setup-back{justify-self:start;min-height:44px;padding:8px 0;color:var(--accent)}
+#captain-onboarding[data-setup-view="start"] #setup-methods{display:flex;flex-direction:column;gap:12px}
+#captain-onboarding[data-setup-view="start"] #setup-methods>*{order:initial}
+#captain-onboarding[data-setup-view="start"] .setup-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0}
+#captain-onboarding #captain-search{display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid var(--accent);border-radius:12px;min-height:52px;background:var(--accent);color:var(--accent-ink,#fff);font-weight:600;font-size:15px}
+#captain-search svg{width:22px;height:22px;flex:none}
+#captain-onboarding .setup-tools button{display:flex;flex-direction:row;height:auto;width:100%;align-items:center;justify-content:center;gap:8px;min-height:56px;padding:10px;background:var(--surface-sunk);border:1px solid var(--line-strong,var(--line));color:var(--ink);border-radius:12px}
+#captain-onboarding .setup-tools button svg{width:22px;height:22px;flex:none;color:var(--accent)}
+#captain-onboarding .setup-tools button span{font-size:13px;line-height:1.4;text-align:start}
+#captain-onboarding #captain-address-toggle{border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);text-align:center;font-weight:600;min-height:48px}
+#captain-onboarding .setup-alternatives{margin:4px 0;color:var(--ink-soft);font-size:12px}
+#captain-onboarding .setup-alternatives::before,#captain-onboarding .setup-alternatives::after{background:var(--line)}
+#captain-onboarding #connection-settings{color:var(--ink-soft);min-height:44px;margin:0}
+#login-section .setup-steps{gap:12px;margin-bottom:16px}
+#login-section .setup-steps li{color:var(--ink-soft)}
+#login-section .setup-steps li>span{background:var(--surface-sunk);color:var(--ink-soft);border:1px solid var(--line)}
+#login-section .setup-steps li[aria-current="step"]{color:var(--accent)}
+#login-section .setup-steps li[aria-current="step"]>span{background:var(--accent);color:var(--accent-ink,#fff);border-color:var(--accent)}
+#captain-onboarding #captain-results button,#captain-onboarding #captain-search-again{background:var(--surface-sunk);color:var(--ink);border-color:var(--line)}
+#captain-onboarding .setup-server-info small{color:var(--ink-soft)}
+#captain-onboarding .setup-server-action{background:var(--accent);color:var(--accent-ink,#fff)}
+#captain-onboarding :is(button,input):focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+#captain-onboarding #captain-note:empty{display:none}
+
+.connection-navigation{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.connection-navigation:has(>button[hidden]):not(:has(>button:not([hidden]))){display:none}
+#captain-onboarding #connection-orders{margin-inline-start:auto;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;color:var(--accent);background:var(--surface-sunk);font-size:13px;font-weight:600}
+#login-section .setup-steps[hidden]{display:none}
+#captain-onboarding #connection-done{margin-top:8px}
+
+#captain-onboarding .connection-navigation .setup-back{margin:0;align-self:center}
+#captain-onboarding:has(#connection-done:not([hidden])) #connection-save{background:var(--surface-sunk);color:var(--ink);border:1px solid var(--line)}

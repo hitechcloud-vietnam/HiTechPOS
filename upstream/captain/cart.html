@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="assets/common/appearance.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Cart Summary</title>
+    <script src="assets/common/i18n.js"></script>
+    <script src="assets/common/languages.js"></script>
+    <script src="assets/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="assets/common/confirm.css">
+<script src="assets/common/confirm.js"></script>
+<script src="assets/common/access.js"></script>
+    <script src="assets/common/money.js"></script>
+    <link rel="stylesheet" href="assets/common/service-details.css">
+    <script src="assets/common/service-details.js"></script>
+    <script src="assets/common/order-actions.js"></script>
+    <script src="assets/common/phone-preferences.js"></script>
+    <link rel="stylesheet" href="assets/common/kitchen-notices.css">
+    <script src="assets/common/kitchen-notices.js" defer></script>
+    <script src="config.js"></script>
+    <script src="assets/common/popup.js"></script>
+    <script src="assets/common/order-queue.js"></script>
+    <script src="assets/common/this-device.js"></script>
+    <!-- The bill can ask again for a price a waiter typed, so it needs the
+         same sheet the menu uses. -->
+    <script src="assets/common/ask-price.js"></script>
+    <script src="assets/common/ask-options.js"></script>
+    <script src="assets/common/item-localization.js"></script>
+    <script src="assets/common/item-language.js"></script>
+    <script src="indexedDB.js"></script>
+    <script src="assets/common/kitchen-send-feedback.js"></script><script src="assets/common/order-queue-ui.js"></script>
+    <script src="assets/cart/script.js"></script>
+    <!-- The decisions every screen shares, made once. Before the screen's own
+         stylesheet, so a screen can override a token rather than fight one. -->
+    <link href="assets/common/design.css" rel="stylesheet">
+    <link href="assets/cart/style.css" rel="stylesheet">
+    <!-- After style.css, which it replaces most of. -->
+    <link href="assets/cart/bill.css" rel="stylesheet">
+    <link href="assets/cart/notes-modal.css" rel="stylesheet">
+    <link href="assets/common/ui-theme.css" rel="stylesheet">
+    <script src="assets/checkout/checkout.js"></script>
+    <!-- What a dish SOUNDS like, for matching a transcript. Before
+         item-search.js, which picks it up if the page has it. -->
+    <script src="assets/common/sounds-like.js"></script>
+    <script src="assets/common/item-search.js"></script>
+    <script src="assets/products/script.js"></script>
+    <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="assets/common/i18n.css">
+    <link rel="stylesheet" href="assets/common/mobile-gestures.css">
+    <script src="assets/common/mobile-gestures.js" defer></script>
+    <link rel="stylesheet" href="assets/common/app-design.css">
+    <link rel="stylesheet" href="assets/common/appearance.css">
+    <link rel="stylesheet" href="assets/common/chef-loading.css">
+    <script src="assets/common/chef-loading.js" defer></script>
+</head>
+
+<body class="bill-screen">
+
+    <!-- Page Loader -->
+    <div id="page-loader">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Popup -->
+    <div id="popup">
+        ⚠️ Need more? Our counter staff is happy to help!
+        <button onclick="hidePopup()" aria-label="Close popup">&times;</button>
+    </div>
+    <div class="container">
+
+        <div class="bill-head">
+            <a href="products.html" class="back-link" aria-label="Back to the menu">←</a>
+            <div class="bill-head-title">On this order</div>
+            <a class="cart-add-items" href="products.html">+ <span>Add items</span></a>
+        </div>
+
+        <!-- Which table this is for: the one piece of context a waiter
+             carrying three orders needs before reading a word of it. -->
+        <div class="bill-where" id="bill-where" hidden></div>
+
+        <div class="bill-lines" id="cart-summary">
+            <!-- Lines are drawn by renderCart in indexedDB.js -->
+        </div>
+
+        <!--
+            ONE totals block, at the bottom, where a bill puts it. This used to
+            be twelve accordions, one per line, each holding that line's own
+            subtotal, discount and tax. Nobody adds up twelve accordions.
+        -->
+        <div class="bill-totals" id="bill-totals" hidden></div>
+
+        <!--
+            ONE of these sends food to a kitchen.
+
+            The old footer was Clear, a total and Confirm, all the same size and
+            weight, so the button that throws the order away looked exactly like
+            the one that commits it. The destructive one is quiet and on the
+            left; the committing one is the accent and carries the amount.
+        -->
+        <div class="bill-bar-actions">
+            <button type="button" class="bill-clear" onclick="onCancelClick()">
+                <i class="fas fa-trash-alt"></i> Clear
+            </button>
+            <button type="button" class="bill-send" id="next-btn" onclick="kioskPlaceOrder()">
+                <span>Send to kitchen</span>
+                <span class="bill-send-amount" id="bill-send-amount"></span>
+            </button>
+        </div>
+
+        <!-- Still written to by renderCart and by code on other screens. -->
+        <span id="cart-qty" hidden>0</span>
+        <span id="cart-total" hidden>0.00</span>
+    </div>
+
+    <!-- Cancel Modal -->
+    <div id="cancelModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3 class="modal-title">Cancel Order</h3>
+            <p class="modal-message">Are you sure you want to cancel the order?</p>
+            <div class="modal-buttons">
+                <button id="confirmCancel" class="modal-btn confirm" onclick="confirmCancelOrder()">Yes,
+                    Cancel</button>
+                <button id="closeModal" class="modal-btn cancel" onclick="closeCancelModal()">No</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Summary Bottom Sheet -->
+    <div id="cart-summary-sheet" class="cart-sheet">
+        <div class="cart-sheet-backdrop"></div>
+
+        <div class="cart-sheet-panel">
+            <div class="cart-sheet-handle"></div>
+
+            <div class="cart-sheet-header">
+                <div>
+                    <div class="cart-sheet-title">Bill Summary</div>
+                    <div class="cart-sheet-subtitle" id="cart-sheet-subtitle">
+                        0 items · 0 qty
+                    </div>
+                </div>
+                <button type="button" class="cart-sheet-close" aria-label="Close">
+                    ✕
+                </button>
+            </div>
+
+            <div class="cart-sheet-body" id="cart-sheet-body">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Notes Modal -->
+    <!-- Product Notes Modal -->
+    <div id="cart-notes-modal" role="dialog" aria-modal="true" aria-labelledby="cart-notes-product-name" class="notes-modal" style="display:none;">
+        <div class="notes-modal-content">
+            <h4 id="cart-notes-product-name" translate="no" class="notes-title">Product Notes</h4>
+
+            <div class="notes-body">
+                <div id="cart-notes-chips" class="notes-chips"></div>
+                <label for="cart-notes-text" class="notes-label">Notes</label>
+                <textarea id="cart-notes-text" rows="3" class="notes-textarea"
+                    placeholder="Eg: Non sugar, half milk, extra hot..."></textarea>
+            </div>
+
+            <div class="notes-footer">
+                <button type="button" id="cart-notes-cancel-btn" class="notes-btn notes-btn-secondary">
+                    Cancel
+                </button>
+                <button type="button" id="cart-notes-save-btn" class="notes-btn notes-btn-primary">
+                    Apply
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/cart/notes-modal.js"></script>
+    <script>
+        /*
+         * Which table, at the top.
+         *
+         * The waiter chose it two screens ago and has taken an order since.
+         * Carrying three at once, "is this the one for table four" is the
+         * question they ask before reading a single line - and the screen
+         * could not answer it.
+         */
+        (function () {
+            const where = document.getElementById('bill-where');
+            if (!where) return;
+            const table = localStorage.getItem('kiosk_table_no');
+            const type = localStorage.getItem('orderType');
+            if (!table && !type) return;
+
+            where.hidden = false;
+            where.innerHTML = table
+                ? 'For <strong></strong>'
+                : '<strong></strong>';
+            const strong = where.querySelector('strong');
+            /* textContent, not a template: a table number is typed by hand. */
+            let takeawayNumber = '';
+            try { takeawayNumber = JSON.parse(localStorage.getItem('kiosk_takeaway_reservation'))?.number || ''; } catch (_) {}
+            strong.textContent = table ? 'Table ' + table : type === 'Take away' && takeawayNumber ? 'Take Away ' + takeawayNumber : type;
+        })();
+    </script>
+
+</body>
+
+</html>

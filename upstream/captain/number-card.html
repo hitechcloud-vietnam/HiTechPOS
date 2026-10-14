@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="assets/common/appearance.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Number card</title>
+    <link href="assets/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/common/design.css" rel="stylesheet">
+    <link href="assets/number-card/style.css" rel="stylesheet">
+    <script src="assets/common/i18n.js"></script>
+    <script src="assets/common/languages.js"></script>
+    <script src="assets/common/access.js"></script>
+    <script src="assets/common/money.js"></script>
+    <link rel="stylesheet" href="assets/common/service-details.css">
+    <link rel="stylesheet" href="assets/common/confirm.css">
+<script src="assets/common/confirm.js"></script>
+<script src="assets/common/service-details.js"></script>
+    <script src="assets/common/order-actions.js"></script>
+    <script src="assets/common/phone-preferences.js"></script>
+    <link rel="stylesheet" href="assets/common/kitchen-notices.css">
+    <script src="assets/common/kitchen-notices.js" defer></script>
+    <script src="config.js"></script>
+    <!-- The same renderer and the same grouping the picker uses. A number here
+         that is not the number in the hand would be worse than no card. -->
+    <script src="assets/common/menu-view.js"></script>
+    <script src="assets/common/item-localization.js"></script>
+    <script src="assets/common/item-language.js"></script>
+    <script src="indexedDB.js"></script>
+    <link rel="stylesheet" href="assets/common/i18n.css">
+    <link rel="stylesheet" href="assets/common/app-design.css">
+    <link rel="stylesheet" href="assets/common/appearance.css">
+</head>
+
+<body>
+    <!--
+        THE NUMBERS, ON PAPER.
+
+        Third of the three answers to "how to make ux of searching best while
+        add item". The other two live behind the search box; this one goes on
+        a wall, because the fastest search is the one a waiter does not do.
+
+        It prints from the phone's own share sheet or from any browser pointed
+        at this page, and it is deliberately not a screen anybody has to keep
+        open: it is a thing to print once and stick up.
+    -->
+    <div class="card-sheet">
+        <header class="card-head">
+            <div>
+                <h1 id="card-title">Number card</h1>
+                <p class="card-sub" id="card-sub">Stick it on the wall. Type a dish's number into the search box on the menu to add it.</p>
+            </div>
+            <div class="card-actions">
+                <button type="button" class="ui-btn-quiet" id="card-back">Back</button>
+                <button type="button" class="ui-btn" id="card-print">Print</button>
+            </div>
+        </header>
+
+        <div id="card-body" class="card-body">
+            <p class="card-empty">Loading the menu.</p>
+        </div>
+
+        <footer class="card-foot">
+            <span id="card-stamp"></span>
+            <span>Numbers move when the shop changes its menu. Reprint after a change.</span>
+        </footer>
+    </div>
+
+    <script src="assets/number-card/script.js"></script>
+</body>
+
+</html>

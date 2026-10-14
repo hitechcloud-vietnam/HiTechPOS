@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+# Nothing here on purpose.
+#
+# The checks moved to pre-commit (see that file), so running them again on the
+# way out would double the wait for the same answer. This file exists so that
+# `core.hooksPath` pointing here does not silently fall back to a stale hook in
+# .git/hooks from before the move.

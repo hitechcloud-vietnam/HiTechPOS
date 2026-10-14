@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security problem
+    url: https://github.com/Posnic/captain/security/policy
+    about: Do not open a public issue. Email security@posnic.com.
+  - name: The POS server
+    url: https://github.com/Posnic/POS
+    about: Captain talks to a Posnic POS server. Report server problems there.
