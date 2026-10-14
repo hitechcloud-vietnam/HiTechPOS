@@ -223,6 +223,11 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
   /* ---- e-invoices (hoá đơn điện tử) ---- */
   app.get('/api/shop/einvoice-settings', auth, async (req, res) => res.json(await einvoices.getSettings(req.account.tenantId)));
   app.put('/api/shop/einvoice-settings', auth, async (req, res) => res.json(await einvoices.updateSettings(req.account.tenantId, req.body && req.body.provider ? req.body : null)));
+  /* Sales the auto-issue worker could not invoice (einvoice-worker.js). */
+  app.get('/api/shop/einvoice-errors', auth, async (req, res) => {
+    const t = await store.tenants.findById(req.account.tenantId);
+    res.json(((t && t.einvoiceErrors) || []).slice().reverse());
+  });
   app.get('/api/shop/einvoices', auth, async (req, res) => res.json(await einvoices.list(req.account.tenantId)));
   const ownerTenant = async (req) => store.tenants.findById(req.account.tenantId);
   app.post('/api/shop/einvoices/:refId/reconcile', auth, async (req, res) => res.json(await einvoices.reconcile(await ownerTenant(req), req.params.refId)));

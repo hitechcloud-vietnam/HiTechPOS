@@ -29,6 +29,7 @@ Quy tắc:
 | `pos/api/src/services/hitech-pay.js` | Tệp mới – adapter gọi control plane bằng khoá `HITECH_POS_KEY` của shop | Như trên | Không |
 | `pos/frontend/static/script/js/modules/js/sales.js` | Nhãn ô Qrpay dùng i18n `lang_razorpay`; `PosnicPro.sales.paymentLabel` dịch “Cash”/“Card” khi hiển thị (giữ khoá nội bộ) | Hiển thị “QR chuyển khoản”, “Tiền mặt”, “Thẻ” | Có |
 | `pos/api/tests/unit/db/model-registry-module-helpers.test.js` | Test mới cho bản vá `model-registry` | | Có |
+| `pos/api/src/constants/customers.constants.js` (+ test `customers-vn-tax-id.test.js`) | Mã số thuế khách hàng nhận cả GSTIN Ấn Độ lẫn MST Việt Nam (10, 10-3, 12 số); mã bưu chính 5–6 số | API khách hàng từ chối MST Việt Nam nên hoá đơn điện tử B2B không lấy được MST người mua | Có (dạng tổng quát hoá) |
 | `pos/languages/vi.json`, `_english.json` | `lang_qrpay`, `lang_razorpay` → “QR chuyển khoản”; khoá mới `lang_qr_customer_display`, `lang_qr_money_received` | Việt hoá, nút mới trong hộp thoại QR | Không |
 | `pos/frontend/modals/sales.html`, `sales.js` | Nút “Màn hình khách” và “Đã nhận tiền” trong hộp thoại QR khi id là `htp_…` | Thu ngân xác nhận VietQR chuyển khoản trực tiếp | Không |
 | `pos/api/src/routes/sales.routes.js` | Route `GET /sales/hitechQrConfirm` (quyền `sales.write`) | Như trên | Không |

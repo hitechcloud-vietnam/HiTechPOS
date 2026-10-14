@@ -39,13 +39,16 @@ async function main() {
     ? createOnboarding({ shardUrl: config.shardUrl, shopHeader: config.shardShopHeader, baseDomain: config.shopBaseDomains[0], branchPatcher: tenantClient && createMongoBranchPatcher({ client: tenantClient }) })
     : null;
   const providers = providersFromConfig(config);
-  const { app, billing, einvoices } = createApp({ store, config, providers, installer, onboarding });
+  const { app, billing, einvoices, notifier } = createApp({ store, config, providers, installer, onboarding });
 
   const server = app.listen(config.port, config.host, () => {
     console.log(`[control-plane] http://${config.host}:${config.port} store=${store.kind} providers=${providers.list().join(',') || 'none'}`);
   });
   const expiry = setInterval(() => billing.enforceExpiry().then((s) => s.length && console.log('[control-plane] suspended', s)).catch((e) => console.error('[control-plane] expiry job', e)), 3600000);
   expiry.unref();
+  /* Trial reminders: hourly is enough, each message is sent once per key. */
+  const reminders = setInterval(() => notifier.runReminders().then((r) => r.length && console.log('[control-plane] reminders', JSON.stringify(r))).catch((e) => console.error('[control-plane] reminders job', e)), 3600000);
+  reminders.unref();
   let einvoiceTimer = null;
   if (einvoiceWorkerOn) {
     const worker = createEInvoiceWorker({ store, einvoices, tenantDb: (tenant) => tenantClient.db(tenant.tenantDb) });
