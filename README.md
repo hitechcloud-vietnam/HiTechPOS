@@ -48,7 +48,7 @@ Kiểm thử toàn chuỗi (MongoDB + Posnic shard + control plane + màn hình 
 node scripts/e2e.mjs        # máy không có mạng: MONGOMS_SYSTEM_BINARY=/đường/dẫn/mongod
 ```
 
-Triển khai thật xem [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+Triển khai production (Ubuntu 24.04, MongoDB replica set, PM2, Caddy, sao lưu, giám sát) xem [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md); biến môi trường: [docs/deploy/ENV.md](docs/deploy/ENV.md); vận hành và xử lý sự cố: [docs/deploy/RUNBOOK.md](docs/deploy/RUNBOOK.md).
 
 ## Tài liệu
 
@@ -56,7 +56,7 @@ Triển khai thật xem [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 - [Lộ trình phát triển](docs/ROADMAP.md)
 - [Giấy phép & tuân thủ AGPL](docs/LICENSING.md)
 - [API cho máy POS và đối tác](docs/API.md)
-- [Triển khai](docs/DEPLOYMENT.md)
+- [Triển khai](docs/DEPLOYMENT.md) · [Biến môi trường](docs/deploy/ENV.md) · [Sổ tay vận hành](docs/deploy/RUNBOOK.md)
 - [Đồng bộ mã nguồn Posnic](docs/UPSTREAM.md)
 
 ## Giấy phép
