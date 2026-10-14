@@ -144,7 +144,7 @@ test('onboarding makes a fresh cafe shop Vietnamese through the Posnic API', asy
   assert.equal(s.preferences.footer_print, preset.receipt.footer);
   assert.equal(s.preferences.roundOff, true);
   assert.equal(s.preferences.default_tax, tax8.tax_id);
-  assert.deepEqual(s.features, { ...presets.posnicModuleSettings('cafe-tra-sua'), module_channels_enable: true });
+  assert.deepEqual(s.features, { ...presets.posnicModuleSettings('cafe-tra-sua'), module_channels_enable: true, first_run_done: true, first_run_decided: true });
   // Locale already right: nothing written.
   assert.ok(!fake.calls.some((c) => c.route === 'PUT /api/settings/starterLocale'));
 });

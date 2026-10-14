@@ -304,7 +304,11 @@ function createOnboarding({ transport = nodeHttpTransport, shardUrl, shopHeader 
     async modules({ api, preset }) {
       const s = presets.posnicModuleSettings(preset.id);
       const channels = Boolean(s.module_online_ordering_enable || s.module_captain_enable || s.module_delivery_partners_enable);
-      await api('PUT', '/api/settings/group/features', { ...s, module_channels_enable: channels });
+      /* first_run_* tell Posnic's own first-run wizard (frontend settings.js,
+         "ready to take its first sale") that setup is done: HiTechPOS already
+         chose the modules and seeded Vietnamese sample data, and the wizard
+         would otherwise offer Posnic's English/Indian demo pack. */
+      await api('PUT', '/api/settings/group/features', { ...s, module_channels_enable: channels, first_run_done: true, first_run_decided: true });
       return 'ok';
     },
 

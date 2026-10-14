@@ -34,8 +34,9 @@ function apiKey() {
   return key;
 }
 
-/* node:http rather than fetch: internal hosts may use ports fetch refuses. */
-function request(method, path, body) {
+/* node:http rather than fetch: internal hosts may use ports fetch refuses.
+   `raw` returns the body bytes instead of parsed JSON. */
+function request(method, path, body, { raw = false } = {}) {
   const target = new URL(baseUrl() + path);
   const lib = target.protocol === 'https:' ? https : http;
   const payload = body === undefined ? undefined : JSON.stringify(body);
@@ -55,6 +56,10 @@ function request(method, path, body) {
         const chunks = [];
         res.on('data', (c) => chunks.push(c));
         res.on('end', () => {
+          if (raw) {
+            if (res.statusCode >= 200 && res.statusCode < 300) return resolve(Buffer.concat(chunks));
+            return reject(new Error(`HiTechPOS payments answered ${res.statusCode}`));
+          }
           let json = null;
           try {
             json = JSON.parse(Buffer.concat(chunks).toString('utf8') || 'null');
@@ -97,9 +102,20 @@ async function generate(amount, { method } = {}) {
     amount: toVnd(amount),
     ...(method ? { method } : {}),
   });
+  /* The QR is fetched over the internal channel and handed to the screen as
+     a data: URL, so it shows whatever the shop's CSP and network allow. */
+  let imageUrl = payment.qrImageUrl;
+  if (imageUrl) {
+    try {
+      const svg = await request('GET', new URL(imageUrl).pathname, undefined, { raw: true });
+      imageUrl = `data:image/svg+xml;base64,${svg.toString('base64')}`;
+    } catch {
+      /* fall back to the public URL */
+    }
+  }
   return {
     status: true,
-    data: { id: PREFIX + payment.orderCode, image_url: payment.qrImageUrl, checkout_url: payment.checkoutUrl || null, display_url: payment.displayUrl || null },
+    data: { id: PREFIX + payment.orderCode, image_url: imageUrl, checkout_url: payment.checkoutUrl || null, display_url: payment.displayUrl || null },
     message: 'QR Code Generate successfully',
   };
 }

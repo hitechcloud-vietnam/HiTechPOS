@@ -10903,7 +10903,7 @@ PosnicPro.sales.qr = {
                     img2.onload = function () {
                         console.log('Using CSS cropping method');
                         // Use CSS to crop and display the image
-                        qrContainer.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:15px;box-shadow:0 8px 32px rgba(0,0,0,0.1);"><div style="width:400px;height:400px;overflow:hidden;display:flex;align-items:center;justify-content:center;border-radius:10px;position:relative;"><img loading="lazy" decoding="async" src="' + img2.src + '" alt="QR Code" style="width:100%;height:auto;object-fit:contain;clip-path:inset(25% 15% 15% 15%);" /></div></div>';
+                        qrContainer.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:15px;box-shadow:0 8px 32px rgba(0,0,0,0.1);"><div style="width:400px;height:400px;overflow:hidden;display:flex;align-items:center;justify-content:center;border-radius:10px;position:relative;"><img loading="lazy" decoding="async" src="' + img2.src + '" alt="QR Code" style="width:100%;height:auto;object-fit:contain;clip-path:' + (isHitech ? 'none' : 'inset(25% 15% 15% 15%)') + ';" /></div></div>';
 
                         var qrRecord = [];
                         qrRecord.push({ amount: amount, image_url: data.image_url, status: 'yes' });
@@ -10921,9 +10921,12 @@ PosnicPro.sales.qr = {
                 // Start with Method 1
                 tryMethod2();
 
+                /* HiTechPOS QR is a plain VietQR image (Razorpay's is a poster the
+                   clip above trims) and settles from a bank feed, so it is
+                   polled more often. */
                 PosnicPro.sales.qr.intervalId = setInterval(function () {
                     PosnicPro.sales.qr.qrStatusUpdate(data);
-                }, 10 * 1000);
+                }, (isHitech ? 3 : 10) * 1000);
                 setTimeout(function () {
                     loader.find(".loadingSpinner:first").remove();
                 }, 5000);
