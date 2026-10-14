@@ -1,0 +1,233 @@
+name: Native test build
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Native platform to build
+        type: choice
+        options: [android, ios]
+        default: android
+      ios_build_number:
+        description: Unique TestFlight build number
+        type: string
+        default: "1"
+      publish_build_run:
+        description: Verified Android build run to publish as preview 14
+        required: false
+        type: string
+      publish_smoke_run:
+        description: Successful smoke run for the same source
+        required: false
+        type: string
+      publish_pin_run:
+        description: Successful native PIN qualification for the same app sources
+        required: false
+        type: string
+      test_build_run:
+        description: Existing Android test build run to install and smoke-test (empty builds an APK)
+        required: false
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: android-test-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  android:
+    if: inputs.publish_build_run == '' && inputs.platform != 'ios' && inputs.test_build_run == ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm run check
+      - run: npx expo prebuild --no-install --platform android
+      # Expo's generated release variant uses the development signing key.
+      # It bundles Hermes and assets, so this test APK needs no Metro server.
+      - run: ./gradlew assembleRelease --no-daemon --max-workers=2 -PreactNativeArchitectures=arm64-v8a,x86_64
+        working-directory: android
+      - name: Verify and package test APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p test-release
+          cp android/app/build/outputs/apk/release/app-release.apk test-release/posnic-business-0.1.0-preview.14-android-test.apk
+          sdk_tools="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          "$sdk_tools/apksigner" verify --verbose --print-certs test-release/*.apk > test-release/signature.txt
+          "$sdk_tools/aapt" dump badging test-release/*.apk > test-release/package.txt
+          if grep -Eq "^uses-permission[^:]*: name='android\.permission\.(READ_EXTERNAL_STORAGE|WRITE_EXTERNAL_STORAGE|SYSTEM_ALERT_WINDOW)'" test-release/package.txt; then
+            echo "Unexpected storage or overlay permission in packaged APK"
+            exit 1
+          fi
+          unzip -l test-release/*.apk assets/index.android.bundle | tee test-release/bundle.txt
+          unzip -p test-release/*.apk assets/index.android.bundle | wc -c | awk '{ if ($1 < 100000) exit 1 }'
+          printf '%s\n' "$GITHUB_SHA" > test-release/SOURCE_COMMIT.txt
+          cd test-release
+          sha256sum *.apk > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: posnic-business-android-test
+          path: test-release/
+          if-no-files-found: error
+          retention-days: 30
+  smoke:
+    if: inputs.publish_build_run == '' && inputs.platform != 'ios' && inputs.test_build_run != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: posnic-business-android-test
+          run-id: ${{ inputs.test_build_run }}
+          github-token: ${{ github.token }}
+          path: test-release
+      - name: Verify download and start Android emulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd test-release && sha256sum -c SHA256SUMS.txt)
+          sudo chmod 666 /dev/kvm
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platform-tools' 'emulator' 'system-images;android-35;google_apis;x86_64'
+          export PATH="$ANDROID_HOME/platform-tools:$PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+          export ANDROID_USER_HOME="$RUNNER_TEMP/android-user"
+          export ANDROID_EMULATOR_HOME="$ANDROID_USER_HOME"
+          export ANDROID_AVD_HOME="$ANDROID_USER_HOME/avd"
+          mkdir -p "$ANDROID_AVD_HOME"
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n business-test -k 'system-images;android-35;google_apis;x86_64' -p "$ANDROID_AVD_HOME/business-test.avd" --force
+          "$ANDROID_HOME/emulator/emulator" -list-avds | grep -x business-test
+          "$ANDROID_HOME/emulator/emulator" -avd business-test -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > emulator.log 2>&1 &
+          timeout 180 adb wait-for-device
+          timeout 300 bash -c 'until [[ "$(adb shell getprop sys.boot_completed | tr -d "\r")" == 1 ]]; do sleep 2; done'
+          adb shell input keyevent 82
+          adb install test-release/*.apk
+      - name: Launch standalone app and sample business
+        run: python3 scripts/android-smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-smoke-evidence
+          path: |
+            smoke-evidence/
+            emulator.log
+          if-no-files-found: warn
+
+  ios:
+    if: inputs.platform == 'ios'
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      POSNIC_IOS_BUILD_NUMBER: ${{ inputs.ios_build_number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npx expo prebuild --platform ios --no-install
+      - run: pod install --project-directory=ios
+      - name: Sign and archive iPhone app
+        env:
+          IOS_CERT_P12: ${{ secrets.IOS_CERT_P12 }}
+          IOS_CERT_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
+          IOS_APPSTORE_PROVISIONING_PROFILE: ${{ secrets.IOS_APPSTORE_PROVISIONING_PROFILE }}
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+        run: bash scripts/build-ios.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: posnic-business-ios-testflight
+          path: build-output/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload to TestFlight
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER: ${{ secrets.ASC_API_ISSUER }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          key_dir="$HOME/.appstoreconnect/private_keys"
+          mkdir -p "$key_dir"
+          key_path="$key_dir/AuthKey_${ASC_API_KEY_ID}.p8"
+          trap 'rm -f "$key_path"' EXIT
+          printf '%s' "$ASC_API_KEY_P8" > "$key_path"
+          chmod 600 "$key_path"
+          xcrun altool --upload-app --type ios --file build-output/PosnicBusiness.ipa --apiKey "$ASC_API_KEY_ID" --apiIssuer "$ASC_API_ISSUER"
+
+  publish:
+    if: inputs.publish_build_run != '' && inputs.platform == 'android'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BUILD_RUN: ${{ inputs.publish_build_run }}
+      SMOKE_RUN: ${{ inputs.publish_smoke_run }}
+      PIN_RUN: ${{ inputs.publish_pin_run }}
+    steps:
+      - name: Verify successful build and smoke runs
+        id: source
+        run: |
+          set -euo pipefail
+          [[ "$BUILD_RUN" =~ ^[0-9]+$ && "$SMOKE_RUN" =~ ^[0-9]+$ && "$PIN_RUN" =~ ^[0-9]+$ ]]
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" > build.json
+          gh api "repos/$GH_REPO/actions/runs/$SMOKE_RUN" > smoke.json
+          gh api "repos/$GH_REPO/actions/runs/$PIN_RUN" > pin.json
+          jq -e '.conclusion == "success" and .path == ".github/workflows/pin-qa.yml"' pin.json
+          jq -e '.conclusion == "success" and .event == "workflow_dispatch" and .path == ".github/workflows/native.yml"' build.json smoke.json
+          source_sha=$(jq -r .head_sha build.json)
+          [[ "$source_sha" == "$(jq -r .head_sha smoke.json)" ]]
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN/jobs" --jq '.jobs[] | select(.name == "android") | .conclusion' | grep -x success
+          gh api "repos/$GH_REPO/actions/runs/$SMOKE_RUN/jobs" --jq '.jobs[] | select(.name == "smoke") | .conclusion' | grep -x success
+          gh api "repos/$GH_REPO/actions/runs/$PIN_RUN/jobs" --jq '.jobs[] | select(.name == "pin") | .conclusion' | grep -x success
+          echo "sha=$source_sha" >> "$GITHUB_OUTPUT"
+          echo "pin_sha=$(jq -r .head_sha pin.json)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.source.outputs.sha }}
+      - name: Verify PIN qualification covers the shipped app
+        env:
+          PIN_SHA: ${{ steps.source.outputs.pin_sha }}
+        run: |
+          git fetch origin "$PIN_SHA" --depth=1
+          git diff --exit-code HEAD FETCH_HEAD -- src modules plugins package.json package-lock.json app.json app.config.ts index.ts
+      - uses: actions/download-artifact@v4
+        with:
+          name: posnic-business-android-test
+          run-id: ${{ inputs.publish_build_run }}
+          github-token: ${{ github.token }}
+          path: test-release
+      - name: Publish verified preview 14
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          set -euo pipefail
+          [[ "$(cat test-release/SOURCE_COMMIT.txt)" == "$SOURCE_SHA" ]]
+          (cd test-release && sha256sum -c SHA256SUMS.txt)
+          grep -q "versionCode='14'" test-release/package.txt
+          git archive --format=zip --output=test-release/posnic-business-v0.1.0-preview.14-source.zip "$SOURCE_SHA"
+          cat > release-notes.md <<'NOTES'
+          Latest Android test build of Posnic Business. Download the APK below and open it on your phone. No Expo Go or development server is needed. Start with **Explore sample business**.
+
+          Since preview 13: Date-selected sales and item insights, invoice-author rankings, invoice payments, discounts, returns and busy hours. More includes PIN enable/disable/change, biometric controls, auto-lock timing and account/server details. Android versionCode is now 14.
+
+          This is a development-signed test APK for ARM64 phones and x86-64 emulators. Connected insights require the new bounded-insights API on your server (Posnic/POS#1291). Older servers retain their existing report screens. Reports include synced cloud sales, not unsynced device sales. New control labels cover 18 locales; some explanations remain English.
+
+          Validation: TypeScript and 113 app tests, signature and permissions, embedded JavaScript, and Android emulator installation, dashboard, Insights, item paging and background/resume checks passed. Native PIN qualification also passed. These are emulator checks, not physical-device or live-tenant acceptance. Source commit, signing details, package metadata and checksum are attached.
+          NOTES
+          gh release create v0.1.0-preview.14 --target "$SOURCE_SHA" --prerelease --title 'Posnic Business 0.1.0-preview.14 - Android test build' --notes-file release-notes.md test-release/*.apk test-release/*.zip test-release/SHA256SUMS.txt test-release/signature.txt test-release/package.txt test-release/SOURCE_COMMIT.txt

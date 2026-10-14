@@ -1,0 +1,76 @@
+{
+  "name": "posnic-business",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Posnic owner and manager companion for Android and iOS",
+  "license": "AGPL-3.0-only",
+  "main": "index.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Posnic/posnic-business.git"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "build:web": "expo export --platform web",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "check:attribution": "node scripts/check-attribution.mjs",
+    "check": "npm run typecheck && npm test && npm run check:attribution",
+    "format": "prettier --write src tests scripts plugins docs *.json *.ts *.md .github/workflows",
+    "format:check": "prettier --check src tests scripts plugins docs *.json *.ts *.md .github/workflows",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^15.0.2",
+    "@formatjs/intl-datetimeformat": "7.8.0",
+    "@formatjs/intl-datetimeformat-calendar-buddhist": "1.1.0",
+    "@formatjs/intl-getcanonicallocales": "3.2.12",
+    "@formatjs/intl-locale": "5.3.12",
+    "@formatjs/intl-numberformat": "9.4.3",
+    "@formatjs/intl-pluralrules": "6.3.15",
+    "@noble/ciphers": "^2.4.0",
+    "@noble/hashes": "^2.4.0",
+    "@react-navigation/bottom-tabs": "^7.19.2",
+    "@react-navigation/native": "^7.4.1",
+    "@react-navigation/native-stack": "^7.19.2",
+    "expo": "57.0.25",
+    "expo-constants": "~57.0.19",
+    "expo-crypto": "~57.0.3",
+    "expo-device": "~57.0.2",
+    "expo-local-authentication": "~57.0.3",
+    "expo-notifications": "~57.0.21",
+    "expo-secure-store": "~57.0.4",
+    "expo-status-bar": "57.0.1",
+    "expo-system-ui": "~57.0.4",
+    "expo-web-browser": "~57.0.3",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-nitro-modules": "0.37.1",
+    "react-native-quick-base64": "3.0.0",
+    "react-native-quick-crypto": "1.1.7",
+    "react-native-safe-area-context": "5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-web": "0.21.2",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "~19.2.2",
+    "prettier": "^3.9.8",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "overrides": {
+    "xcode": {
+      "uuid": "11.1.1"
+    }
+  }
+}
