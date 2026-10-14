@@ -1,0 +1,11 @@
+{
+  "name": "@hitechpos/payment-pay2s",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cổng thanh toán Pay2S (chuyển khoản ngân hàng/QR) cho HiTechPOS",
+  "license": "AGPL-3.0-only",
+  "main": "src/index.js",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test" },
+  "dependencies": { "@hitechpos/payment-core": "0.1.0" }
+}

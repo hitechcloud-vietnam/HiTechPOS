@@ -1,0 +1,10 @@
+{
+  "name": "@hitechpos/payment-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hợp đồng nhà cung cấp thanh toán, sổ nhật ký giao dịch và tiện ích dùng chung cho cổng thanh toán HiTechPOS",
+  "license": "AGPL-3.0-only",
+  "main": "src/index.js",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test" }
+}
