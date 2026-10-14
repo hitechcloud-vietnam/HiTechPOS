@@ -19,6 +19,7 @@ const { signToken, verifyToken } = require('./tokens');
 const { createOps } = require('./ops');
 const { createAdminConsoleRouter } = require('./admin-console');
 const { createTaxLedgerRouter } = require('./tax-ledger-router');
+const { createBusinessCloudRouter } = require('./business-cloud');
 
 
 /* Error codes map to Vietnamese messages for the signup/billing UI. */
@@ -142,6 +143,9 @@ function createApp({ store, config, providers, installer, onboarding, now = () =
     }
   });
 
+  /* "Continue with HiTechPOS Cloud" for the owner app (src/business-cloud.js);
+     its own JSON parser and strict error shape, so mounted before ours. */
+  app.use('/api/business/v1', createBusinessCloudRouter({ store, config, now, logger }));
   app.use(express.json({ limit: '64kb' }));
 
   /* A password change or reset invalidates every session issued before it. */

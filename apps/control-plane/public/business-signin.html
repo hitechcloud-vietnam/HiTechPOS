@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="hb-csrf" content="">
+<title>Kết nối HiTechPOS Business</title>
+<link rel="stylesheet" href="/api/business/v1/assets/business-signin.css">
+</head>
+<body>
+<main>
+  <p class="brand">HiTechPOS</p>
+  <h1 id="title">Kết nối ứng dụng chủ cửa hàng</h1>
+
+  <section id="intro" hidden>
+    <p>Thiết bị <strong id="device"></strong> đang xin quyền xem số liệu kinh doanh và xử lý các yêu cầu phê duyệt mà tài khoản của bạn được phép. Kết nối này không thể bán hàng.</p>
+    <p>Chỉ tiếp tục nếu chính bạn vừa bắt đầu kết nối trên điện thoại. Đối chiếu mã dưới đây với mã hiển thị trên điện thoại:</p>
+    <p class="code" id="code"></p>
+  </section>
+
+  <form id="login" hidden novalidate>
+    <p id="stepup-note" class="note" hidden>Để xác nhận thao tác phê duyệt, vui lòng nhập lại mật khẩu tài khoản HiTechPOS.</p>
+    <label for="email">Email tài khoản HiTechPOS</label>
+    <input id="email" name="email" type="email" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="254" required>
+    <label for="password">Mật khẩu</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" maxlength="256" required>
+    <button type="submit" id="signin">Đăng nhập</button>
+  </form>
+
+  <form id="consent" hidden>
+    <p>Đã đăng nhập: <strong id="who"></strong> <button type="button" class="link" id="switch">Dùng tài khoản khác</button></p>
+    <fieldset>
+      <legend>Chọn cửa hàng kết nối</legend>
+      <div id="shop-list"></div>
+    </fieldset>
+    <button type="submit" id="allow">Cho phép kết nối</button>
+    <button type="button" class="secondary" id="deny">Từ chối</button>
+  </form>
+
+  <p id="status" role="status" aria-live="polite"></p>
+  <p id="done" hidden><a id="open-app" href="#">Mở ứng dụng HiTechPOS Business</a></p>
+  <p class="foot">Mật khẩu chỉ dùng trên trang này và không bao giờ được gửi tới ứng dụng. Ứng dụng nhận một phiên riêng do cửa hàng cấp.</p>
+</main>
+<script id="hb-state" type="application/json">{}</script>
+<script src="/api/business/v1/assets/business-signin.js" nonce="" defer></script>
+</body>
+</html>

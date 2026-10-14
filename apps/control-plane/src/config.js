@@ -36,6 +36,12 @@ function loadConfig(env = process.env) {
       readyzShard: !['0', 'false', 'no'].includes(String(env.READYZ_SHARD || '').toLowerCase()),
       readyzTimeoutMs: Number(env.READYZ_TIMEOUT_MS) > 0 ? Number(env.READYZ_TIMEOUT_MS) : 1500,
     },
+    /* Owner app sign-in (business-cloud.js): issuer defaults to PUBLIC_URL;
+       CORS only for the Expo web preview origins listed here. */
+    businessCloud: {
+      issuer: env.BUSINESS_CLOUD_ISSUER || null,
+      corsOrigins: String(env.BUSINESS_CLOUD_CORS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean),
+    },
     saasVatRate: env.SAAS_VAT_RATE === undefined || env.SAAS_VAT_RATE === 'KCT' ? 'KCT' : Number(env.SAAS_VAT_RATE),
     graceDays: Number(env.GRACE_DAYS || 7),
     smtpUrl: env.SMTP_URL || null,
